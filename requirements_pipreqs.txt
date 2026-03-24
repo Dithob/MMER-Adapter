@@ -1,0 +1,16 @@
+cpm_kernels==1.0.11
+facenet_pytorch==2.6.0
+h5py==3.16.0
+librosa==0.11.0
+matplotlib==3.10.8
+modelscope==1.35.1
+numpy==2.4.3
+nvidia_ml_py==13.595.45
+pandas==3.0.1
+Pillow==12.1.1
+pynvml==13.0.1
+scikit_learn==1.8.0
+sentencepiece==0.2.1
+torch==2.5.1+cu124
+tqdm==4.67.3
+transformers==4.36.1

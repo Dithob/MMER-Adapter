@@ -16,35 +16,15 @@ class ConfigClassification():
         # normalize
         model_name = str.lower(args.modelName)
         dataset_name = str.lower(args.datasetName)
-        
-        # Check if it's iemocap dataset and get num_classes
-        num_classes = getattr(args, 'num_classes', 4)  # Default to 4-class
-        
         # load params
         commonArgs = HYPER_MODEL_MAP[model_name]()['commonParas']
         dataArgs = HYPER_DATASET_MAP[dataset_name]
         dataArgs = dataArgs['aligned'] if (commonArgs['need_data_aligned'] and 'aligned' in dataArgs) else dataArgs['unaligned']
-        
-        # Update num_classes in dataArgs
-        dataArgs['num_classes'] = num_classes
-        
-        # Get dataset parameters
-        dataset_paras = HYPER_MODEL_MAP[model_name]()['datasetParas'][dataset_name]
-        
-        # For iemocap, dynamically select prompt and label mapping based on num_classes
-        if dataset_name == 'iemocap':
-            if num_classes == 6:
-                dataset_paras['task_specific_prompt'] = dataset_paras['task_specific_prompt_6class']
-                dataset_paras['label_index_mapping'] = dataset_paras['label_index_mapping_6class']
-            # Remove the 6class-specific keys to avoid confusion
-            dataset_paras.pop('task_specific_prompt_6class', None)
-            dataset_paras.pop('label_index_mapping_6class', None)
-        
         # integrate all parameters
         self.args = Storage(dict(vars(args),
                             **dataArgs,
                             **commonArgs,
-                            **dataset_paras,
+                            **HYPER_MODEL_MAP[model_name]()['datasetParas'][dataset_name],
                             ))
     
     def __datasetCommonParams(self):
@@ -52,12 +32,12 @@ class ConfigClassification():
         tmp = {
             'iemocap':{
                 'unaligned': {
-                    'dataPath': os.path.join(root_dataset_dir, 'IEMOCAP', 'iemocap_data_0610.pkl'),
+                    'dataPath': os.path.join(root_dataset_dir, 'IEMOCAP'),
                     'seq_lens': (84, 157, 32),
                     # (text, audio, video)
                     'feature_dims': (4096, 64, 64),
-                    'train_samples': 4290,
-                    'num_classes': 4,
+                    'train_samples': 5240,
+                    'num_classes': 3,
                     'language': 'en',
                     'KeyEval': 'weight_F1'
                 }
@@ -149,29 +129,6 @@ class ConfigClassification():
                     'gamma': 0,
                     # res
                     'H': 1.0
-                },
-                'iemocap':{
-                    'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target \
-                                                set <angry:0, happy:1, sad:2, neutral:3>. response: The emotion is',
-                    'task_specific_prompt_6class': 'Please recognize the emotion of the above multimodal content from the target \
-                                                set <angry:0, happy:1, excited:2, sad:3, neutral:4, frustrated:5>. response: The emotion is',
-                    'max_new_tokens': 2,
-                    'pseudo_tokens': 4,
-                    'label_index_mapping': {'angry': 0, 'happy': 1, 'sad': 2, 'neutral': 3},
-                    'label_index_mapping_6class': {'angry': 0, 'happy': 1, 'excited': 2, 'sad': 3, 'neutral': 4, 'frustrated': 5},
-                    'batch_size': 8,
-                    'learning_rate': 5e-5,
-                    'a_lstm_hidden_size': 64,
-                    'v_lstm_hidden_size': 32,
-                    'a_lstm_layers': 1,
-                    'v_lstm_layers': 1,
-                    'a_lstm_dropout': 0.0,
-                    'v_lstm_dropout': 0.0,
-                    'warm_up_epochs': 90,
-                    'gamma':1,
-                    'update_epochs': 1,
-                    'early_stop': 8,
-                    'H': 3.0
                 },
             },
         }

@@ -21,6 +21,11 @@ def get_args():
     parser.add_argument('--gpu_ids', type=str, default='[0]')
     parser.add_argument('--seeds', type=str, default='[1111, 2222, 3333, 4444, 5555]')
     parser.add_argument('--num_workers', type=int, default=0)
+    
+    # Ablation interfaces for MoE
+    parser.add_argument('--use_moe_fusion', action='store_true', help='whether to use MoE fusion strategy')
+    parser.add_argument('--use_gate', action='store_true', help='whether to use bias-aware adaptive gating')
+    
     return parser.parse_args()
 
 def main():

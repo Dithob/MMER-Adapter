@@ -216,6 +216,11 @@ def parse_args():
                         help='path to load pretrain LLM.')
     parser.add_argument('--gpu_ids', type=list, default=[],
                         help='indicates the gpus will be used. If none, the most-free gpu will be used!')   #使用GPU1
+                        
+    # Ablation interfaces for MoE
+    parser.add_argument('--use_moe_fusion', action='store_true', help='whether to use MoE fusion strategy')
+    parser.add_argument('--use_gate', action='store_true', help='whether to use bias-aware adaptive gating')
+                        
     return parser.parse_args()
 
 if __name__ == '__main__':

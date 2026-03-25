@@ -27,10 +27,38 @@ class CMCM(nn.Module):
         self.audio_LSTM = TVA_LSTM(audio_in, args.a_lstm_hidden_size, num_layers=args.a_lstm_layers, dropout=args.a_lstm_dropout)
         self.video_LSTM = TVA_LSTM(video_in, args.v_lstm_hidden_size, num_layers=args.v_lstm_layers, dropout=args.v_lstm_dropout)
 
-        self.text_guide_mixer = Text_guide_mixer()
-        #low_rank_fusion
+        self.use_moe_fusion = getattr(args, 'use_moe_fusion', False)
+        self.use_gate = getattr(args, 'use_gate', False)
+        
         fusion_input_size = 256
-        self.mutli_scale_fusion = mutli_scale_fusion(input_size=fusion_input_size, output_size= text_in, pseudo_tokens= args.pseudo_tokens)
+        if self.use_moe_fusion:
+            self.pseudo_tokens = args.pseudo_tokens
+            self.text_in = text_in
+            # Expert 1: Deep Fusion
+            self.expert1_mixer = Text_guide_mixer()
+            self.expert1_fusion = mutli_scale_fusion(input_size=fusion_input_size, output_size=text_in, pseudo_tokens=args.pseudo_tokens)
+            
+            # Expert 2: Lightweight Fusion
+            self.expert2_mixer = Lightweight_mixer()
+            self.expert2_fusion = nn.Sequential(
+                nn.Linear(fusion_input_size, 1024),
+                nn.GELU(),
+                nn.Linear(1024, text_in * args.pseudo_tokens)
+            )
+            
+            self.gate_text_gap = nn.AdaptiveAvgPool1d(1)
+            gate_input_dim = 256 + 256 + 4096
+            if self.use_gate:
+                gate_input_dim += 1
+            
+            self.gate = nn.Sequential(
+                nn.Linear(gate_input_dim, 128),
+                nn.ReLU(),
+                nn.Linear(128, 2)
+            )
+        else:
+            self.text_guide_mixer = Text_guide_mixer()
+            self.mutli_scale_fusion = mutli_scale_fusion(input_size=fusion_input_size, output_size= text_in, pseudo_tokens= args.pseudo_tokens)
 
 
     def forward(self, labels, text, audio, video):
@@ -42,10 +70,37 @@ class CMCM(nn.Module):
         video_h = self.video_LSTM(video, video_len)
         audio_h = self.audio_LSTM(audio, audio_len)
 
-
-        fusion_h= self.text_guide_mixer(audio_h, video_h, text)
-
-        fusion_h= self.mutli_scale_fusion(fusion_h)
+        if self.use_moe_fusion:
+            # Expert 1: Deep Fusion
+            e1_h = self.expert1_mixer(audio_h, video_h, text)
+            e1_out = self.expert1_fusion(e1_h) 
+            
+            # Expert 2: Lightweight Fusion
+            e2_h = self.expert2_mixer(audio_h, video_h, text)
+            e2_out = self.expert2_fusion(e2_h).view(e2_h.shape[0], self.pseudo_tokens, self.text_in)
+            
+            # Gating
+            text_gap = self.gate_text_gap(text.permute(0, 2, 1)).squeeze(-1) 
+            if text_gap.dim() == 1:
+                text_gap = text_gap.unsqueeze(0)
+            
+            if self.use_gate:
+                # Compute bias score using cosine similarity to represent modality bias/noise
+                bias_score = F.cosine_similarity(audio_h, video_h, dim=-1).unsqueeze(-1)
+                gate_input = torch.cat([audio_h, video_h, text_gap, bias_score], dim=-1)
+            else:
+                gate_input = torch.cat([audio_h, video_h, text_gap], dim=-1)
+                
+            gate_weights = F.softmax(self.gate(gate_input), dim=-1) 
+            
+            # Weighted fusion
+            fusion_h = gate_weights[:, 0].unsqueeze(1).unsqueeze(2) * e1_out + \
+                       gate_weights[:, 1].unsqueeze(1).unsqueeze(2) * e2_out
+                       
+            feature_f = (e1_h + e2_h) / 2.0
+        else:
+            feature_f = self.text_guide_mixer(audio_h, video_h, text)
+            fusion_h = self.mutli_scale_fusion(feature_f)
 
 
         LLM_input = torch.cat([fusion_h, text], dim=1)
@@ -56,7 +111,7 @@ class CMCM(nn.Module):
             'Loss': LLM_output.loss,
             'Feature_a': audio_h,
             'Feature_v': video_h,
-            'Feature_f': fusion_h,
+            'Feature_f': feature_f,
         }
         return res
 
@@ -69,12 +124,33 @@ class CMCM(nn.Module):
         audio_h = self.audio_LSTM(audio, audio_len)
         video_h = self.video_LSTM(video, video_len)
 
-
-        fusion_h = self.text_guide_mixer(audio_h, video_h, text)
-
-        # low_rank_fusion
-
-        fusion_h = self.mutli_scale_fusion(fusion_h)
+        if self.use_moe_fusion:
+            # Expert 1
+            e1_h = self.expert1_mixer(audio_h, video_h, text)
+            e1_out = self.expert1_fusion(e1_h) 
+            
+            # Expert 2
+            e2_h = self.expert2_mixer(audio_h, video_h, text)
+            e2_out = self.expert2_fusion(e2_h).view(e2_h.shape[0], self.pseudo_tokens, self.text_in)
+            
+            # Gating
+            text_gap = self.gate_text_gap(text.permute(0, 2, 1)).squeeze(-1) 
+            if text_gap.dim() == 1:
+                text_gap = text_gap.unsqueeze(0)
+                
+            if self.use_gate:
+                bias_score = F.cosine_similarity(audio_h, video_h, dim=-1).unsqueeze(-1) 
+                gate_input = torch.cat([audio_h, video_h, text_gap, bias_score], dim=-1)
+            else:
+                gate_input = torch.cat([audio_h, video_h, text_gap], dim=-1)
+                
+            gate_weights = F.softmax(self.gate(gate_input), dim=-1) 
+            
+            fusion_h = gate_weights[:, 0].unsqueeze(1).unsqueeze(2) * e1_out + \
+                       gate_weights[:, 1].unsqueeze(1).unsqueeze(2) * e2_out
+        else:
+            fusion_h = self.text_guide_mixer(audio_h, video_h, text)
+            fusion_h = self.mutli_scale_fusion(fusion_h)
 
         # concatenate mutli_scale_fusion and text_embedding
 
@@ -131,7 +207,11 @@ class Text_guide_mixer(nn.Module):
 
         return fusion
 
-
+class Lightweight_mixer(nn.Module):
+    def __init__(self):
+        super(Lightweight_mixer, self).__init__()
+    def forward(self, audio, video, text):
+        return audio + video
 class mutli_scale_fusion(nn.Module):
     def __init__(self, input_size, output_size, pseudo_tokens = 4):
         super(mutli_scale_fusion, self).__init__()

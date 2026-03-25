@@ -103,6 +103,8 @@ python run.py --model_type llama2 --datasetName mosei --pretrain_LM /path/to/lla
 - `--root_dataset_dir`: 数据集根目录
 - `--gpu_ids`: 使用的GPU ID列表
 - `--seeds`: 随机种子列表
+- `--use_moe_fusion`: 是否启用MoE融合机制，默认为False
+- `--use_gate`: 是否启用偏差感知门控机制，默认为False
 
 ### 示例
 
@@ -154,18 +156,39 @@ python run.py \
     --seeds [1111, 2222, 3333, 4444, 5555]
 
 # 在IEMOCAP数据集上训练（4分类）
-python run_iemocap.py \
+python run.py \
     --model_type chatglm3 \
+    --datasetName iemocap4 \
     --pretrain_LM /data/huggingface_model/THUDM/chatglm3-6b-base/ \
     --gpu_ids [0] \
     --seeds [1111, 2222, 3333, 4444, 5555]
 
 # 在IEMOCAP数据集上训练（6分类）
-python run_iemocap.py \
+python run.py \
     --model_type qwen \
+    --datasetName iemocap6 \
     --pretrain_LM /data/huggingface_model/Qwen/Qwen-1_8B/ \
     --gpu_ids [1] \
     --seeds [1111, 2222, 3333, 4444, 5555]
+
+# 在IEMOCAP数据集上训练（4分类）- 启用MoE和偏差感知门控
+python run.py \
+    --model_type chatglm3 \
+    --datasetName iemocap4 \
+    --pretrain_LM /data/huggingface_model/THUDM/chatglm3-6b-base/ \
+    --gpu_ids [0] \
+    --seeds [1111, 2222, 3333, 4444, 5555] \
+    --use_moe_fusion \
+    --use_gate
+
+# 在IEMOCAP数据集上训练（4分类）- 仅启用MoE（无偏差感知）
+python run.py \
+    --model_type chatglm3 \
+    --datasetName iemocap4 \
+    --pretrain_LM /data/huggingface_model/THUDM/chatglm3-6b-base/ \
+    --gpu_ids [0] \
+    --seeds [1111, 2222, 3333, 4444, 5555] \
+    --use_moe_fusion
 ```
 
 ## 支持的数据集
@@ -187,19 +210,23 @@ python run_iemocap.py \
 
 CMCM模型包含以下组件：
 
-1. **文本编码器**: 使用预训练语言模型（ChatGLM3/Qwen/Llama2）
+1. **文本编码器**: 使用预训练语言模型（ChatGLM3/Qwen/Llama2/DeepSeek）
 2. **音频编码器**: LSTM网络
 3. **视频编码器**: LSTM网络
 4. **文本引导混合器**: 利用文本信息引导音频和视频特征融合
 5. **多尺度融合器**: 通过不同尺度的特征提取和整合
+6. **MoE融合机制**（可选）: 包含深度融合和轻量级融合两个专家网络
+7. **门控机制**（可选）: 自适应选择最适合当前输入的融合策略
 
 ## 技术特点
 
 1. **文本引导融合**: 利用文本语义信息指导多模态特征融合
 2. **多尺度特征提取**: 捕获不同层次的特征信息
 3. **低秩融合**: 减少计算复杂度，提高模型效率
-4. **大语言模型适配**: 支持多种主流大语言模型
-5. **灵活的配置系统**: 支持多种数据集和任务类型
+4. **MoE自主融合策略**: 结合深度融合和轻量级融合两个专家网络，提高模型表达能力
+5. **偏差感知门控机制**: 利用音频和视频特征的余弦相似度作为偏差指标，自适应选择最适合当前输入的融合策略
+6. **大语言模型适配**: 支持多种主流大语言模型
+7. **灵活的配置系统**: 支持多种数据集和任务类型
 
 ## 依赖项
 

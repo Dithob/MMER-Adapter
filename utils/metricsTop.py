@@ -20,6 +20,8 @@ class MetricsTop():
         else:
             self.metrics_dict = {
                 'IEMOCAP': self.__eval_iemocap_classification,
+                'IEMOCAP4': self.__eval_iemocap_classification,
+                'IEMOCAP6': self.__eval_iemocap_classification,
                 'MELD': self.__eval_meld_classification,
                 'CHERMA': self.__eval_cherma_classification
             }

@@ -7,6 +7,8 @@ from transformers import PreTrainedTokenizer
 from transformers.utils import logging, PaddingStrategy
 from transformers.tokenization_utils_base import EncodedInput, BatchEncoding
 
+logger = logging.get_logger(__name__)
+
 
 class SPTokenizer:
     def __init__(self, model_path: str):
@@ -102,9 +104,17 @@ class ChatGLMTokenizer(PreTrainedTokenizer):
     def unk_token(self) -> str:
         return "<unk>"
 
+    @unk_token.setter
+    def unk_token(self, value):
+        logger.warning("Setting unk_token is not supported, use the default one.")
+
     @property
     def pad_token(self) -> str:
         return "<unk>"
+
+    @pad_token.setter
+    def pad_token(self, value):
+        logger.warning("Setting pad_token is not supported, use the default one.")
 
     @property
     def pad_token_id(self):
@@ -113,6 +123,10 @@ class ChatGLMTokenizer(PreTrainedTokenizer):
     @property
     def eos_token(self) -> str:
         return "</s>"
+
+    @eos_token.setter
+    def eos_token(self, value):
+        logger.warning("Setting eos_token is not supported, use the default one.")
 
     @property
     def eos_token_id(self):

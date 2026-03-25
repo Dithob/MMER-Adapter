@@ -33,7 +33,8 @@ MSE-Adapter-main/
 ├── results/                   # 结果保存目录
 │   ├── models/               # 模型保存
 │   └── results/             # 实验结果
-└── run.py                    # 主运行脚本
+├── run.py                    # 主运行脚本
+└── test_load.py              # 数据加载测试脚本
 ```
 
 ## 重构亮点
@@ -65,12 +66,14 @@ python run.py --model_type llama2    # 使用Llama2-7B
 ### 4. 统一的配置系统
 
 配置系统支持：
+
 - 回归任务：MOSEI、SIMSV2
-- 分类任务：MELD、CHERMA
+- 分类任务：MELD、CHERMA、IEMOCAP（4分类和6分类）
 
 ### 5. 消除代码冗余
 
 通过重构，我们：
+
 - 将三个独立的项目合并为一个统一框架
 - 提取公共代码，减少重复
 - 统一接口，便于维护和扩展
@@ -92,8 +95,8 @@ python run.py --model_type llama2 --datasetName mosei --pretrain_LM /path/to/lla
 
 ### 参数说明
 
-- `--model_type`: 语言模型类型，可选 `chatglm3`、`qwen`、`llama2`
-- `--datasetName`: 数据集名称，支持 `mosei`、`simsv2`、`meld`、`cherma`
+- `--model_type`: 语言模型类型，可选 `chatglm3`、`qwen`、`qwen3.5`、`llama2`、`deepseek`
+- `--datasetName`: 数据集名称，支持 `mosei`、`simsv2`、`meld`、`cherma`、`iemocap4`、`iemocap6`
 - `--pretrain_LM`: 预训练语言模型路径
 - `--train_mode`: 训练模式，`regression`（回归）或 `classification`（分类）
 - `--modelName`: 模型名称，目前支持 `cmcm`
@@ -149,17 +152,36 @@ python run.py \
     --pretrain_LM /data/huggingface_model/deepseek-ai/deepseek-llm-7b-base/ \
     --gpu_ids [0] \
     --seeds [1111, 2222, 3333, 4444, 5555]
+
+# 在IEMOCAP数据集上训练（4分类）
+python run_iemocap.py \
+    --model_type chatglm3 \
+    --pretrain_LM /data/huggingface_model/THUDM/chatglm3-6b-base/ \
+    --gpu_ids [0] \
+    --seeds [1111, 2222, 3333, 4444, 5555]
+
+# 在IEMOCAP数据集上训练（6分类）
+python run_iemocap.py \
+    --model_type qwen \
+    --pretrain_LM /data/huggingface_model/Qwen/Qwen-1_8B/ \
+    --gpu_ids [1] \
+    --seeds [1111, 2222, 3333, 4444, 5555]
 ```
 
 ## 支持的数据集
 
 ### 回归任务
-- **MOSEI**: 多模态情感强度预测，范围[-3.0, 3.0]
-- **SIMSV2**: 中文多模态情感强度预测，范围[-1.0, 1.0]
+
+- **MOSEI**: 多模态情感强度预测，范围\[-3.0, 3.0]
+- **SIMSV2**: 中文多模态情感强度预测，范围\[-1.0, 1.0]
 
 ### 分类任务
+
 - **MELD**: 英文多模态情感分类，7类情感
 - **CHERMA**: 中文多模态情感分类，7类情感
+- **IEMOCAP**: 英文多模态情感分类
+  - **iemocap4**: 4类情感（angry, happy, sad, neutral）
+  - **iemocap6**: 6类情感（angry, happy, excited, sad, neutral, frustrated）
 
 ## 模型架构
 
@@ -213,16 +235,60 @@ CMCM模型包含以下组件：
 3. 其他参数保持不变
 
 例如，之前的命令：
+
 ```bash
 cd MSE-ChatGLM3-6B
 python run.py --datasetName mosei
 ```
 
 现在改为：
+
 ```bash
 cd MSE-Adapter-main
 python run.py --model_type chatglm3 --datasetName mosei
 ```
+
+## IEMOCAP数据集动态分类配置
+
+MSE-Adapter框架支持IEMOCAP数据集的4分类和6分类任务，通过以下方式实现动态配置：
+
+### 1. 数据集名称映射
+
+- `iemocap4`: 4类情感分类（angry, happy, sad, neutral）
+- `iemocap6`: 6类情感分类（angry, happy, excited, sad, neutral, frustrated）
+
+### 2. 动态配置实现
+
+框架会根据数据集名称自动：
+
+- 设置相应的分类数量（4或6）
+- 选择对应的提示词（task\_specific\_prompt）
+- 选择对应的标签映射（label\_index\_mapping）
+- 选择对应的情感映射（emo\_map4或emo\_map6）
+
+### 3. 使用方法
+
+使用 `run.py` 脚本训练IEMOCAP数据集：
+
+```bash
+# 训练IEMOCAP 4分类
+python run.py --model_type chatglm3 --datasetName iemocap4
+
+# 训练IEMOCAP 6分类
+python run.py --model_type qwen --datasetName iemocap6
+
+# 查看脚本帮助
+python run.py --help
+```
+
+### 4. 数据加载
+
+框架支持从以下位置加载IEMOCAP数据集的文本标签：
+
+- `d:\ProjectFiles\exp_202603\datasets\text_data\iemocap_text`（优先）
+- 其他常见路径（自动检测）
+
+如果找不到文本标签，框架会自动生成虚拟数据用于测试。
 
 ## 许可证
 

@@ -17,22 +17,32 @@ class ConfigClassification():
         model_name = str.lower(args.modelName)
         dataset_name = str.lower(args.datasetName)
         
-        # Check if it's iemocap dataset and get num_classes
-        num_classes = getattr(args, 'num_classes', 4)  # Default to 4-class
-        
         # load params
         commonArgs = HYPER_MODEL_MAP[model_name]()['commonParas']
-        dataArgs = HYPER_DATASET_MAP[dataset_name]
+        
+        # Handle iemocap4 and iemocap6 dataset names
+        if dataset_name in ['iemocap4', 'iemocap6']:
+            # Use iemocap as the base dataset name for configuration
+            base_dataset_name = 'iemocap'
+            # Set num_classes based on dataset name
+            num_classes = 4 if dataset_name == 'iemocap4' else 6
+        else:
+            base_dataset_name = dataset_name
+            # Get num_classes from args or use default
+            num_classes = getattr(args, 'num_classes', 4)
+        
+        # Get data parameters
+        dataArgs = HYPER_DATASET_MAP[base_dataset_name]
         dataArgs = dataArgs['aligned'] if (commonArgs['need_data_aligned'] and 'aligned' in dataArgs) else dataArgs['unaligned']
         
         # Update num_classes in dataArgs
         dataArgs['num_classes'] = num_classes
         
         # Get dataset parameters
-        dataset_paras = HYPER_MODEL_MAP[model_name]()['datasetParas'][dataset_name]
+        dataset_paras = HYPER_MODEL_MAP[model_name]()['datasetParas'][base_dataset_name]
         
         # For iemocap, dynamically select prompt and label mapping based on num_classes
-        if dataset_name == 'iemocap':
+        if base_dataset_name == 'iemocap':
             if num_classes == 6:
                 dataset_paras['task_specific_prompt'] = dataset_paras['task_specific_prompt_6class']
                 dataset_paras['label_index_mapping'] = dataset_paras['label_index_mapping_6class']

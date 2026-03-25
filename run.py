@@ -234,7 +234,7 @@ if __name__ == '__main__':
             args.pretrain_LM = '/root/autodl-tmp/models/deepseek-ai/deepseek-llm-7b-base/'
 
     
-    for data_name in ['mosei', 'simsv2', 'meld', 'cherma']:
+    for data_name in ['mosei', 'simsv2', 'meld', 'cherma', 'iemocap4', 'iemocap6']:
         if data_name in ['mosei', 'simsv2']:
             args.train_mode = 'regression'
         else:

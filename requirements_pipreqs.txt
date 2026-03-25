@@ -11,6 +11,6 @@ Pillow==12.1.1
 pynvml==13.0.1
 scikit_learn==1.8.0
 sentencepiece==0.2.1
-torch==2.5.1+cu124
+torch==2.5.1
 tqdm==4.67.3
 transformers==4.36.1

@@ -94,7 +94,7 @@ Pygments==2.19.2
 pynvml==13.0.1
 pyparsing==3.3.2
 python-dateutil==2.9.0.post0
-pywin32==311
+# pywin32==311  # Windows包
 PyYAML==6.0.3
 pyzmq==27.1.0
 referencing==0.37.0
@@ -117,9 +117,10 @@ tiktoken==0.12.0
 timm==1.0.26
 tinycss2==1.4.0
 tokenizers==0.15.2
-torch==2.5.1+cu124
-torchaudio==2.5.1+cu124
-torchvision==0.20.1+cu124
+# 去掉+cu124
+torch==2.5.1
+torchaudio==2.5.1
+torchvision==0.20.1
 tornado==6.5.4
 tqdm==4.67.3
 traitlets==5.14.3

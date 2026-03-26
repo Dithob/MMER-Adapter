@@ -23,6 +23,10 @@ class CMCM(nn.Module):
         # audio and video enocding
         text_in, audio_in, video_in = args.feature_dims[:]
         text_len, audio_len, video_len = args.seq_lens[:]
+        
+        # Extract actual text_in dynamically to handle missing config mismatches (Qwen=2048 vs default=4096)
+        if hasattr(self.LLM.model, 'config'):
+            text_in = getattr(self.LLM.model.config, 'hidden_size', text_in)
 
         self.audio_LSTM = TVA_LSTM(audio_in, args.a_lstm_hidden_size, num_layers=args.a_lstm_layers, dropout=args.a_lstm_dropout)
         self.video_LSTM = TVA_LSTM(video_in, args.v_lstm_hidden_size, num_layers=args.v_lstm_layers, dropout=args.v_lstm_dropout)
@@ -35,7 +39,7 @@ class CMCM(nn.Module):
             self.pseudo_tokens = args.pseudo_tokens
             self.text_in = text_in
             # Expert 1: Deep Fusion
-            self.expert1_mixer = Text_guide_mixer()
+            self.expert1_mixer = Text_guide_mixer(text_in)
             self.expert1_fusion = mutli_scale_fusion(input_size=fusion_input_size, output_size=text_in, pseudo_tokens=args.pseudo_tokens)
             
             # Expert 2: Lightweight Fusion
@@ -47,7 +51,7 @@ class CMCM(nn.Module):
             )
             
             self.gate_text_gap = nn.AdaptiveAvgPool1d(1)
-            gate_input_dim = 256 + 256 + 4096
+            gate_input_dim = 256 + 256 + text_in
             if self.use_gate:
                 gate_input_dim += 1
             
@@ -57,7 +61,7 @@ class CMCM(nn.Module):
                 nn.Linear(128, 2)
             )
         else:
-            self.text_guide_mixer = Text_guide_mixer()
+            self.text_guide_mixer = Text_guide_mixer(text_in)
             self.mutli_scale_fusion = mutli_scale_fusion(input_size=fusion_input_size, output_size= text_in, pseudo_tokens= args.pseudo_tokens)
 
 
@@ -192,10 +196,10 @@ class TVA_LSTM(nn.Module):
         return h
 
 class Text_guide_mixer(nn.Module):
-    def __init__(self):
+    def __init__(self, text_in=4096):
         super(Text_guide_mixer, self).__init__()
         self.GAP = nn.AdaptiveAvgPool1d(1)
-        self.text_mlp = nn.Linear(4096, 256)
+        self.text_mlp = nn.Linear(text_in, 256)
     def forward(self, audio, video, text):
         text_GAP = self.GAP(text.permute(0, 2, 1)).squeeze()
         text_knowledge = self.text_mlp(text_GAP)

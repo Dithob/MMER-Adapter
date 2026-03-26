@@ -109,86 +109,34 @@ python run.py --model_type llama2 --datasetName mosei --pretrain_LM /path/to/lla
 ### 示例
 
 ```bash
-# 在MOSEI数据集上训练ChatGLM3-6B模型
-python run.py \
-    --model_type chatglm3 \
-    --datasetName mosei \
-    --pretrain_LM /root/autodl-tmp/datasets/THUDM/chatglm3-6b-base/ \
-    --gpu_ids [0] \
-    --seeds [1111, 2222, 3333, 4444, 5555]
+# 在MOSEI数据集上训练ChatGLM3-6B模型 (默认参数)
+python run.py --model_type chatglm3 --datasetName mosei
 
-# 在SIMSV2数据集上训练Qwen-1.8B模型
-python run.py \
-    --model_type qwen \
-    --datasetName simsv2 \
-    --pretrain_LM /root/autodl-tmp/datasets/Qwen/Qwen-1_8B/ \
-    --gpu_ids [1] \
-    --seeds [1111, 2222, 3333, 4444, 5555]
+# 在SIMSV2数据集上训练Qwen-1.8B模型，并指定使用 GPU 1
+python run.py --model_type qwen --datasetName simsv2 --gpu_ids 1
 
 # 在MELD数据集上训练ChatGLM3-6B模型
-python run.py \
-    --model_type chatglm3 \
-    --datasetName meld \
-    --pretrain_LM /data/huggingface_model/THUDM/chatglm3-6b-base/ \
-    --gpu_ids [0] \
-    --seeds [1111, 2222, 3333, 4444, 5555]
-
-
-python run_test.py ^
-    --model_type chatglm3 ^
-    --datasetName meld ^
-    --pretrain_LM D:\ProjectFiles\exp_202603\models\chatglm3-6b-base\
-
-# 在SIMSV2数据集上训练Qwen3.5模型
-python run.py \
-    --model_type qwen3.5 \
-    --datasetName simsv2 \
-    --pretrain_LM /data/huggingface_model/Qwen/Qwen-3.5B/ \
-    --gpu_ids [3] \
-    --seeds [1111, 2222, 3333, 4444, 5555]
-
-# 在CHERMA数据集上训练DeepSeek模型
-python run.py \
-    --model_type deepseek \
-    --datasetName cherma \
-    --pretrain_LM /data/huggingface_model/deepseek-ai/deepseek-llm-7b-base/ \
-    --gpu_ids [0] \
-    --seeds [1111, 2222, 3333, 4444, 5555]
+python run.py --model_type chatglm3 --datasetName meld
 
 # 在IEMOCAP数据集上训练（4分类）
-python run.py \
-    --model_type chatglm3 \
-    --datasetName iemocap4 \
-    --pretrain_LM /data/huggingface_model/THUDM/chatglm3-6b-base/ \
-    --gpu_ids [0] \
-    --seeds [1111, 2222, 3333, 4444, 5555]
+python run.py --model_type chatglm3 --datasetName iemocap4
 
-# 在IEMOCAP数据集上训练（6分类）
-python run.py \
-    --model_type qwen \
-    --datasetName iemocap6 \
-    --pretrain_LM /data/huggingface_model/Qwen/Qwen-1_8B/ \
-    --gpu_ids [1] \
-    --seeds [1111, 2222, 3333, 4444, 5555]
+# 在IEMOCAP数据集上训练（6分类）- 启用MoE和偏差感知门控
+python run.py --model_type qwen --datasetName iemocap6 --use_moe_fusion --use_gate
 
-# 在IEMOCAP数据集上训练（4分类）- 启用MoE和偏差感知门控
-python run.py \
-    --model_type chatglm3 \
-    --datasetName iemocap4 \
-    --pretrain_LM /data/huggingface_model/THUDM/chatglm3-6b-base/ \
-    --gpu_ids [0] \
-    --seeds [1111, 2222, 3333, 4444, 5555] \
-    --use_moe_fusion \
-    --use_gate
+# 一次性训练多个数据集（按顺序训练）
+python run.py --model_type chatglm3 --datasetName mosei,simsv2,meld
 
-# 在IEMOCAP数据集上训练（4分类）- 仅启用MoE（无偏差感知）
+# 一次性训练所有支持的数据集
+python run.py --model_type qwen --datasetName all
+
+# 自定义预训练路径和随机种子
 python run.py \
-    --model_type chatglm3 \
-    --datasetName iemocap4 \
-    --pretrain_LM /data/huggingface_model/THUDM/chatglm3-6b-base/ \
-    --gpu_ids [0] \
-    --seeds [1111, 2222, 3333, 4444, 5555] \
-    --use_moe_fusion
+    --model_type llama2 \
+    --datasetName mosei \
+    --pretrain_LM /custom/path/to/llama2-7b/ \
+    --seeds 1111,2222 \
+    --gpu_ids 0
 ```
 
 ## 支持的数据集

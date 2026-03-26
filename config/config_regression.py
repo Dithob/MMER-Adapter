@@ -34,7 +34,7 @@ class ConfigRegression():
                     'dataPath': os.path.join(root_dataset_dir, 'MOSI/Processed/unaligned_50.pkl'),
                     'seq_lens': (50, 50, 50),
                     # (text, audio, video)
-                    'feature_dims': (4096, 5, 20),
+                    'feature_dims': (0, 5, 20),  # text_dim=0 means auto-detect from LLM hidden_size
                     'train_samples': 1284,
                     'num_classes': 3,
                     'language': 'en',
@@ -46,7 +46,7 @@ class ConfigRegression():
                     'dataPath': os.path.join(root_dataset_dir, 'MOSEI/Processed/unaligned_50.pkl'),
                     'seq_lens': (50, 500, 375),
                     # (text, audio, video)
-                    'feature_dims': (4096, 74, 35),
+                    'feature_dims': (0, 74, 35),  # text_dim=0 means auto-detect from LLM hidden_size
                     'train_samples': 16326,
                     'num_classes': 3,
                     'language': 'en',
@@ -58,7 +58,7 @@ class ConfigRegression():
                     'dataPath': os.path.join(root_dataset_dir, 'SIMS_V2/ch-simsv2s.pkl'),
                     # (batch_size, seq_lens, feature_dim)
                     'seq_lens': (50, 925, 232),  # (text, audio, video)
-                    'feature_dims': (4096, 25, 177),  # (text, audio, video)
+                    'feature_dims': (0, 25, 177),  # text_dim=0 means auto-detect from LLM hidden_size
                     'train_samples': 2722,
                     'num_classes': 3,
                     'language': 'cn',

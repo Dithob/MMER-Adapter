@@ -24,9 +24,14 @@ class CMCM(nn.Module):
         text_in, audio_in, video_in = args.feature_dims[:]
         text_len, audio_len, video_len = args.seq_lens[:]
         
-        # Extract actual text_in dynamically to handle missing config mismatches (Qwen=2048 vs default=4096)
+        # Dynamically resolve text_in from LLM hidden_size
+        # When feature_dims[0]=0 (placeholder), always use LLM's actual hidden_size
         if hasattr(self.LLM.model, 'config'):
-            text_in = getattr(self.LLM.model.config, 'hidden_size', text_in)
+            llm_hidden_size = getattr(self.LLM.model.config, 'hidden_size', None)
+            if llm_hidden_size is not None and (text_in == 0 or text_in != llm_hidden_size):
+                text_in = llm_hidden_size
+                # Write back to args for consistency in logs and downstream
+                args.feature_dims = (text_in, audio_in, video_in)
 
         self.audio_LSTM = TVA_LSTM(audio_in, args.a_lstm_hidden_size, num_layers=args.a_lstm_layers, dropout=args.a_lstm_dropout)
         self.video_LSTM = TVA_LSTM(video_in, args.v_lstm_hidden_size, num_layers=args.v_lstm_layers, dropout=args.v_lstm_dropout)

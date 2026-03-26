@@ -64,8 +64,8 @@ class ConfigClassification():
                 'unaligned': {
                     'dataPath': os.path.join(root_dataset_dir, 'IEMOCAP', 'iemocap_data_0610.pkl'),
                     'seq_lens': (84, 157, 32),
-                    # (text, audio, video)
-                    'feature_dims': (4096, 64, 64),
+                    # (text, audio, video) text_dim=0 means auto-detect from LLM hidden_size
+                    'feature_dims': (0, 64, 64),
                     'train_samples': 4290,
                     'num_classes': 4,
                     'language': 'en',
@@ -76,8 +76,8 @@ class ConfigClassification():
                 'unaligned': {
                     'dataPath': os.path.join(root_dataset_dir, 'MELD'),
                     'seq_lens': (65, 157, 32),
-                    # (text, audio, video)
-                    'feature_dims': (4096, 64, 64),
+                    # (text, audio, video) text_dim=0 means auto-detect from LLM hidden_size
+                    'feature_dims': (0, 64, 64),
                     'train_samples': 9992,
                     'num_classes': 3,
                     'language': 'en',
@@ -89,7 +89,7 @@ class ConfigClassification():
                     'dataPath': os.path.join(root_dataset_dir, 'CHERMA0723'),
                     # (batch_size, seq_lens, feature_dim)
                     'seq_lens': (78, 543, 16), # (text, audio, video)
-                    'feature_dims': (4096, 1024, 2048), # (text, audio, video)
+                    'feature_dims': (0, 1024, 2048), # text_dim=0 means auto-detect from LLM hidden_size
                     'train_samples': 16326,
                     'num_classes': 3,
                     'language': 'cn',
@@ -115,21 +115,20 @@ class ConfigClassification():
                     # batch_size of each epoch is update_epochs * batch_size
                     'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target \
                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is',
-                    'max_new_tokens': 2,
-                    'pseudo_tokens': 4,
+                    'max_new_tokens': 1,
+                    'pseudo_tokens': 2,
                     'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5,
                                            'anger': 6},
-                    # 'batch_size': 8,
                     'batch_size': 12,
-                    'learning_rate': 5e-5,
+                    'learning_rate': 5e-4,
                     # feature subNets
-                    'a_lstm_hidden_size': 64,
-                    'v_lstm_hidden_size': 32,
+                    'a_lstm_hidden_size': 32,
+                    'v_lstm_hidden_size': 16,
                     'a_lstm_layers': 1,
                     'v_lstm_layers': 1,
                     'a_lstm_dropout': 0.0,
                     'v_lstm_dropout': 0.0,
-                    'warm_up_epochs': 90,
+                    'warm_up_epochs': 50,
                     #loss weight   best：1
                     'gamma': 1,
                     'update_epochs': 1,

@@ -338,7 +338,12 @@ class Language_model(nn.Module):
                 else:
                     label_template = [f"{label.item():.{1}f}" for label in labels]
             else:
-                label_template = [f"{label.item()}" for label in labels]
+                # Append EOS token to classification labels to help model learn generation stopping
+                # This aligns with MSE-Qwen3.5-2B's append_eos_to_label behavior
+                eos_suffix = ''
+                if self.model_type in ['qwen', 'qwen3.5'] and hasattr(self.tokenizer, 'eos_token') and self.tokenizer.eos_token:
+                    eos_suffix = self.tokenizer.eos_token
+                label_template = [f"{label.item()}{eos_suffix}" for label in labels]
             
             if self.model_type == 'chatglm3':
                 labels_id = self.tokenizer(label_template, padding=True, return_tensors="pt", add_special_tokens=False)["input_ids"].to(self.device)

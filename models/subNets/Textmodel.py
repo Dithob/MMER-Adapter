@@ -49,7 +49,7 @@ class Language_model(nn.Module):
         self.model = ChatGLMForConditionalGeneration.from_pretrained(
             pretrained_model, 
             trust_remote_code=True, 
-            torch_dtype=torch.bfloat16
+            dtype=torch.bfloat16
         ).half()
         self.tokenizer = ChatGLMTokenizer.from_pretrained(
             pretrained_model, 
@@ -68,7 +68,7 @@ class Language_model(nn.Module):
         self.model = AutoModelForCausalLM.from_pretrained(
             pretrained_model,
             trust_remote_code=True,
-            torch_dtype=torch.bfloat16
+            dtype=torch.bfloat16
         ).half()
         
         # 设置token id
@@ -114,7 +114,7 @@ class Language_model(nn.Module):
         """ChatGLM3的前向传播"""
         opt_tokens, labels = self.input_processing(fusion_embedding, labels, mode='train')
         
-        with torch.cuda.amp.autocast():
+        with torch.amp.autocast(device_type='cuda'):
             output = self.model(
                 input_ids=opt_tokens, 
                 input_fusion=fusion_embedding, 
@@ -131,13 +131,18 @@ class Language_model(nn.Module):
         
         attention_mask = torch.cat([atts_bos, atts_fusion, labels_atts], dim=1)
         
-        with torch.cuda.amp.autocast():
+        # 确保 pad_token_id 有值，避免后续生成警告
+        if self.model.config.pad_token_id is None and hasattr(self.tokenizer, 'pad_token_id'):
+            self.model.config.pad_token_id = self.tokenizer.pad_token_id
+
+        with torch.amp.autocast(device_type='cuda'):
             output = self.model(
-                inputs_embeds=opt_tokens, 
-                return_dict=True, 
+                inputs_embeds=opt_tokens,
+                attention_mask=attention_mask,
+                return_dict=True,
                 labels=labels
             )
-        
+
         return output
     
     def generate(self, fusion_embedding):
@@ -158,12 +163,22 @@ class Language_model(nn.Module):
         else:
             gen_kwargs = {"max_new_tokens": self.max_new_tokens, "num_beams": 1, "do_sample": False, "top_k": 10}
         
-        opt_tokens, _ = self.input_processing(fusion_embedding, mode='generate')
-        
+        opt_tokens, atts = self.input_processing(fusion_embedding, mode='generate')
+        attention_mask = atts
+
+        if self.model.config.pad_token_id is None and hasattr(self.tokenizer, 'pad_token_id'):
+            self.model.config.pad_token_id = self.tokenizer.pad_token_id
+
         context_length = opt_tokens.size(1)
         all_responses = []
-        
-        for outputs in self.model.stream_generate(opt_tokens, **gen_kwargs, input_fusion=fusion_embedding):
+
+        for outputs in self.model.stream_generate(
+            opt_tokens,
+            attention_mask=attention_mask,
+            pad_token_id=self.model.config.pad_token_id,
+            **gen_kwargs,
+            input_fusion=fusion_embedding
+        ):
             outputs = outputs[:, context_length:].tolist()
             response = self.tokenizer.batch_decode(outputs)
         
@@ -197,7 +212,7 @@ class Language_model(nn.Module):
                 "max_new_tokens": self.max_new_tokens
             }
         elif self.model_type == 'llama2':
-            attention_mask = None
+            attention_mask = torch.cat([atts_bos, atts_fusion], dim=1)
             gen_kwargs = {
                 "num_beams": 1,
                 "do_sample": False,
@@ -205,14 +220,22 @@ class Language_model(nn.Module):
                 "max_new_tokens": self.max_new_tokens
             }
         else:  # deepseek
-            attention_mask = None
+            attention_mask = torch.cat([atts_bos, atts_fusion], dim=1)
             gen_kwargs = {
                 "num_beams": 1,
                 "do_sample": False,
                 "max_new_tokens": self.max_new_tokens
             }
-        
-        outputs = self.model.generate(inputs_embeds=opt_tokens, **gen_kwargs)
+
+        if self.model.config.pad_token_id is None and hasattr(self.tokenizer, 'pad_token_id'):
+            self.model.config.pad_token_id = self.tokenizer.pad_token_id
+
+        outputs = self.model.generate(
+            inputs_embeds=opt_tokens,
+            attention_mask=attention_mask,
+            pad_token_id=self.model.config.pad_token_id,
+            **gen_kwargs
+        )
         
         if self.model_type in ['qwen', 'qwen3.5']:
             responses = self.tokenizer.batch_decode(

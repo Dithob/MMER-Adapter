@@ -230,9 +230,9 @@ if __name__ == '__main__':
     # 根据模型类型设置默认的预训练模型路径
     if args.pretrain_LM == '/root/autodl-tmp/models/chatglm3-6b-base/':
         if args.model_type == 'qwen':
-            args.pretrain_LM = '/root/autodl-tmp/models/Qwen/Qwen-1_8B/'
+            args.pretrain_LM = '/root/autodl-tmp/models/Qwen/Qwen-1.8B/'
         elif args.model_type == 'qwen3.5':
-            args.pretrain_LM = '/root/autodl-tmp/models/Qwen/Qwen-3_5B/'
+            args.pretrain_LM = '/root/autodl-tmp/models/Qwen/Qwen-3.5-25B/'
         elif args.model_type == 'llama2':
             args.pretrain_LM = '/root/autodl-tmp/models/Meta/Llama-2-7b-hf/'
         elif args.model_type == 'deepseek':
@@ -240,7 +240,8 @@ if __name__ == '__main__':
 
     
     # for data_name in ['mosei', 'simsv2', 'meld', 'cherma', 'iemocap4', 'iemocap6']:
-    for data_name in ['iemocap6']:
+    # for data_name in ['iemocap6']:
+    for data_name in ['meld']:
         if data_name in ['mosei', 'simsv2']:
             args.train_mode = 'regression'
         else:

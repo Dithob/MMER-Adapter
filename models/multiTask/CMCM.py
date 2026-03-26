@@ -3,7 +3,7 @@ import math
 import os
 import sys
 import collections
-from torch.cuda.amp import autocast, GradScaler
+from torch.amp import autocast, GradScaler
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

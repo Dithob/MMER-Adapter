@@ -187,7 +187,7 @@ class TVA_LSTM(nn.Module):
         # _, (final_states, _) = self.rnn(packed_sequence)
         # h = self.dropout(final_states[-1])
         _, final_states = self.rnn(packed_sequence)
-        h = self.dropout(final_states[0].squeeze())
+        h = self.dropout(final_states[0].squeeze(0))
         h = self.linear(h)
         return h
 

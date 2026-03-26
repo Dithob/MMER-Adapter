@@ -240,8 +240,8 @@ if __name__ == '__main__':
 
     
     # for data_name in ['mosei', 'simsv2', 'meld', 'cherma', 'iemocap4', 'iemocap6']:
-    # for data_name in ['iemocap6']:
-    for data_name in ['meld']:
+    for data_name in ['iemocap4']:
+    # for data_name in ['meld']:
         if data_name in ['mosei', 'simsv2']:
             args.train_mode = 'regression'
         else:

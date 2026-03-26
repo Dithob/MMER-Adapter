@@ -36,7 +36,7 @@ class Language_model(nn.Module):
         """根据模型类型加载不同的语言模型"""
         if self.model_type == 'chatglm3':
             self._load_chatglm3(pretrained_model)
-        elif self.model_type in ['qwen', 'llama2']:
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']:
             self._load_modelscope_model(pretrained_model)
         else:
             raise ValueError(f"Unsupported model type: {self.model_type}")
@@ -73,13 +73,23 @@ class Language_model(nn.Module):
         
         # 设置token id
         if self.model_type == 'qwen':
-            self.eos_token_id = self.tokenizer.convert_tokens_to_ids('')
+            self.eos_token_id = self.tokenizer.convert_tokens_to_ids('<|endoftext|>')
+            self.tokenizer.pad_token_id = self.eos_token_id
+            self.bos_token_id = self.tokenizer.convert_tokens_to_ids('<|im_start|>')
+            self.tokenizer.bos_token_id = self.bos_token_id
+        elif self.model_type == 'qwen3.5':
+            # Qwen3.5使用与Qwen类似的token设置
+            self.eos_token_id = self.tokenizer.convert_tokens_to_ids('<|endoftext|>')
             self.tokenizer.pad_token_id = self.eos_token_id
             self.bos_token_id = self.tokenizer.convert_tokens_to_ids('<|im_start|>')
             self.tokenizer.bos_token_id = self.bos_token_id
         elif self.model_type == 'llama2':
             self.tokenizer.pad_token_id = 0
-            self.eos_token_id = self.tokenizer.convert_tokens_to_ids('')
+            self.eos_token_id = self.tokenizer.convert_tokens_to_ids('</s>')
+        elif self.model_type == 'deepseek':
+            # DeepSeek模型使用默认的token设置
+            if self.tokenizer.pad_token_id is None:
+                self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
     
     def text_embedding(self, text_ids):
         embeddings = self.model.base_model.get_input_embeddings()
@@ -95,8 +105,10 @@ class Language_model(nn.Module):
         
         if self.model_type == 'chatglm3':
             return self._forward_chatglm3(fusion_embedding, labels)
-        else:
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']:
             return self._forward_modelscope(fusion_embedding, labels)
+        else:
+            raise ValueError(f"Unsupported model type in forward: {self.model_type}")
     
     def _forward_chatglm3(self, fusion_embedding, labels):
         """ChatGLM3的前向传播"""
@@ -134,8 +146,10 @@ class Language_model(nn.Module):
         
         if self.model_type == 'chatglm3':
             return self._generate_chatglm3(fusion_embedding)
-        else:
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']:
             return self._generate_modelscope(fusion_embedding)
+        else:
+            raise ValueError(f"Unsupported model type in generate: {self.model_type}")
     
     def _generate_chatglm3(self, fusion_embedding):
         """ChatGLM3的生成"""
@@ -174,7 +188,7 @@ class Language_model(nn.Module):
         """ModelScope模型的生成"""
         opt_tokens, atts_bos, atts_fusion, _, _ = self.input_processing(fusion_embedding, mode='generate')
         
-        if self.model_type == 'qwen':
+        if self.model_type in ['qwen', 'qwen3.5']:
             attention_mask = torch.cat([atts_bos, atts_fusion], dim=1)
             gen_kwargs = {
                 "num_beams": 1,
@@ -182,7 +196,7 @@ class Language_model(nn.Module):
                 "bos_token_id": self.tokenizer.bos_token_id,
                 "max_new_tokens": self.max_new_tokens
             }
-        else:  # llama2
+        elif self.model_type == 'llama2':
             attention_mask = None
             gen_kwargs = {
                 "num_beams": 1,
@@ -190,17 +204,24 @@ class Language_model(nn.Module):
                 "top_p": None,
                 "max_new_tokens": self.max_new_tokens
             }
+        else:  # deepseek
+            attention_mask = None
+            gen_kwargs = {
+                "num_beams": 1,
+                "do_sample": False,
+                "max_new_tokens": self.max_new_tokens
+            }
         
         outputs = self.model.generate(inputs_embeds=opt_tokens, **gen_kwargs)
         
-        if self.model_type == 'qwen':
+        if self.model_type in ['qwen', 'qwen3.5']:
             responses = self.tokenizer.batch_decode(
                 outputs[:, 1:], 
                 add_special_tokens=False, 
                 skip_special_tokens=True, 
                 clean_up_tokenization_spaces=False
             )
-        else:  # llama2
+        else:  # llama2, deepseek
             responses = self.tokenizer.batch_decode(
                 outputs[:, 1:], 
                 add_special_tokens=False, 
@@ -235,8 +256,10 @@ class Language_model(nn.Module):
         """
         if self.model_type == 'chatglm3':
             return self._input_processing_chatglm3(fusion_embedding, labels, mode)
-        else:
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']:
             return self._input_processing_modelscope(fusion_embedding, labels, mode)
+        else:
+            raise ValueError(f"Unsupported model type in input_processing: {self.model_type}")
     
     def _input_processing_chatglm3(self, fusion_embedding, labels=None, mode=None):
         """ChatGLM3的输入处理"""
@@ -261,20 +284,20 @@ class Language_model(nn.Module):
         opt_tokens = torch.cat([fusion_embedding, task_prompt_embedding], dim=1)
         atts_fusion = torch.ones(opt_tokens.size()[:-1], dtype=torch.long).to(self.device)
         
-        if self.model_type == 'qwen':
+        if self.model_type in ['qwen', 'qwen3.5']:
             bos = torch.ones([batch_size, 1], dtype=atts_fusion.dtype, device=self.device) * self.tokenizer.bos_token_id
             bos_embeds = self.text_embedding(bos)
             atts_bos = atts_fusion[:, :1]
             opt_tokens = torch.cat([bos_embeds, opt_tokens], dim=1)
-        else:  # llama2
+        else:  # llama2, deepseek
             bos_embeds = None
             atts_bos = None
         
         opt_tokens, labels, labels_atts = self.input_labels_construct(opt_tokens, labels, mode)
         
-        if self.model_type == 'qwen':
+        if self.model_type in ['qwen', 'qwen3.5']:
             return opt_tokens, atts_bos, atts_fusion, labels, labels_atts
-        else:  # llama2
+        else:  # llama2, deepseek
             return opt_tokens, None, atts_fusion, labels, labels_atts
     
     def input_labels_construct(self, opt_tokens, labels=None, mode=None):
@@ -287,7 +310,7 @@ class Language_model(nn.Module):
         
         if mode == "train":
             if self.train_mode == "regression":
-                if self.model_type == 'qwen':
+                if self.model_type in ['qwen', 'qwen3.5']:
                     label_template = [f"+{label.item():.{1}f}" if label >= 0 else f"{label.item():.{1}f}" for label in labels]
                 else:
                     label_template = [f"{label.item():.{1}f}" for label in labels]

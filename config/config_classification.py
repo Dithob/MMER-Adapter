@@ -28,15 +28,16 @@ class ConfigClassification():
             num_classes = 4 if dataset_name == 'iemocap4' else 6
         else:
             base_dataset_name = dataset_name
-            # Get num_classes from args or use default
-            num_classes = getattr(args, 'num_classes', 4)
+            # num_classes will come from the dataset config (dataArgs), don't override
+            num_classes = None
         
         # Get data parameters
         dataArgs = HYPER_DATASET_MAP[base_dataset_name]
         dataArgs = dataArgs['aligned'] if (commonArgs['need_data_aligned'] and 'aligned' in dataArgs) else dataArgs['unaligned']
         
-        # Update num_classes in dataArgs
-        dataArgs['num_classes'] = num_classes
+        # Only override num_classes for iemocap (where it's dynamically determined)
+        if num_classes is not None:
+            dataArgs['num_classes'] = num_classes
         
         # Get dataset parameters
         dataset_paras = HYPER_MODEL_MAP[model_name]()['datasetParas'][base_dataset_name]

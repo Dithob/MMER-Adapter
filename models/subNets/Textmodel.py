@@ -209,6 +209,7 @@ class Language_model(nn.Module):
                 "num_beams": 1,
                 "do_sample": False,
                 "bos_token_id": self.tokenizer.bos_token_id,
+                "eos_token_id": self.tokenizer.eos_token_id,
                 "max_new_tokens": self.max_new_tokens
             }
         elif self.model_type == 'llama2':
@@ -238,15 +239,19 @@ class Language_model(nn.Module):
         )
         
         if self.model_type in ['qwen', 'qwen3.5']:
+            # When using inputs_embeds, model.generate() returns only new token IDs.
+            # Extract only the last max_new_tokens tokens (the actual generated output).
+            new_tokens = outputs[:, -self.max_new_tokens:]
             responses = self.tokenizer.batch_decode(
-                outputs[:, 1:], 
+                new_tokens, 
                 add_special_tokens=False, 
                 skip_special_tokens=True, 
                 clean_up_tokenization_spaces=False
             )
         else:  # llama2, deepseek
+            new_tokens = outputs[:, -self.max_new_tokens:]
             responses = self.tokenizer.batch_decode(
-                outputs[:, 1:], 
+                new_tokens, 
                 add_special_tokens=False, 
                 skip_special_tokens=True, 
                 clean_up_tokenization_spaces=False

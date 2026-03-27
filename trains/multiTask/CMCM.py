@@ -132,6 +132,9 @@ class CMCM():
                     with autocast('cuda'):
                         output= model(labels_m, (text,text_lengths), (audio, audio_lengths), (vision, vision_lengths))
                         loss = output['Loss']
+                        # Add optional MoE load-balance loss
+                        if 'MoE_LB_Loss' in output:
+                            loss = loss + output['MoE_LB_Loss']
 
 
                     # backward

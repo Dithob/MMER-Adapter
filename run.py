@@ -222,6 +222,7 @@ def parse_args():
     # Ablation interfaces for MoE
     parser.add_argument('--use_moe_fusion', action='store_true', help='whether to use MoE fusion strategy')
     parser.add_argument('--use_gate', action='store_true', help='whether to use bias-aware adaptive gating')
+    parser.add_argument('--use_moe_lb_loss', action='store_true', help='enable load-balance loss for MoE routing')
                         
     return parser.parse_args()
 

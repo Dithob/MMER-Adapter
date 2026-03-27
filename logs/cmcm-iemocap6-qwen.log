@@ -1,0 +1,117 @@
+2026-03-27 15:06:07:INFO:========= 准备训练数据集: iemocap6 (classification) =========
+2026-03-27 15:06:07:INFO:Start running cmcm...
+2026-03-27 15:06:07:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'iemocap6', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'seeds': [1111, 2222, 3333], 'use_moe_fusion': True, 'use_gate': True, 'dataPath': '/root/autodl-tmp/datasets/IEMOCAP/iemocap_data_0610.pkl', 'seq_lens': (84, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 4290, 'num_classes': 6, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target                                                 set <angry:0, happy:1, excited:2, sad:3, neutral:4, frustrated:5>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'angry': 0, 'happy': 1, 'excited': 2, 'sad': 3, 'neutral': 4, 'frustrated': 5}, 'batch_size': 12, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-27 15:06:07:INFO:Find gpu: 0, with memory: 548732928 left!
+2026-03-27 15:06:07:INFO:Let's use the GPU 1 !
+2026-03-27 15:06:08:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-03-27 15:06:12:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-03-27 15:06:14:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-03-27 15:06:23:INFO:trainable params: 10340558 || all params: 1892165646 || trainable%: 0.546493274616825
+2026-03-27 15:06:23:INFO:Init labels...
+2026-03-27 15:06:23:INFO:Start training...
+2026-03-27 15:07:43:INFO:========= 准备训练数据集: iemocap6 (classification) =========
+2026-03-27 15:07:43:INFO:Start running cmcm...
+2026-03-27 15:07:43:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'iemocap6', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'seeds': [1111, 2222, 3333], 'use_moe_fusion': True, 'use_gate': True, 'dataPath': '/root/autodl-tmp/datasets/IEMOCAP/iemocap_data_0610.pkl', 'seq_lens': (84, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 4290, 'num_classes': 6, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target                                                 set <angry:0, happy:1, excited:2, sad:3, neutral:4, frustrated:5>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'angry': 0, 'happy': 1, 'excited': 2, 'sad': 3, 'neutral': 4, 'frustrated': 5}, 'batch_size': 16, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-27 15:07:43:INFO:Find gpu: 0, with memory: 548732928 left!
+2026-03-27 15:07:43:INFO:Let's use the GPU 1 !
+2026-03-27 15:07:43:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-03-27 15:07:48:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-03-27 15:07:50:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-03-27 15:07:59:INFO:trainable params: 10340558 || all params: 1892165646 || trainable%: 0.546493274616825
+2026-03-27 15:07:59:INFO:Init labels...
+2026-03-27 15:07:59:INFO:Start training...
+2026-03-27 15:20:32:INFO:TRAIN-(cmcm) (1/1/1)>> loss: 4.4420
+2026-03-27 15:21:13:INFO:VAL-(cmcm) >>
+2026-03-27 15:21:13:INFO:M: >>  acc: 0.3800  weight_F1: 0.3391 
+2026-03-27 15:21:14:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-iemocap6-classification.pth.
+2026-03-27 15:33:39:INFO:TRAIN-(cmcm) (1/2/1)>> loss: 0.7670
+2026-03-27 15:34:20:INFO:VAL-(cmcm) >>
+2026-03-27 15:34:20:INFO:M: >>  acc: 0.3858  weight_F1: 0.3691 
+2026-03-27 15:34:22:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/cmcm-iemocap6-classification.pth.
+2026-03-27 15:46:44:INFO:TRAIN-(cmcm) (1/3/1)>> loss: 0.7235
+2026-03-27 15:47:24:INFO:VAL-(cmcm) >>
+2026-03-27 15:47:24:INFO:M: >>  acc: 0.4223  weight_F1: 0.4107 
+2026-03-27 15:47:26:INFO:Saving checkpoint at epoch 3 to /root/autodl-tmp/results/models/cmcm-iemocap6-classification.pth.
+2026-03-27 15:59:50:INFO:TRAIN-(cmcm) (1/4/1)>> loss: 0.7024
+2026-03-27 16:00:31:INFO:VAL-(cmcm) >>
+2026-03-27 16:00:31:INFO:M: >>  acc: 0.3935  weight_F1: 0.3579 
+2026-03-27 16:12:49:INFO:TRAIN-(cmcm) (2/5/1)>> loss: 0.6912
+2026-03-27 16:13:30:INFO:VAL-(cmcm) >>
+2026-03-27 16:13:30:INFO:M: >>  acc: 0.4453  weight_F1: 0.4413 
+2026-03-27 16:13:31:INFO:Saving checkpoint at epoch 5 to /root/autodl-tmp/results/models/cmcm-iemocap6-classification.pth.
+2026-03-27 16:25:50:INFO:TRAIN-(cmcm) (1/6/1)>> loss: 0.6800
+2026-03-27 16:26:32:INFO:VAL-(cmcm) >>
+2026-03-27 16:26:32:INFO:M: >>  acc: 0.4837  weight_F1: 0.4821 
+2026-03-27 16:26:33:INFO:Saving checkpoint at epoch 6 to /root/autodl-tmp/results/models/cmcm-iemocap6-classification.pth.
+2026-03-27 16:38:54:INFO:TRAIN-(cmcm) (1/7/1)>> loss: 0.6618
+2026-03-27 16:39:35:INFO:VAL-(cmcm) >>
+2026-03-27 16:39:35:INFO:M: >>  acc: 0.3992  weight_F1: 0.3671 
+2026-03-27 16:51:57:INFO:TRAIN-(cmcm) (2/8/1)>> loss: 0.6543
+2026-03-27 16:52:37:INFO:VAL-(cmcm) >>
+2026-03-27 16:52:37:INFO:M: >>  acc: 0.4549  weight_F1: 0.4581 
+2026-03-27 17:05:01:INFO:TRAIN-(cmcm) (3/9/1)>> loss: 0.6437
+2026-03-27 17:05:43:INFO:VAL-(cmcm) >>
+2026-03-27 17:05:43:INFO:M: >>  acc: 0.4491  weight_F1: 0.4255 
+2026-03-27 17:18:05:INFO:TRAIN-(cmcm) (4/10/1)>> loss: 0.6334
+2026-03-27 17:18:46:INFO:VAL-(cmcm) >>
+2026-03-27 17:18:46:INFO:M: >>  acc: 0.4990  weight_F1: 0.4917 
+2026-03-27 17:18:47:INFO:Saving checkpoint at epoch 10 to /root/autodl-tmp/results/models/cmcm-iemocap6-classification.pth.
+2026-03-27 17:31:11:INFO:TRAIN-(cmcm) (1/11/1)>> loss: 0.6107
+2026-03-27 17:31:51:INFO:VAL-(cmcm) >>
+2026-03-27 17:31:51:INFO:M: >>  acc: 0.5048  weight_F1: 0.5049 
+2026-03-27 17:31:53:INFO:Saving checkpoint at epoch 11 to /root/autodl-tmp/results/models/cmcm-iemocap6-classification.pth.
+2026-03-27 17:44:13:INFO:TRAIN-(cmcm) (1/12/1)>> loss: 0.6031
+2026-03-27 17:44:53:INFO:VAL-(cmcm) >>
+2026-03-27 17:44:53:INFO:M: >>  acc: 0.4837  weight_F1: 0.4750 
+2026-03-27 17:57:09:INFO:TRAIN-(cmcm) (2/13/1)>> loss: 0.5802
+2026-03-27 17:57:50:INFO:VAL-(cmcm) >>
+2026-03-27 17:57:50:INFO:M: >>  acc: 0.4664  weight_F1: 0.4427 
+2026-03-27 18:10:09:INFO:TRAIN-(cmcm) (3/14/1)>> loss: 0.5582
+2026-03-27 18:10:51:INFO:VAL-(cmcm) >>
+2026-03-27 18:10:51:INFO:M: >>  acc: 0.4894  weight_F1: 0.4797 
+2026-03-27 18:23:16:INFO:TRAIN-(cmcm) (4/15/1)>> loss: 0.5416
+2026-03-27 18:23:57:INFO:VAL-(cmcm) >>
+2026-03-27 18:23:57:INFO:M: >>  acc: 0.4856  weight_F1: 0.4748 
+2026-03-27 18:36:23:INFO:TRAIN-(cmcm) (5/16/1)>> loss: 0.5246
+2026-03-27 18:37:06:INFO:VAL-(cmcm) >>
+2026-03-27 18:37:06:INFO:M: >>  acc: 0.4818  weight_F1: 0.4933 
+2026-03-27 18:49:28:INFO:TRAIN-(cmcm) (6/17/1)>> loss: 0.4984
+2026-03-27 18:50:10:INFO:VAL-(cmcm) >>
+2026-03-27 18:50:10:INFO:M: >>  acc: 0.5067  weight_F1: 0.5097 
+2026-03-27 18:50:12:INFO:Saving checkpoint at epoch 17 to /root/autodl-tmp/results/models/cmcm-iemocap6-classification.pth.
+2026-03-27 19:02:42:INFO:TRAIN-(cmcm) (1/18/1)>> loss: 0.4725
+2026-03-27 19:03:23:INFO:VAL-(cmcm) >>
+2026-03-27 19:03:23:INFO:M: >>  acc: 0.5106  weight_F1: 0.5064 
+2026-03-27 19:15:49:INFO:TRAIN-(cmcm) (2/19/1)>> loss: 0.4453
+2026-03-27 19:16:31:INFO:VAL-(cmcm) >>
+2026-03-27 19:16:31:INFO:M: >>  acc: 0.4952  weight_F1: 0.4875 
+2026-03-27 19:29:10:INFO:TRAIN-(cmcm) (3/20/1)>> loss: 0.4111
+2026-03-27 19:29:52:INFO:VAL-(cmcm) >>
+2026-03-27 19:29:52:INFO:M: >>  acc: 0.4645  weight_F1: 0.4796 
+2026-03-27 19:42:36:INFO:TRAIN-(cmcm) (4/21/1)>> loss: 0.3708
+2026-03-27 19:43:18:INFO:VAL-(cmcm) >>
+2026-03-27 19:43:18:INFO:M: >>  acc: 0.5010  weight_F1: 0.5053 
+2026-03-27 19:56:03:INFO:TRAIN-(cmcm) (5/22/1)>> loss: 0.3413
+2026-03-27 19:56:46:INFO:VAL-(cmcm) >>
+2026-03-27 19:56:46:INFO:M: >>  acc: 0.4664  weight_F1: 0.4714 
+2026-03-27 20:09:20:INFO:TRAIN-(cmcm) (6/23/1)>> loss: 0.3042
+2026-03-27 20:10:03:INFO:VAL-(cmcm) >>
+2026-03-27 20:10:03:INFO:M: >>  acc: 0.4933  weight_F1: 0.4985 
+2026-03-27 20:22:42:INFO:TRAIN-(cmcm) (7/24/1)>> loss: 0.2748
+2026-03-27 20:23:26:INFO:VAL-(cmcm) >>
+2026-03-27 20:23:26:INFO:M: >>  acc: 0.4645  weight_F1: 0.4778 
+2026-03-27 20:35:57:INFO:TRAIN-(cmcm) (8/25/1)>> loss: 0.2511
+2026-03-27 20:36:38:INFO:VAL-(cmcm) >>
+2026-03-27 20:36:38:INFO:M: >>  acc: 0.4587  weight_F1: 0.4651 
+2026-03-27 20:38:46:INFO:TEST-(cmcm) >>
+2026-03-27 20:38:46:INFO:M: >>  acc: 0.4716  weight_F1: 0.4637 
+2026-03-27 20:38:47:INFO:Results are added to /root/autodl-tmp/results/results/iemocap6-classification-90.csv...
+2026-03-27 20:38:47:INFO:Start running cmcm...
+2026-03-27 20:38:47:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'iemocap6', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [0], 'seeds': [1111, 2222, 3333], 'use_moe_fusion': True, 'use_gate': True, 'dataPath': '/root/autodl-tmp/datasets/IEMOCAP/iemocap_data_0610.pkl', 'seq_lens': (84, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 4290, 'num_classes': 6, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target                                                 set <angry:0, happy:1, excited:2, sad:3, neutral:4, frustrated:5>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'angry': 0, 'happy': 1, 'excited': 2, 'sad': 3, 'neutral': 4, 'frustrated': 5}, 'batch_size': 16, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 2222}>
+2026-03-27 20:38:47:INFO:Let's use the GPU 1 !
+2026-03-27 20:38:48:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-03-27 20:38:52:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-03-27 20:38:54:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-03-27 20:39:03:INFO:trainable params: 10340558 || all params: 1892165646 || trainable%: 0.546493274616825
+2026-03-27 20:39:03:INFO:Init labels...
+2026-03-27 20:39:03:INFO:Start training...

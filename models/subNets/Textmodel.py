@@ -158,30 +158,36 @@ class Language_model(nn.Module):
     
     def _generate_chatglm3(self, fusion_embedding):
         """ChatGLM3的生成"""
+        # ChatGLM3's SentencePiece tokenizer encodes standalone digits as 2 tokens:
+        # ▁ (word boundary, token 30910) + digit. Training labels also tokenize this way,
+        # so max_new_tokens must be +1 to account for the ▁ prefix.
+        effective_max_tokens = self.max_new_tokens + 1
         if self.train_mode == 'regression':
-            gen_kwargs = {"max_new_tokens": self.max_new_tokens, "num_beams": 1, "do_sample": False, "top_k": 10}
+            gen_kwargs = {"max_new_tokens": effective_max_tokens, "num_beams": 1, "do_sample": False, "top_k": 10}
         else:
-            gen_kwargs = {"max_new_tokens": self.max_new_tokens, "num_beams": 1, "do_sample": False, "top_k": 10}
+            gen_kwargs = {"max_new_tokens": effective_max_tokens, "num_beams": 1, "do_sample": False, "top_k": 10}
         
-        opt_tokens, atts = self.input_processing(fusion_embedding, mode='generate')
-        attention_mask = atts
-
-        if self.model.config.pad_token_id is None and hasattr(self.tokenizer, 'pad_token_id'):
-            self.model.config.pad_token_id = self.tokenizer.pad_token_id
+        opt_tokens, _ = self.input_processing(fusion_embedding, mode='generate')
 
         context_length = opt_tokens.size(1)
         all_responses = []
 
+        # NOTE: Do NOT pass attention_mask or pad_token_id here.
+        # ChatGLM3's stream_generate handles them internally.
         for outputs in self.model.stream_generate(
             opt_tokens,
-            attention_mask=attention_mask,
-            pad_token_id=self.model.config.pad_token_id,
             **gen_kwargs,
             input_fusion=fusion_embedding
         ):
             outputs = outputs[:, context_length:].tolist()
             response = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
         
+        # # Debug: print first batch's raw decode results (only once)
+        # if not hasattr(self, '_debug_printed'):
+        #     self._debug_printed = True
+        #     print(f"[DEBUG generate] raw responses (first 5): {response[:5]}")
+        #     print(f"[DEBUG generate] raw output token ids (first 5): {outputs[:5]}")
+
         for x in response:
             x = x.strip()
             if self.train_mode == 'regression':

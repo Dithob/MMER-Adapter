@@ -49,7 +49,7 @@ class Language_model(nn.Module):
         self.model = ChatGLMForConditionalGeneration.from_pretrained(
             pretrained_model, 
             trust_remote_code=True, 
-            dtype=torch.bfloat16
+            torch_dtype=torch.bfloat16
         ).half()
         self.tokenizer = ChatGLMTokenizer.from_pretrained(
             pretrained_model, 
@@ -180,9 +180,10 @@ class Language_model(nn.Module):
             input_fusion=fusion_embedding
         ):
             outputs = outputs[:, context_length:].tolist()
-            response = self.tokenizer.batch_decode(outputs)
+            response = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
         
         for x in response:
+            x = x.strip()
             if self.train_mode == 'regression':
                 try:
                     value = float(

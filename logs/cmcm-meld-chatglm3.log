@@ -160,3 +160,334 @@
 2026-03-30 19:57:00:INFO:VAL-(cmcm) >>
 2026-03-30 19:57:00:INFO:M: >>  acc: 0.3886  weight_F1: 0.3557 
 2026-03-30 19:57:07:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-30 20:01:24:INFO:========= 准备训练数据集: meld (classification) =========
+2026-03-30 20:01:24:INFO:Start running cmcm...
+2026-03-30 20:01:24:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'chatglm3', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b', 'gpu_ids': [], 'seeds': [3333], 'use_moe_fusion': True, 'use_gate': True, 'use_moe_lb_loss': True, 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 20, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 3333}>
+2026-03-30 20:01:24:INFO:Find gpu: 0, with memory: 548732928 left!
+2026-03-30 20:01:24:INFO:Let's use the GPU 1 !
+2026-03-30 20:01:26:WARNING:Setting eos_token is not supported, use the default one.
+2026-03-30 20:01:26:WARNING:Setting pad_token is not supported, use the default one.
+2026-03-30 20:01:26:WARNING:Setting unk_token is not supported, use the default one.
+2026-03-30 20:01:30:WARNING:Setting eos_token is not supported, use the default one.
+2026-03-30 20:01:30:WARNING:Setting pad_token is not supported, use the default one.
+2026-03-30 20:01:30:WARNING:Setting unk_token is not supported, use the default one.
+2026-03-30 20:01:31:WARNING:Setting eos_token is not supported, use the default one.
+2026-03-30 20:01:31:WARNING:Setting pad_token is not supported, use the default one.
+2026-03-30 20:01:31:WARNING:Setting unk_token is not supported, use the default one.
+2026-03-30 20:01:37:WARNING:Setting eos_token is not supported, use the default one.
+2026-03-30 20:01:37:WARNING:Setting pad_token is not supported, use the default one.
+2026-03-30 20:01:37:WARNING:Setting unk_token is not supported, use the default one.
+2026-03-30 20:01:40:INFO:trainable params: 3711632 || all params: 6247295632 || trainable%: 0.05941181942772514
+2026-03-30 20:01:41:INFO:Init labels...
+2026-03-30 20:01:41:INFO:Start training...
+2026-03-30 20:24:44:INFO:========= 准备训练数据集: meld (classification) =========
+2026-03-30 20:24:44:INFO:Start running cmcm...
+2026-03-30 20:24:44:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'chatglm3', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b', 'gpu_ids': [], 'seeds': [3333], 'use_moe_fusion': True, 'use_gate': True, 'use_moe_lb_loss': True, 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 20, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 3333}>
+2026-03-30 20:24:44:INFO:Find gpu: 0, with memory: 548732928 left!
+2026-03-30 20:24:44:INFO:Let's use the GPU 1 !
+2026-03-30 20:24:46:WARNING:Setting eos_token is not supported, use the default one.
+2026-03-30 20:24:46:WARNING:Setting pad_token is not supported, use the default one.
+2026-03-30 20:24:46:WARNING:Setting unk_token is not supported, use the default one.
+2026-03-30 20:24:50:WARNING:Setting eos_token is not supported, use the default one.
+2026-03-30 20:24:50:WARNING:Setting pad_token is not supported, use the default one.
+2026-03-30 20:24:50:WARNING:Setting unk_token is not supported, use the default one.
+2026-03-30 20:24:51:WARNING:Setting eos_token is not supported, use the default one.
+2026-03-30 20:24:51:WARNING:Setting pad_token is not supported, use the default one.
+2026-03-30 20:24:51:WARNING:Setting unk_token is not supported, use the default one.
+2026-03-30 20:24:54:WARNING:Setting eos_token is not supported, use the default one.
+2026-03-30 20:24:54:WARNING:Setting pad_token is not supported, use the default one.
+2026-03-30 20:24:54:WARNING:Setting unk_token is not supported, use the default one.
+2026-03-30 20:24:58:INFO:trainable params: 3711632 || all params: 6247295632 || trainable%: 0.05941181942772514
+2026-03-30 20:24:58:INFO:Init labels...
+2026-03-30 20:24:58:INFO:Start training...
+2026-03-30 20:33:34:INFO:TRAIN-(cmcm) (1/1/1)>> loss: 4.8372
+2026-03-30 20:34:25:INFO:VAL-(cmcm) >>
+2026-03-30 20:34:25:INFO:M: >>  acc: 0.4049  weight_F1: 0.3666 
+2026-03-30 20:34:32:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-30 20:43:11:INFO:TRAIN-(cmcm) (1/2/1)>> loss: 0.7452
+2026-03-30 20:44:01:INFO:VAL-(cmcm) >>
+2026-03-30 20:44:01:INFO:M: >>  acc: 0.4265  weight_F1: 0.3884 
+2026-03-30 20:44:09:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-30 20:52:45:INFO:TRAIN-(cmcm) (1/3/1)>> loss: 0.7284
+2026-03-30 20:53:35:INFO:VAL-(cmcm) >>
+2026-03-30 20:53:35:INFO:M: >>  acc: 0.4328  weight_F1: 0.3918 
+2026-03-30 20:53:43:INFO:Saving checkpoint at epoch 3 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-30 21:02:20:INFO:TRAIN-(cmcm) (1/4/1)>> loss: 0.7143
+2026-03-30 21:03:11:INFO:VAL-(cmcm) >>
+2026-03-30 21:03:11:INFO:M: >>  acc: 0.4626  weight_F1: 0.4062 
+2026-03-30 21:03:19:INFO:Saving checkpoint at epoch 4 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-30 21:11:59:INFO:TRAIN-(cmcm) (1/5/1)>> loss: 0.6906
+2026-03-30 21:12:50:INFO:VAL-(cmcm) >>
+2026-03-30 21:12:50:INFO:M: >>  acc: 0.4815  weight_F1: 0.4345 
+2026-03-30 21:12:58:INFO:Saving checkpoint at epoch 5 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-30 21:21:34:INFO:TRAIN-(cmcm) (1/6/1)>> loss: 0.6483
+2026-03-30 21:22:24:INFO:VAL-(cmcm) >>
+2026-03-30 21:22:24:INFO:M: >>  acc: 0.5194  weight_F1: 0.4892 
+2026-03-30 21:22:32:INFO:Saving checkpoint at epoch 6 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-30 21:31:06:INFO:TRAIN-(cmcm) (1/7/1)>> loss: 0.5826
+2026-03-30 21:31:56:INFO:VAL-(cmcm) >>
+2026-03-30 21:31:56:INFO:M: >>  acc: 0.5870  weight_F1: 0.5645 
+2026-03-30 21:32:04:INFO:Saving checkpoint at epoch 7 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-30 21:40:38:INFO:TRAIN-(cmcm) (1/8/1)>> loss: 0.5410
+2026-03-30 21:41:28:INFO:VAL-(cmcm) >>
+2026-03-30 21:41:28:INFO:M: >>  acc: 0.6159  weight_F1: 0.6025 
+2026-03-30 21:41:36:INFO:Saving checkpoint at epoch 8 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-30 21:50:10:INFO:TRAIN-(cmcm) (1/9/1)>> loss: 0.5222
+2026-03-30 21:51:00:INFO:VAL-(cmcm) >>
+2026-03-30 21:51:00:INFO:M: >>  acc: 0.5933  weight_F1: 0.5902 
+2026-03-30 21:59:31:INFO:TRAIN-(cmcm) (2/10/1)>> loss: 0.5063
+2026-03-30 22:00:22:INFO:VAL-(cmcm) >>
+2026-03-30 22:00:22:INFO:M: >>  acc: 0.6240  weight_F1: 0.6132 
+2026-03-30 22:00:29:INFO:Saving checkpoint at epoch 10 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-30 22:09:02:INFO:TRAIN-(cmcm) (1/11/1)>> loss: 0.4918
+2026-03-30 22:09:53:INFO:VAL-(cmcm) >>
+2026-03-30 22:09:53:INFO:M: >>  acc: 0.6348  weight_F1: 0.6222 
+2026-03-30 22:10:00:INFO:Saving checkpoint at epoch 11 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-30 22:18:39:INFO:TRAIN-(cmcm) (1/12/1)>> loss: 0.4755
+2026-03-30 22:19:29:INFO:VAL-(cmcm) >>
+2026-03-30 22:19:29:INFO:M: >>  acc: 0.6375  weight_F1: 0.6160 
+2026-03-30 22:28:01:INFO:TRAIN-(cmcm) (2/13/1)>> loss: 0.4630
+2026-03-30 22:28:51:INFO:VAL-(cmcm) >>
+2026-03-30 22:28:51:INFO:M: >>  acc: 0.6357  weight_F1: 0.6231 
+2026-03-30 22:28:59:INFO:Saving checkpoint at epoch 13 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-30 22:37:32:INFO:TRAIN-(cmcm) (1/14/1)>> loss: 0.4468
+2026-03-30 22:38:22:INFO:VAL-(cmcm) >>
+2026-03-30 22:38:22:INFO:M: >>  acc: 0.5888  weight_F1: 0.5865 
+2026-03-30 22:46:52:INFO:TRAIN-(cmcm) (2/15/1)>> loss: 0.4301
+2026-03-30 22:47:43:INFO:VAL-(cmcm) >>
+2026-03-30 22:47:43:INFO:M: >>  acc: 0.6186  weight_F1: 0.6097 
+2026-03-30 22:56:13:INFO:TRAIN-(cmcm) (3/16/1)>> loss: 0.4124
+2026-03-30 22:57:03:INFO:VAL-(cmcm) >>
+2026-03-30 22:57:03:INFO:M: >>  acc: 0.5951  weight_F1: 0.5848 
+2026-03-30 23:05:33:INFO:TRAIN-(cmcm) (4/17/1)>> loss: 0.3917
+2026-03-30 23:06:24:INFO:VAL-(cmcm) >>
+2026-03-30 23:06:24:INFO:M: >>  acc: 0.6005  weight_F1: 0.5904 
+2026-03-30 23:14:53:INFO:TRAIN-(cmcm) (5/18/1)>> loss: 0.3697
+2026-03-30 23:15:44:INFO:VAL-(cmcm) >>
+2026-03-30 23:15:44:INFO:M: >>  acc: 0.6105  weight_F1: 0.6004 
+2026-03-30 23:24:14:INFO:TRAIN-(cmcm) (6/19/1)>> loss: 0.3495
+2026-03-30 23:25:05:INFO:VAL-(cmcm) >>
+2026-03-30 23:25:05:INFO:M: >>  acc: 0.5753  weight_F1: 0.5730 
+2026-03-30 23:33:35:INFO:TRAIN-(cmcm) (7/20/1)>> loss: 0.3248
+2026-03-30 23:34:26:INFO:VAL-(cmcm) >>
+2026-03-30 23:34:26:INFO:M: >>  acc: 0.6069  weight_F1: 0.5971 
+2026-03-30 23:42:57:INFO:TRAIN-(cmcm) (8/21/1)>> loss: 0.3030
+2026-03-30 23:43:47:INFO:VAL-(cmcm) >>
+2026-03-30 23:43:47:INFO:M: >>  acc: 0.5861  weight_F1: 0.5824 
+2026-03-30 23:45:46:INFO:TEST-(cmcm) >>
+2026-03-30 23:45:46:INFO:M: >>  acc: 0.6356  weight_F1: 0.6293 
+2026-03-30 23:45:46:INFO:Results are added to /root/autodl-tmp/results/results/meld-classification-50.csv...
+2026-03-31 00:14:11:INFO:========= 准备训练数据集: meld (classification) =========
+2026-03-31 00:14:11:INFO:Start running cmcm...
+2026-03-31 00:14:11:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'chatglm3', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b', 'gpu_ids': [], 'seeds': [3333], 'use_moe_fusion': False, 'use_gate': False, 'use_moe_lb_loss': False, 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 20, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 3333}>
+2026-03-31 00:14:12:INFO:Find gpu: 0, with memory: 548732928 left!
+2026-03-31 00:14:12:INFO:Let's use the GPU 1 !
+2026-03-31 00:14:13:WARNING:Setting eos_token is not supported, use the default one.
+2026-03-31 00:14:13:WARNING:Setting pad_token is not supported, use the default one.
+2026-03-31 00:14:13:WARNING:Setting unk_token is not supported, use the default one.
+2026-03-31 00:14:17:WARNING:Setting eos_token is not supported, use the default one.
+2026-03-31 00:14:17:WARNING:Setting pad_token is not supported, use the default one.
+2026-03-31 00:14:17:WARNING:Setting unk_token is not supported, use the default one.
+2026-03-31 00:14:18:WARNING:Setting eos_token is not supported, use the default one.
+2026-03-31 00:14:18:WARNING:Setting pad_token is not supported, use the default one.
+2026-03-31 00:14:18:WARNING:Setting unk_token is not supported, use the default one.
+2026-03-31 00:14:21:WARNING:Setting eos_token is not supported, use the default one.
+2026-03-31 00:14:21:WARNING:Setting pad_token is not supported, use the default one.
+2026-03-31 00:14:21:WARNING:Setting unk_token is not supported, use the default one.
+2026-03-31 00:14:25:INFO:trainable params: 2592520 || all params: 6246176520 || trainable%: 0.041505711401188514
+2026-03-31 00:14:25:INFO:Init labels...
+2026-03-31 00:14:25:INFO:Start training...
+2026-03-31 00:22:55:INFO:TRAIN-(cmcm) (1/1/1)>> loss: 3.1538
+2026-03-31 00:23:46:INFO:VAL-(cmcm) >>
+2026-03-31 00:23:46:INFO:M: >>  acc: 0.3959  weight_F1: 0.3522 
+2026-03-31 00:23:53:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 00:32:26:INFO:TRAIN-(cmcm) (1/2/1)>> loss: 0.7470
+2026-03-31 00:33:16:INFO:VAL-(cmcm) >>
+2026-03-31 00:33:16:INFO:M: >>  acc: 0.4022  weight_F1: 0.3669 
+2026-03-31 00:33:24:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 00:41:56:INFO:TRAIN-(cmcm) (1/3/1)>> loss: 0.7263
+2026-03-31 00:42:46:INFO:VAL-(cmcm) >>
+2026-03-31 00:42:46:INFO:M: >>  acc: 0.4193  weight_F1: 0.3637 
+2026-03-31 00:51:15:INFO:TRAIN-(cmcm) (2/4/1)>> loss: 0.7213
+2026-03-31 00:52:05:INFO:VAL-(cmcm) >>
+2026-03-31 00:52:05:INFO:M: >>  acc: 0.4031  weight_F1: 0.3710 
+2026-03-31 00:52:13:INFO:Saving checkpoint at epoch 4 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 01:00:45:INFO:TRAIN-(cmcm) (1/5/1)>> loss: 0.7079
+2026-03-31 01:01:35:INFO:VAL-(cmcm) >>
+2026-03-31 01:01:35:INFO:M: >>  acc: 0.4247  weight_F1: 0.3560 
+2026-03-31 01:10:04:INFO:TRAIN-(cmcm) (2/6/1)>> loss: 0.6965
+2026-03-31 01:10:54:INFO:VAL-(cmcm) >>
+2026-03-31 01:10:54:INFO:M: >>  acc: 0.4184  weight_F1: 0.3718 
+2026-03-31 01:11:02:INFO:Saving checkpoint at epoch 6 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 01:19:33:INFO:TRAIN-(cmcm) (1/7/1)>> loss: 0.6907
+2026-03-31 01:20:24:INFO:VAL-(cmcm) >>
+2026-03-31 01:20:24:INFO:M: >>  acc: 0.4545  weight_F1: 0.3600 
+2026-03-31 01:28:53:INFO:TRAIN-(cmcm) (2/8/1)>> loss: 0.6810
+2026-03-31 01:29:43:INFO:VAL-(cmcm) >>
+2026-03-31 01:29:43:INFO:M: >>  acc: 0.4463  weight_F1: 0.4040 
+2026-03-31 01:29:51:INFO:Saving checkpoint at epoch 8 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 01:38:23:INFO:TRAIN-(cmcm) (1/9/1)>> loss: 0.6740
+2026-03-31 01:39:13:INFO:VAL-(cmcm) >>
+2026-03-31 01:39:13:INFO:M: >>  acc: 0.4599  weight_F1: 0.4195 
+2026-03-31 01:39:20:INFO:Saving checkpoint at epoch 9 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 01:47:52:INFO:TRAIN-(cmcm) (1/10/1)>> loss: 0.6651
+2026-03-31 01:48:43:INFO:VAL-(cmcm) >>
+2026-03-31 01:48:43:INFO:M: >>  acc: 0.4824  weight_F1: 0.4395 
+2026-03-31 01:48:50:INFO:Saving checkpoint at epoch 10 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 01:57:21:INFO:TRAIN-(cmcm) (1/11/1)>> loss: 0.6557
+2026-03-31 01:58:12:INFO:VAL-(cmcm) >>
+2026-03-31 01:58:12:INFO:M: >>  acc: 0.4554  weight_F1: 0.3994 
+2026-03-31 02:06:41:INFO:TRAIN-(cmcm) (2/12/1)>> loss: 0.6517
+2026-03-31 02:07:31:INFO:VAL-(cmcm) >>
+2026-03-31 02:07:31:INFO:M: >>  acc: 0.4905  weight_F1: 0.4327 
+2026-03-31 02:16:01:INFO:TRAIN-(cmcm) (3/13/1)>> loss: 0.6398
+2026-03-31 02:16:51:INFO:VAL-(cmcm) >>
+2026-03-31 02:16:51:INFO:M: >>  acc: 0.4689  weight_F1: 0.4506 
+2026-03-31 02:16:58:INFO:Saving checkpoint at epoch 13 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 02:25:30:INFO:TRAIN-(cmcm) (1/14/1)>> loss: 0.6295
+2026-03-31 02:26:21:INFO:VAL-(cmcm) >>
+2026-03-31 02:26:21:INFO:M: >>  acc: 0.4653  weight_F1: 0.4521 
+2026-03-31 02:26:28:INFO:Saving checkpoint at epoch 14 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 02:35:00:INFO:TRAIN-(cmcm) (1/15/1)>> loss: 0.6171
+2026-03-31 02:35:50:INFO:VAL-(cmcm) >>
+2026-03-31 02:35:50:INFO:M: >>  acc: 0.4797  weight_F1: 0.4596 
+2026-03-31 02:35:57:INFO:Saving checkpoint at epoch 15 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 02:44:29:INFO:TRAIN-(cmcm) (1/16/1)>> loss: 0.5970
+2026-03-31 02:45:19:INFO:VAL-(cmcm) >>
+2026-03-31 02:45:19:INFO:M: >>  acc: 0.4689  weight_F1: 0.4691 
+2026-03-31 02:45:27:INFO:Saving checkpoint at epoch 16 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 02:53:59:INFO:TRAIN-(cmcm) (1/17/1)>> loss: 0.5692
+2026-03-31 02:54:49:INFO:VAL-(cmcm) >>
+2026-03-31 02:54:49:INFO:M: >>  acc: 0.5050  weight_F1: 0.5035 
+2026-03-31 02:54:56:INFO:Saving checkpoint at epoch 17 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 03:03:29:INFO:TRAIN-(cmcm) (1/18/1)>> loss: 0.5401
+2026-03-31 03:04:19:INFO:VAL-(cmcm) >>
+2026-03-31 03:04:19:INFO:M: >>  acc: 0.5564  weight_F1: 0.5451 
+2026-03-31 03:04:26:INFO:Saving checkpoint at epoch 18 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 03:12:58:INFO:TRAIN-(cmcm) (1/19/1)>> loss: 0.5182
+2026-03-31 03:13:48:INFO:VAL-(cmcm) >>
+2026-03-31 03:13:48:INFO:M: >>  acc: 0.5654  weight_F1: 0.5528 
+2026-03-31 03:13:56:INFO:Saving checkpoint at epoch 19 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 03:22:28:INFO:TRAIN-(cmcm) (1/20/1)>> loss: 0.4970
+2026-03-31 03:23:18:INFO:VAL-(cmcm) >>
+2026-03-31 03:23:18:INFO:M: >>  acc: 0.5591  weight_F1: 0.5405 
+2026-03-31 03:31:48:INFO:TRAIN-(cmcm) (2/21/1)>> loss: 0.4775
+2026-03-31 03:32:38:INFO:VAL-(cmcm) >>
+2026-03-31 03:32:38:INFO:M: >>  acc: 0.5690  weight_F1: 0.5582 
+2026-03-31 03:32:45:INFO:Saving checkpoint at epoch 21 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 10:01:56:INFO:========= 准备训练数据集: meld (classification) =========
+2026-03-31 10:01:56:INFO:Start running cmcm...
+2026-03-31 10:01:56:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'chatglm3', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [], 'seeds': [3333], 'use_moe_fusion': False, 'use_gate': False, 'use_moe_lb_loss': False, 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 20, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 3333}>
+2026-03-31 10:01:56:INFO:Find gpu: 0, with memory: 548732928 left!
+2026-03-31 10:01:56:INFO:Let's use the GPU 1 !
+2026-03-31 10:02:25:INFO:trainable params: 2592520 || all params: 6246176520 || trainable%: 0.041505711401188514
+2026-03-31 10:02:26:INFO:Init labels...
+2026-03-31 10:02:26:INFO:Start training...
+2026-03-31 10:10:58:INFO:TRAIN-(cmcm) (1/1/1)>> loss: 1.9701
+2026-03-31 10:11:49:INFO:VAL-(cmcm) >>
+2026-03-31 10:11:49:INFO:M: >>  acc: 0.4292  weight_F1: 0.2822 
+2026-03-31 10:11:57:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 10:20:31:INFO:TRAIN-(cmcm) (1/2/1)>> loss: 0.7384
+2026-03-31 10:21:22:INFO:VAL-(cmcm) >>
+2026-03-31 10:21:22:INFO:M: >>  acc: 0.4364  weight_F1: 0.3198 
+2026-03-31 10:21:29:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 10:30:04:INFO:TRAIN-(cmcm) (1/3/1)>> loss: 0.7037
+2026-03-31 10:30:54:INFO:VAL-(cmcm) >>
+2026-03-31 10:30:54:INFO:M: >>  acc: 0.4815  weight_F1: 0.4225 
+2026-03-31 10:31:02:INFO:Saving checkpoint at epoch 3 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 10:39:36:INFO:TRAIN-(cmcm) (1/4/1)>> loss: 0.6374
+2026-03-31 10:40:26:INFO:VAL-(cmcm) >>
+2026-03-31 10:40:26:INFO:M: >>  acc: 0.5888  weight_F1: 0.5776 
+2026-03-31 10:40:34:INFO:Saving checkpoint at epoch 4 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 10:49:08:INFO:TRAIN-(cmcm) (1/5/1)>> loss: 0.5537
+2026-03-31 10:49:59:INFO:VAL-(cmcm) >>
+2026-03-31 10:49:59:INFO:M: >>  acc: 0.6168  weight_F1: 0.6027 
+2026-03-31 10:50:06:INFO:Saving checkpoint at epoch 5 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 10:58:40:INFO:TRAIN-(cmcm) (1/6/1)>> loss: 0.5230
+2026-03-31 10:59:31:INFO:VAL-(cmcm) >>
+2026-03-31 10:59:31:INFO:M: >>  acc: 0.6420  weight_F1: 0.6226 
+2026-03-31 10:59:38:INFO:Saving checkpoint at epoch 6 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 11:08:12:INFO:TRAIN-(cmcm) (1/7/1)>> loss: 0.5068
+2026-03-31 11:09:03:INFO:VAL-(cmcm) >>
+2026-03-31 11:09:03:INFO:M: >>  acc: 0.6546  weight_F1: 0.6294 
+2026-03-31 11:09:11:INFO:Saving checkpoint at epoch 7 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 11:17:44:INFO:TRAIN-(cmcm) (1/8/1)>> loss: 0.4984
+2026-03-31 11:18:35:INFO:VAL-(cmcm) >>
+2026-03-31 11:18:35:INFO:M: >>  acc: 0.6546  weight_F1: 0.6406 
+2026-03-31 11:18:42:INFO:Saving checkpoint at epoch 8 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 11:27:17:INFO:TRAIN-(cmcm) (1/9/1)>> loss: 0.4910
+2026-03-31 11:28:08:INFO:VAL-(cmcm) >>
+2026-03-31 11:28:08:INFO:M: >>  acc: 0.6610  weight_F1: 0.6502 
+2026-03-31 11:28:15:INFO:Saving checkpoint at epoch 9 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 11:36:49:INFO:TRAIN-(cmcm) (1/10/1)>> loss: 0.4818
+2026-03-31 11:37:39:INFO:VAL-(cmcm) >>
+2026-03-31 11:37:39:INFO:M: >>  acc: 0.6592  weight_F1: 0.6426 
+2026-03-31 11:46:11:INFO:TRAIN-(cmcm) (2/11/1)>> loss: 0.4774
+2026-03-31 11:47:02:INFO:VAL-(cmcm) >>
+2026-03-31 11:47:02:INFO:M: >>  acc: 0.6483  weight_F1: 0.6389 
+2026-03-31 11:55:33:INFO:TRAIN-(cmcm) (3/12/1)>> loss: 0.4738
+2026-03-31 11:56:23:INFO:VAL-(cmcm) >>
+2026-03-31 11:56:23:INFO:M: >>  acc: 0.6438  weight_F1: 0.6207 
+2026-03-31 12:04:55:INFO:TRAIN-(cmcm) (4/13/1)>> loss: 0.4681
+2026-03-31 12:05:46:INFO:VAL-(cmcm) >>
+2026-03-31 12:05:46:INFO:M: >>  acc: 0.6601  weight_F1: 0.6425 
+2026-03-31 12:14:17:INFO:TRAIN-(cmcm) (5/14/1)>> loss: 0.4633
+2026-03-31 12:15:08:INFO:VAL-(cmcm) >>
+2026-03-31 12:15:08:INFO:M: >>  acc: 0.6528  weight_F1: 0.6335 
+2026-03-31 12:23:39:INFO:TRAIN-(cmcm) (6/15/1)>> loss: 0.4586
+2026-03-31 12:24:30:INFO:VAL-(cmcm) >>
+2026-03-31 12:24:30:INFO:M: >>  acc: 0.6637  weight_F1: 0.6543 
+2026-03-31 12:24:37:INFO:Saving checkpoint at epoch 15 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 12:33:12:INFO:TRAIN-(cmcm) (1/16/1)>> loss: 0.4541
+2026-03-31 12:34:02:INFO:VAL-(cmcm) >>
+2026-03-31 12:34:02:INFO:M: >>  acc: 0.6583  weight_F1: 0.6419 
+2026-03-31 12:42:34:INFO:TRAIN-(cmcm) (2/17/1)>> loss: 0.4508
+2026-03-31 12:43:24:INFO:VAL-(cmcm) >>
+2026-03-31 12:43:24:INFO:M: >>  acc: 0.6700  weight_F1: 0.6569 
+2026-03-31 12:43:32:INFO:Saving checkpoint at epoch 17 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 12:52:06:INFO:TRAIN-(cmcm) (1/18/1)>> loss: 0.4451
+2026-03-31 12:52:57:INFO:VAL-(cmcm) >>
+2026-03-31 12:52:57:INFO:M: >>  acc: 0.6727  weight_F1: 0.6521 
+2026-03-31 13:01:29:INFO:TRAIN-(cmcm) (2/19/1)>> loss: 0.4407
+2026-03-31 13:02:20:INFO:VAL-(cmcm) >>
+2026-03-31 13:02:20:INFO:M: >>  acc: 0.6628  weight_F1: 0.6463 
+2026-03-31 13:10:52:INFO:TRAIN-(cmcm) (3/20/1)>> loss: 0.4366
+2026-03-31 13:11:42:INFO:VAL-(cmcm) >>
+2026-03-31 13:11:42:INFO:M: >>  acc: 0.6691  weight_F1: 0.6533 
+2026-03-31 13:20:14:INFO:TRAIN-(cmcm) (4/21/1)>> loss: 0.4306
+2026-03-31 13:21:05:INFO:VAL-(cmcm) >>
+2026-03-31 13:21:05:INFO:M: >>  acc: 0.6619  weight_F1: 0.6477 
+2026-03-31 13:29:37:INFO:TRAIN-(cmcm) (5/22/1)>> loss: 0.4240
+2026-03-31 13:30:28:INFO:VAL-(cmcm) >>
+2026-03-31 13:30:28:INFO:M: >>  acc: 0.6546  weight_F1: 0.6368 
+2026-03-31 13:39:00:INFO:TRAIN-(cmcm) (6/23/1)>> loss: 0.4194
+2026-03-31 13:39:51:INFO:VAL-(cmcm) >>
+2026-03-31 13:39:51:INFO:M: >>  acc: 0.6754  weight_F1: 0.6627 
+2026-03-31 13:39:58:INFO:Saving checkpoint at epoch 23 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-31 13:48:39:INFO:TRAIN-(cmcm) (1/24/1)>> loss: 0.4109
+2026-03-31 13:49:30:INFO:VAL-(cmcm) >>
+2026-03-31 13:49:30:INFO:M: >>  acc: 0.6528  weight_F1: 0.6345 
+2026-03-31 13:58:04:INFO:TRAIN-(cmcm) (2/25/1)>> loss: 0.4048
+2026-03-31 13:58:55:INFO:VAL-(cmcm) >>
+2026-03-31 13:58:55:INFO:M: >>  acc: 0.6546  weight_F1: 0.6425 
+2026-03-31 14:07:31:INFO:TRAIN-(cmcm) (3/26/1)>> loss: 0.3986
+2026-03-31 14:08:22:INFO:VAL-(cmcm) >>
+2026-03-31 14:08:22:INFO:M: >>  acc: 0.6583  weight_F1: 0.6485 
+2026-03-31 14:16:57:INFO:TRAIN-(cmcm) (4/27/1)>> loss: 0.3911
+2026-03-31 14:17:48:INFO:VAL-(cmcm) >>
+2026-03-31 14:17:48:INFO:M: >>  acc: 0.6537  weight_F1: 0.6417 
+2026-03-31 14:26:22:INFO:TRAIN-(cmcm) (5/28/1)>> loss: 0.3850
+2026-03-31 14:27:13:INFO:VAL-(cmcm) >>
+2026-03-31 14:27:13:INFO:M: >>  acc: 0.6429  weight_F1: 0.6364 
+2026-03-31 14:35:47:INFO:TRAIN-(cmcm) (6/29/1)>> loss: 0.3771
+2026-03-31 14:36:37:INFO:VAL-(cmcm) >>
+2026-03-31 14:36:37:INFO:M: >>  acc: 0.6402  weight_F1: 0.6265 
+2026-03-31 14:45:10:INFO:TRAIN-(cmcm) (7/30/1)>> loss: 0.3679
+2026-03-31 14:46:01:INFO:VAL-(cmcm) >>
+2026-03-31 14:46:01:INFO:M: >>  acc: 0.6447  weight_F1: 0.6330 
+2026-03-31 14:54:39:INFO:TRAIN-(cmcm) (8/31/1)>> loss: 0.3592
+2026-03-31 14:55:30:INFO:VAL-(cmcm) >>
+2026-03-31 14:55:30:INFO:M: >>  acc: 0.6402  weight_F1: 0.6270 
+2026-03-31 14:57:29:INFO:TEST-(cmcm) >>
+2026-03-31 14:57:29:INFO:M: >>  acc: 0.6648  weight_F1: 0.6529 
+2026-03-31 14:57:29:INFO:Results are added to /root/autodl-tmp/results/results/meld-classification-50.csv...

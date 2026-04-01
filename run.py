@@ -38,7 +38,7 @@ def run(args):
     if not os.path.exists(args.model_save_dir):
         os.makedirs(args.model_save_dir)
     args.model_save_path = os.path.join(args.model_save_dir,\
-                                        f'{args.modelName}-{args.datasetName}-{args.train_mode}.pth')
+                                        f'{args.modelName}-{args.datasetName}-{args.train_mode}-{args.timestamp}.pth')
     
     if len(args.gpu_ids) == 0 and torch.cuda.is_available():
         # load free-most gpu
@@ -143,7 +143,7 @@ def run_normal(args):
 
         criterions = list(model_results[0].keys())
         # load other results
-        save_path = os.path.join(args.res_save_dir, f'{args.datasetName}-{args.train_mode}-{args.warm_up_epochs}.csv')
+        save_path = os.path.join(args.res_save_dir, f'{args.datasetName}-{args.train_mode}-{args.warm_up_epochs}-{args.timestamp}.csv')
         if not os.path.exists(args.res_save_dir):
             os.makedirs(args.res_save_dir)
         if os.path.exists(save_path):
@@ -228,6 +228,7 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+    args.timestamp = time.strftime("%Y%m%d_%H%M%S")
     
     # Parse list arguments
     if args.gpu_ids:

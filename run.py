@@ -220,9 +220,23 @@ def parse_args():
                         help='random seeds (e.g. 1111,2222)')
                         
     # Ablation interfaces for MoE
-    parser.add_argument('--use_moe_fusion', action='store_true', help='whether to use MoE fusion strategy')
-    parser.add_argument('--use_gate', action='store_true', help='whether to use bias-aware adaptive gating')
+    parser.add_argument('--use_moe_fusion', action='store_true', help='enable Dual-Branch MoE fusion')
+    parser.add_argument('--use_gate', action='store_true', help='Meta-Gate uses cosine bias from audio-video similarity')
     parser.add_argument('--use_moe_lb_loss', action='store_true', help='enable load-balance loss for MoE routing')
+    parser.add_argument('--num_global_experts', type=int, default=3, help='number of Global MoE experts')
+    parser.add_argument('--num_local_experts', type=int, default=3, help='number of Local MoE experts')
+    parser.add_argument('--expert_bottleneck', type=int, default=64, help='bottleneck dim for Local MoE experts')
+    
+    # DiffLoss
+    parser.add_argument('--use_diff_loss', action='store_true', help='enable DiffLoss between Global and Local branches')
+    parser.add_argument('--use_expert_diff_loss', action='store_true', help='enable DiffLoss between experts within each branch')
+    parser.add_argument('--diff_loss_weight', type=float, default=0.01, help='weight for DiffLoss')
+    
+    # NCE Loss
+    parser.add_argument('--use_nce_loss', action='store_true', help='enable cross-modal NCE (CPC) loss')
+    parser.add_argument('--nce_hidden_dim', type=int, default=32, help='hidden dim for NCE CPC module')
+    parser.add_argument('--nce_pred_steps', type=int, default=2, help='prediction steps for NCE CPC')
+    parser.add_argument('--nce_weight', type=float, default=0.05, help='weight for NCE loss')
                         
     return parser.parse_args()
 

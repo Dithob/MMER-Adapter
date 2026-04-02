@@ -23,7 +23,7 @@ from itertools import chain
 
 logger = logging.getLogger('MSA')
 
-class CMCM():
+class HMMEM():
     def __init__(self, args):
 
         self.args = args

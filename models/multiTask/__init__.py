@@ -1,3 +1,3 @@
-from .CMCM import CMCM
+from .HMMEM import HMMEM
 
-__all__ = ['CMCM']
+__all__ = ['HMMEM']

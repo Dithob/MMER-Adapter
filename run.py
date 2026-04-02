@@ -197,8 +197,8 @@ def parse_args():
                         help='tune parameters ?')
     parser.add_argument('--train_mode', type=str, default="regression",
                         help='regression / classification')
-    parser.add_argument('--modelName', type=str, default='cmcm',
-                        help='support CMCM')
+    parser.add_argument('--modelName', type=str, default='hmmem',
+                        help='support HMMEM')
     parser.add_argument('--model_type', type=str, default='chatglm3',
                         choices=['chatglm3', 'qwen', 'qwen3.5', 'llama2', 'deepseek'],
                         help='type of language model: chatglm3, qwen, qwen3.5, llama2, or deepseek')

@@ -19,13 +19,13 @@ MSE-Adapter-main/
 │   ├── AMIO.py               # 模型包装器
 │   ├── ChatGLM3/             # ChatGLM3模型文件
 │   ├── multiTask/            # 多任务模型
-│   │   └── CMCM.py          # 核心多模态融合模型
+│   │   └── HMMEM.py          # 核心多模态融合模型
 │   └── subNets/             # 子网络
 │       └── Textmodel.py      # 统一的语言模型加载器
 ├── trains/                    # 训练器
 │   ├── ATIO.py               # 训练器包装器
 │   └── multiTask/            # 多任务训练器
-│       └── CMCM.py          # CMCM训练器
+│       └── HMMEM.py          # HMMEM训练器
 ├── utils/                     # 工具函数
 │   ├── functions.py          # 辅助函数
 │   └── metricsTop.py        # 评估指标
@@ -99,7 +99,7 @@ python run.py --model_type llama2 --datasetName mosei --pretrain_LM /path/to/lla
 - `--datasetName`: 数据集名称，支持 `mosei`、`simsv2`、`meld`、`cherma`、`iemocap4`、`iemocap6`
 - `--pretrain_LM`: 预训练语言模型路径
 - `--train_mode`: 训练模式，`regression`（回归）或 `classification`（分类）
-- `--modelName`: 模型名称，目前支持 `cmcm`
+- `--modelName`: 模型名称，目前支持 `hmmem`
 - `--root_dataset_dir`: 数据集根目录
 - `--gpu_ids`: 使用的GPU ID列表
 - `--seeds`: 随机种子列表
@@ -162,7 +162,7 @@ python run.py \
 
 ## 模型架构
 
-CMCM模型包含以下组件：
+HMMEM模型包含以下组件：
 
 1. **文本编码器**: 使用预训练语言模型（ChatGLM3/Qwen/Llama2/DeepSeek）
 2. **音频编码器**: LSTM网络 (支持时序特征提取)

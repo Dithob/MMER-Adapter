@@ -72,14 +72,6 @@ class HMMEM():
         saved_labels = {}
         # init labels
         logger.info("Init labels...")
-        # with tqdm(dataloader['train']) as td:
-        #     for batch_data in td:
-        #         if self.args.train_mode == 'regression':
-        #             labels_m = batch_data['labels']['M'].view(-1).to(self.args.device)
-        #         else:
-        #             labels_m = batch_data['labels']['M']
-        #         indexes = batch_data['index'].view(-1)
-        #         # self.init_labels(indexes, labels_m)
 
         # initilize results
         logger.info("Start training...")
@@ -108,7 +100,6 @@ class HMMEM():
                         optimizer.zero_grad()      #在训练1个batch之后停止梯度清0，当新的epoch来临时才清0
                     left_epochs -= 1                #这么做相当于把batch_size扩大为（N-1）*batch_size，其中N为一个epoch中的batch数
 
-                    # optimizer.zero_grad()
                     vision = batch_data['vision'].to(self.args.device)
                     audio = batch_data['audio'].to(self.args.device)
                     text = batch_data['text'].to(self.args.device)
@@ -153,12 +144,11 @@ class HMMEM():
                     # update
                     scaler.step(optimizer)
                     scaler.update()
-            # scheduler.step()   #每个epoch衰减一次学习率
+            
             train_loss = train_loss / len(dataloader['train'])
 
             logger.info("TRAIN-(%s) (%d/%d/%d)>> loss: %.4f" % (self.args.modelName, \
                         epochs-best_epoch, epochs, self.args.cur_time, train_loss))
-            # print(optimizer.state_dict()['param_groups'][0]['lr'])
             losses.append(train_loss)
 
             # validation
@@ -166,37 +156,25 @@ class HMMEM():
             if epochs >= 1:         #前3epochs不做eval
                 val_results = self.do_test(model, dataloader['valid'], mode="VAL")
                 cur_valid = val_results[self.args.KeyEval]
-                # valid_losses.append(val_results['Loss'])
-                # valid_F1.append(cur_valid)
                 # save best model
                 isBetter = cur_valid <= (best_valid - 1e-6) if min_or_max == 'min' else cur_valid >= (best_valid + 1e-6)
                 if isBetter:
                     best_valid, best_epoch = cur_valid, epochs
                     # save model
-                    # torch.save(model.cpu().state_dict(), self.args.model_save_path)
                     self.save_model(model, epochs, self.args.model_save_path)
                     model.to(self.args.device)
 
-                # # save labels
-                # if self.args.save_labels:
-                #     tmp_save = {k: v.cpu().numpy() for k, v in self.label_map.items()}
-                #     tmp_save['ids'] = ids
-                #     saved_labels[epochs] = tmp_save
                 # early stop
                 if epochs - best_epoch >= self.args.early_stop:     #如果比best_epoch再过了early_stop轮之后还没有出现新的best_epoch，就停止训练
                     if self.args.save_labels:
                         with open(os.path.join(self.args.res_save_dir, f'{self.args.modelName}-{self.args.datasetName}-labels.pkl'), 'wb') as df:
                             plk.dump(saved_labels, df, protocol=4)
-                    # self.loss_plt(losses,CPC_Losses)
-                    # self.lr_plt(lr)
                     return
 
     def do_test(self, model, dataloader, mode="VAL"):
         model.eval()
         y_pred = {'M': [], 'T': [], 'A': [], 'V': []}
         y_true = {'M': [], 'T': [], 'A': [], 'V': []}
-        # eval_loss = 0.0
-        # criterion = nn.L1Loss()
         if self.args.train_mode == 'regression':
             with torch.no_grad():
                 with tqdm(dataloader) as td:
@@ -214,17 +192,13 @@ class HMMEM():
                         predict_label = torch.Tensor(outputs).to(self.args.device)
 
                         labels_m = batch_data['labels']['M'].view(-1).to(self.args.device)
-                        # loss = self.l1_loss(predict_label, labels_m)
-                        # eval_loss += loss.item()
+                        
                         y_pred['M'].append(predict_label.cpu())
                         y_true['M'].append(labels_m.cpu())
             pred, true = torch.cat(y_pred['M']), torch.cat(y_true['M'])
-            # print(pred)
-            # eval_loss = eval_loss / len(dataloader)
             logger.info(mode + "-(%s)" % self.args.modelName + " >>" )
             eval_results = self.metrics(pred, true)
             logger.info('M: >> ' + dict_to_str(eval_results))
-            # eval_results['Loss'] = eval_loss
         else:
             # train_mode == 'classification'
             with torch.no_grad():
@@ -241,15 +215,14 @@ class HMMEM():
                             outputs = model.generate((text, text_lengths), (audio, audio_lengths),
                                                      (vision, vision_lengths))
 
-                        # predict_label = torch.Tensor(outputs).to(self.args.device)
                         predict_label = outputs
                         labels_m = batch_data['labels']['M']
-                        # y_pred['M'].append(predict_label.cpu().numpy())
+                        
                         y_pred['M'].append(predict_label)
                         y_true['M'].append(labels_m)
-            # pred, true = torch.cat(y_pred['M']), torch.cat(y_pred['M'])
+            
             pred, true = list(chain(*y_pred['M'])), list(chain(*y_true['M']))
-            # print(pred)
+            
             eval_results = self.metrics(pred, true)
             logger.info(mode + "-(%s)" % self.args.modelName + " >>")
             logger.info('M: >> ' + dict_to_str(eval_results))
@@ -281,65 +254,3 @@ class HMMEM():
                 del state_dict[k]
         logging.info("Saving checkpoint at epoch {} to {}.".format(epoch, save_path))
         torch.save(state_dict, save_path)
-
-    # def loss_plt(self,loss,CPC_Losses):
-    #     matplotlib.rcParams['font.family'] = 'serif'  # 设置字体族
-    #     matplotlib.rcParams['font.serif'] = ['Arial']  # 选择字体
-    #     logging.getLogger('matplotlib').setLevel(logging.ERROR)
-    #     # train_x = range(len(loss))
-    #     # train_y = loss
-    #     # kl_x = range(len(KL_losses))
-    #     # kl_y = KL_losses
-    #     #
-    #     # save_path = os.path.join(self.args.res_save_dir, f'{self.args.datasetName}-{self.args.train_mode}.jpg')
-    #     # fig, axs = plt.subplots(2, 1)
-    #     #
-    #     # # Plot Train Loss
-    #     # axs[0].plot(train_x, train_y, label='Train')
-    #     # axs[0].set_ylabel('Loss')
-    #     # axs[0].set_ylim([0, max(train_y) * 1.2])
-    #     # axs[0].set_yticks(np.arange(0, max(train_y) + 0.1, (max(train_y) - min(train_y)) / 5))
-    #     # axs[0].legend(loc='upper right')
-    #     #
-    #     # # Plot KL Loss with Log Scale
-    #     # axs[1].plot(kl_x, kl_y, label='KL_losses')
-    #     # axs[1].set_yscale('log')  # Set log scale for KL Loss
-    #     # axs[1].set_ylabel('KL-Loss')
-    #     # axs[1].set_ylim([min(kl_y) - 0.05, max(kl_y) + 0.05])
-    #     # axs[1].set_yticks(np.arange(min(kl_y), max(kl_y) + 0.01, (max(kl_y) - min(kl_y)) / 5))
-    #     # axs[1].legend(loc='upper right')
-    #     #
-    #     # plt.xlabel('epoch')
-    #     # plt.subplots_adjust(hspace=0.5)
-    #     # plt.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
-    #     # plt.close()
-    #     # plt.show()
-    #     kl_x = range(len(CPC_Losses))
-    #     kl_y = CPC_Losses
-    # 
-    #     save_path = os.path.join(self.args.res_save_dir, f'{self.args.datasetName}-{self.args.train_mode}_CPC_Losses.jpg')
-    #     fig, ax = plt.subplots(figsize=(8, 6))  # 调整图的大小
-    # 
-    #     # Plot KL Loss with Log Scale
-    #     ax.plot(kl_x, kl_y, label='KL_losses')
-    #     ax.set_yscale('log')  # 设置 KL Loss 的纵坐标为对数坐标
-    #     ax.set_ylabel('KL-Loss')
-    #     ax.set_ylim([min(kl_y) - 0.05, max(kl_y) + 0.05])
-    # 
-    #     # 使用自动设置刻度
-    #     ax.yaxis.set_major_locator(plt.AutoLocator())
-    # 
-    #     ax.legend(loc='upper right')
-    # 
-    #     plt.xlabel('epoch')
-    #     plt.tight_layout()  # 自动调整布局
-    #     plt.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
-    #     plt.close()
-    #     plt.show()
-
-    # def lr_plt(self,lr):
-    #     plt.plot(np.arange(len(lr)), lr)
-    #     plt.xlabel('Step')
-    #     plt.ylabel('Learning Rate')
-    #     plt.title('Warm-up Learning Rate Schedule')
-    #     plt.show()

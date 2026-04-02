@@ -7,7 +7,7 @@ class ConfigClassification():
     def __init__(self, args):
         # hyper parameters for models
         HYPER_MODEL_MAP = {
-            'cmcm': self.__CMCM
+            'hmmem': self.__HMMEM
         }
         # hyper parameters for datasets
         self.root_dataset_dir = args.root_dataset_dir
@@ -100,7 +100,7 @@ class ConfigClassification():
         }
         return tmp
 
-    def __CMCM(self):
+    def __HMMEM(self):
         tmp = {
             'commonParas':{
                 'need_data_aligned': False,

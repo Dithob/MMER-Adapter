@@ -15,7 +15,7 @@ __all__ = ['ATIO']
 class ATIO():
     def __init__(self):
         self.TRAIN_MAP = {
-           'cmcm': CMCM,
+           'hmmem': HMMEM,
         }
     
     def getTrain(self, args):

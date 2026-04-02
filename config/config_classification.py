@@ -55,7 +55,7 @@ class ConfigClassification():
         self.args = Storage(dict(vars(args),
                             **dataArgs,
                             **commonArgs,
-                            **dataset_paras,
+                            **HYPER_MODEL_MAP[model_name]()['datasetParas'][dataset_name],
                             ))
     
     def __datasetCommonParams(self):
@@ -63,7 +63,7 @@ class ConfigClassification():
         tmp = {
             'iemocap':{
                 'unaligned': {
-                    'dataPath': os.path.join(root_dataset_dir, 'IEMOCAP', 'iemocap_data_0610.pkl'),
+                    'dataPath': os.path.join(root_dataset_dir, 'IEMOCAP'),
                     'seq_lens': (84, 157, 32),
                     # (text, audio, video) text_dim=0 means auto-detect from LLM hidden_size
                     'feature_dims': (0, 64, 64),

@@ -12,7 +12,7 @@ import torch.nn.functional as F
 import torch
 import torch.nn as nn
 from torch import optim
-from torch.cuda.amp import autocast, GradScaler
+from torch.amp import autocast, GradScaler
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from utils.functions import dict_to_str
 from utils.metricsTop import MetricsTop
@@ -129,9 +129,12 @@ class CMCM():
                         vision_lengths = batch_data['vision_lengths'].to(self.args.device)
 
                     # forward
-                    with autocast():
+                    with autocast('cuda'):
                         output= model(labels_m, (text,text_lengths), (audio, audio_lengths), (vision, vision_lengths))
                         loss = output['Loss']
+                        # Add optional MoE load-balance loss
+                        if 'MoE_LB_Loss' in output:
+                            loss = loss + output['MoE_LB_Loss']
 
 
                     # backward
@@ -204,7 +207,7 @@ class CMCM():
                             text_lengths = batch_data['text_lengths'].to(self.args.device)
                             audio_lengths = batch_data['audio_lengths'].to(self.args.device)
                             vision_lengths = batch_data['vision_lengths'].to(self.args.device)
-                        with autocast():
+                        with autocast('cuda'):
                             outputs = model.generate((text,text_lengths), (audio, audio_lengths), (vision, vision_lengths))
 
                         predict_label = torch.Tensor(outputs).to(self.args.device)
@@ -233,7 +236,7 @@ class CMCM():
                             text_lengths = batch_data['text_lengths'].to(self.args.device)
                             audio_lengths = batch_data['audio_lengths'].to(self.args.device)
                             vision_lengths = batch_data['vision_lengths'].to(self.args.device)
-                        with autocast():
+                        with autocast('cuda'):
                             outputs = model.generate((text, text_lengths), (audio, audio_lengths),
                                                      (vision, vision_lengths))
 

@@ -33,7 +33,8 @@ MSE-Adapter-main/
 ├── results/                   # 结果保存目录
 │   ├── models/               # 模型保存
 │   └── results/             # 实验结果
-└── run.py                    # 主运行脚本
+├── run.py                    # 主运行脚本
+└── test_load.py              # 数据加载测试脚本
 ```
 
 ## 重构亮点
@@ -65,12 +66,14 @@ python run.py --model_type llama2    # 使用Llama2-7B
 ### 4. 统一的配置系统
 
 配置系统支持：
+
 - 回归任务：MOSEI、SIMSV2
-- 分类任务：MELD、CHERMA
+- 分类任务：MELD、CHERMA、IEMOCAP（4分类和6分类）
 
 ### 5. 消除代码冗余
 
 通过重构，我们：
+
 - 将三个独立的项目合并为一个统一框架
 - 提取公共代码，减少重复
 - 统一接口，便于维护和扩展
@@ -92,92 +95,86 @@ python run.py --model_type llama2 --datasetName mosei --pretrain_LM /path/to/lla
 
 ### 参数说明
 
-- `--model_type`: 语言模型类型，可选 `chatglm3`、`qwen`、`llama2`
-- `--datasetName`: 数据集名称，支持 `mosei`、`simsv2`、`meld`、`cherma`
+- `--model_type`: 语言模型类型，可选 `chatglm3`、`qwen`、`qwen3.5`、`llama2`、`deepseek`
+- `--datasetName`: 数据集名称，支持 `mosei`、`simsv2`、`meld`、`cherma`、`iemocap4`、`iemocap6`
 - `--pretrain_LM`: 预训练语言模型路径
 - `--train_mode`: 训练模式，`regression`（回归）或 `classification`（分类）
 - `--modelName`: 模型名称，目前支持 `cmcm`
 - `--root_dataset_dir`: 数据集根目录
 - `--gpu_ids`: 使用的GPU ID列表
 - `--seeds`: 随机种子列表
+- `--use_moe_fusion`: 是否启用MoE融合机制，默认为False
+- `--use_gate`: 是否启用偏差感知门控机制，默认为False
 
 ### 示例
 
 ```bash
-# 在MOSEI数据集上训练ChatGLM3-6B模型
-python run.py \
-    --model_type chatglm3 \
-    --datasetName mosei \
-    --pretrain_LM /root/autodl-tmp/datasets/THUDM/chatglm3-6b-base/ \
-    --gpu_ids [0] \
-    --seeds [1111, 2222, 3333, 4444, 5555]
+# 在MOSEI数据集上训练ChatGLM3-6B模型 (默认参数)
+python run.py --model_type chatglm3 --datasetName mosei
 
-# 在SIMSV2数据集上训练Qwen-1.8B模型
-python run.py \
-    --model_type qwen \
-    --datasetName simsv2 \
-    --pretrain_LM /root/autodl-tmp/datasets/Qwen/Qwen-1_8B/ \
-    --gpu_ids [1] \
-    --seeds [1111, 2222, 3333, 4444, 5555]
+# 在SIMSV2数据集上训练Qwen-1.8B模型，并指定使用 GPU 1
+python run.py --model_type qwen --datasetName simsv2 --gpu_ids 1
 
 # 在MELD数据集上训练ChatGLM3-6B模型
+python run.py --model_type chatglm3 --datasetName meld
+
+# 在IEMOCAP数据集上训练（4分类）
+python run.py --model_type chatglm3 --datasetName iemocap4
+
+# 在IEMOCAP数据集上训练（6分类）- 启用MoE和偏差感知门控
+python run.py --model_type qwen --datasetName iemocap6 --use_moe_fusion --use_gate
+
+# 一次性训练多个数据集（按顺序训练）
+python run.py --model_type chatglm3 --datasetName mosei,simsv2,meld
+
+# 一次性训练所有支持的数据集
+python run.py --model_type qwen --datasetName all
+
+# 自定义预训练路径和随机种子
 python run.py \
-    --model_type chatglm3 \
-    --datasetName meld \
-    --pretrain_LM /data/huggingface_model/THUDM/chatglm3-6b-base/ \
-    --gpu_ids [0] \
-    --seeds [1111, 2222, 3333, 4444, 5555]
-
-
-python run_test.py ^
-    --model_type chatglm3 ^
-    --datasetName meld ^
-    --pretrain_LM D:\ProjectFiles\exp_202603\models\chatglm3-6b-base\
-
-# 在SIMSV2数据集上训练Qwen3.5模型
-python run.py \
-    --model_type qwen3.5 \
-    --datasetName simsv2 \
-    --pretrain_LM /data/huggingface_model/Qwen/Qwen-3.5B/ \
-    --gpu_ids [3] \
-    --seeds [1111, 2222, 3333, 4444, 5555]
-
-# 在CHERMA数据集上训练DeepSeek模型
-python run.py \
-    --model_type deepseek \
-    --datasetName cherma \
-    --pretrain_LM /data/huggingface_model/deepseek-ai/deepseek-llm-7b-base/ \
-    --gpu_ids [0] \
-    --seeds [1111, 2222, 3333, 4444, 5555]
+    --model_type llama2 \
+    --datasetName mosei \
+    --pretrain_LM /custom/path/to/llama2-7b/ \
+    --seeds 1111,2222 \
+    --gpu_ids 0
 ```
 
 ## 支持的数据集
 
 ### 回归任务
-- **MOSEI**: 多模态情感强度预测，范围[-3.0, 3.0]
-- **SIMSV2**: 中文多模态情感强度预测，范围[-1.0, 1.0]
+
+- **MOSEI**: 多模态情感强度预测，范围\[-3.0, 3.0]
+- **SIMSV2**: 中文多模态情感强度预测，范围\[-1.0, 1.0]
 
 ### 分类任务
+
 - **MELD**: 英文多模态情感分类，7类情感
 - **CHERMA**: 中文多模态情感分类，7类情感
+- **IEMOCAP**: 英文多模态情感分类
+  - **iemocap4**: 4类情感（angry, happy, sad, neutral）
+  - **iemocap6**: 6类情感（angry, happy, excited, sad, neutral, frustrated）
 
 ## 模型架构
 
 CMCM模型包含以下组件：
 
-1. **文本编码器**: 使用预训练语言模型（ChatGLM3/Qwen/Llama2）
+1. **文本编码器**: 使用预训练语言模型（ChatGLM3/Qwen/Llama2/DeepSeek）
 2. **音频编码器**: LSTM网络
 3. **视频编码器**: LSTM网络
 4. **文本引导混合器**: 利用文本信息引导音频和视频特征融合
 5. **多尺度融合器**: 通过不同尺度的特征提取和整合
+6. **MoE融合机制**（可选）: 包含深度融合和轻量级融合两个专家网络
+7. **门控机制**（可选）: 自适应选择最适合当前输入的融合策略
 
 ## 技术特点
 
 1. **文本引导融合**: 利用文本语义信息指导多模态特征融合
 2. **多尺度特征提取**: 捕获不同层次的特征信息
 3. **低秩融合**: 减少计算复杂度，提高模型效率
-4. **大语言模型适配**: 支持多种主流大语言模型
-5. **灵活的配置系统**: 支持多种数据集和任务类型
+4. **MoE自主融合策略**: 结合深度融合和轻量级融合两个专家网络，提高模型表达能力
+5. **偏差感知门控机制**: 利用音频和视频特征的余弦相似度作为偏差指标，自适应选择最适合当前输入的融合策略
+6. **大语言模型适配**: 支持多种主流大语言模型
+7. **灵活的配置系统**: 支持多种数据集和任务类型
 
 ## 依赖项
 
@@ -213,16 +210,60 @@ CMCM模型包含以下组件：
 3. 其他参数保持不变
 
 例如，之前的命令：
+
 ```bash
 cd MSE-ChatGLM3-6B
 python run.py --datasetName mosei
 ```
 
 现在改为：
+
 ```bash
 cd MSE-Adapter-main
 python run.py --model_type chatglm3 --datasetName mosei
 ```
+
+## IEMOCAP数据集动态分类配置
+
+MSE-Adapter框架支持IEMOCAP数据集的4分类和6分类任务，通过以下方式实现动态配置：
+
+### 1. 数据集名称映射
+
+- `iemocap4`: 4类情感分类（angry, happy, sad, neutral）
+- `iemocap6`: 6类情感分类（angry, happy, excited, sad, neutral, frustrated）
+
+### 2. 动态配置实现
+
+框架会根据数据集名称自动：
+
+- 设置相应的分类数量（4或6）
+- 选择对应的提示词（task\_specific\_prompt）
+- 选择对应的标签映射（label\_index\_mapping）
+- 选择对应的情感映射（emo\_map4或emo\_map6）
+
+### 3. 使用方法
+
+使用 `run.py` 脚本训练IEMOCAP数据集：
+
+```bash
+# 训练IEMOCAP 4分类
+python run.py --model_type chatglm3 --datasetName iemocap4
+
+# 训练IEMOCAP 6分类
+python run.py --model_type qwen --datasetName iemocap6
+
+# 查看脚本帮助
+python run.py --help
+```
+
+### 4. 数据加载
+
+框架支持从以下位置加载IEMOCAP数据集的文本标签：
+
+- `d:\ProjectFiles\exp_202603\datasets\text_data\iemocap_text`（优先）
+- 其他常见路径（自动检测）
+
+如果找不到文本标签，框架会自动生成虚拟数据用于测试。
 
 ## 许可证
 

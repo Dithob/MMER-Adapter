@@ -36,7 +36,7 @@ class Language_model(nn.Module):
         """根据模型类型加载不同的语言模型"""
         if self.model_type == 'chatglm3':
             self._load_chatglm3(pretrained_model)
-        elif self.model_type in ['qwen', 'llama2']:
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']:
             self._load_modelscope_model(pretrained_model)
         else:
             raise ValueError(f"Unsupported model type: {self.model_type}")
@@ -68,18 +68,28 @@ class Language_model(nn.Module):
         self.model = AutoModelForCausalLM.from_pretrained(
             pretrained_model,
             trust_remote_code=True,
-            torch_dtype=torch.bfloat16
+            dtype=torch.bfloat16
         ).half()
         
         # 设置token id
         if self.model_type == 'qwen':
-            self.eos_token_id = self.tokenizer.convert_tokens_to_ids('')
+            self.eos_token_id = self.tokenizer.convert_tokens_to_ids('<|endoftext|>')
+            self.tokenizer.pad_token_id = self.eos_token_id
+            self.bos_token_id = self.tokenizer.convert_tokens_to_ids('<|im_start|>')
+            self.tokenizer.bos_token_id = self.bos_token_id
+        elif self.model_type == 'qwen3.5':
+            # Qwen3.5使用与Qwen类似的token设置
+            self.eos_token_id = self.tokenizer.convert_tokens_to_ids('<|endoftext|>')
             self.tokenizer.pad_token_id = self.eos_token_id
             self.bos_token_id = self.tokenizer.convert_tokens_to_ids('<|im_start|>')
             self.tokenizer.bos_token_id = self.bos_token_id
         elif self.model_type == 'llama2':
             self.tokenizer.pad_token_id = 0
-            self.eos_token_id = self.tokenizer.convert_tokens_to_ids('')
+            self.eos_token_id = self.tokenizer.convert_tokens_to_ids('</s>')
+        elif self.model_type == 'deepseek':
+            # DeepSeek模型使用默认的token设置
+            if self.tokenizer.pad_token_id is None:
+                self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
     
     def text_embedding(self, text_ids):
         embeddings = self.model.base_model.get_input_embeddings()
@@ -95,14 +105,16 @@ class Language_model(nn.Module):
         
         if self.model_type == 'chatglm3':
             return self._forward_chatglm3(fusion_embedding, labels)
-        else:
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']:
             return self._forward_modelscope(fusion_embedding, labels)
+        else:
+            raise ValueError(f"Unsupported model type in forward: {self.model_type}")
     
     def _forward_chatglm3(self, fusion_embedding, labels):
         """ChatGLM3的前向传播"""
         opt_tokens, labels = self.input_processing(fusion_embedding, labels, mode='train')
         
-        with torch.cuda.amp.autocast():
+        with torch.amp.autocast(device_type='cuda'):
             output = self.model(
                 input_ids=opt_tokens, 
                 input_fusion=fusion_embedding, 
@@ -119,13 +131,18 @@ class Language_model(nn.Module):
         
         attention_mask = torch.cat([atts_bos, atts_fusion, labels_atts], dim=1)
         
-        with torch.cuda.amp.autocast():
+        # 确保 pad_token_id 有值，避免后续生成警告
+        if self.model.config.pad_token_id is None and hasattr(self.tokenizer, 'pad_token_id'):
+            self.model.config.pad_token_id = self.tokenizer.pad_token_id
+
+        with torch.amp.autocast(device_type='cuda'):
             output = self.model(
-                inputs_embeds=opt_tokens, 
-                return_dict=True, 
+                inputs_embeds=opt_tokens,
+                attention_mask=attention_mask,
+                return_dict=True,
                 labels=labels
             )
-        
+
         return output
     
     def generate(self, fusion_embedding):
@@ -134,26 +151,45 @@ class Language_model(nn.Module):
         
         if self.model_type == 'chatglm3':
             return self._generate_chatglm3(fusion_embedding)
-        else:
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']:
             return self._generate_modelscope(fusion_embedding)
+        else:
+            raise ValueError(f"Unsupported model type in generate: {self.model_type}")
     
     def _generate_chatglm3(self, fusion_embedding):
         """ChatGLM3的生成"""
+        # ChatGLM3's SentencePiece tokenizer encodes standalone digits as 2 tokens:
+        # ▁ (word boundary, token 30910) + digit. Training labels also tokenize this way,
+        # so max_new_tokens must be +1 to account for the ▁ prefix.
+        effective_max_tokens = self.max_new_tokens + 1
         if self.train_mode == 'regression':
-            gen_kwargs = {"max_new_tokens": self.max_new_tokens, "num_beams": 1, "do_sample": False, "top_k": 10}
+            gen_kwargs = {"max_new_tokens": effective_max_tokens, "num_beams": 1, "do_sample": False, "top_k": 10}
         else:
-            gen_kwargs = {"max_new_tokens": self.max_new_tokens, "num_beams": 1, "do_sample": False, "top_k": 10}
+            gen_kwargs = {"max_new_tokens": effective_max_tokens, "num_beams": 1, "do_sample": False, "top_k": 10}
         
         opt_tokens, _ = self.input_processing(fusion_embedding, mode='generate')
-        
+
         context_length = opt_tokens.size(1)
         all_responses = []
-        
-        for outputs in self.model.stream_generate(opt_tokens, **gen_kwargs, input_fusion=fusion_embedding):
+
+        # NOTE: Do NOT pass attention_mask or pad_token_id here.
+        # ChatGLM3's stream_generate handles them internally.
+        for outputs in self.model.stream_generate(
+            opt_tokens,
+            **gen_kwargs,
+            input_fusion=fusion_embedding
+        ):
             outputs = outputs[:, context_length:].tolist()
-            response = self.tokenizer.batch_decode(outputs)
+            response = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
         
+        # # Debug: print first batch's raw decode results (only once)
+        # if not hasattr(self, '_debug_printed'):
+        #     self._debug_printed = True
+        #     print(f"[DEBUG generate] raw responses (first 5): {response[:5]}")
+        #     print(f"[DEBUG generate] raw output token ids (first 5): {outputs[:5]}")
+
         for x in response:
+            x = x.strip()
             if self.train_mode == 'regression':
                 try:
                     value = float(
@@ -174,35 +210,55 @@ class Language_model(nn.Module):
         """ModelScope模型的生成"""
         opt_tokens, atts_bos, atts_fusion, _, _ = self.input_processing(fusion_embedding, mode='generate')
         
-        if self.model_type == 'qwen':
+        if self.model_type in ['qwen', 'qwen3.5']:
             attention_mask = torch.cat([atts_bos, atts_fusion], dim=1)
             gen_kwargs = {
                 "num_beams": 1,
                 "do_sample": False,
                 "bos_token_id": self.tokenizer.bos_token_id,
+                "eos_token_id": self.tokenizer.eos_token_id,
                 "max_new_tokens": self.max_new_tokens
             }
-        else:  # llama2
-            attention_mask = None
+        elif self.model_type == 'llama2':
+            attention_mask = torch.cat([atts_bos, atts_fusion], dim=1)
             gen_kwargs = {
                 "num_beams": 1,
                 "do_sample": False,
                 "top_p": None,
                 "max_new_tokens": self.max_new_tokens
             }
+        else:  # deepseek
+            attention_mask = torch.cat([atts_bos, atts_fusion], dim=1)
+            gen_kwargs = {
+                "num_beams": 1,
+                "do_sample": False,
+                "max_new_tokens": self.max_new_tokens
+            }
+
+        if self.model.config.pad_token_id is None and hasattr(self.tokenizer, 'pad_token_id'):
+            self.model.config.pad_token_id = self.tokenizer.pad_token_id
+
+        outputs = self.model.generate(
+            inputs_embeds=opt_tokens,
+            attention_mask=attention_mask,
+            pad_token_id=self.model.config.pad_token_id,
+            **gen_kwargs
+        )
         
-        outputs = self.model.generate(inputs_embeds=opt_tokens, **gen_kwargs)
-        
-        if self.model_type == 'qwen':
+        if self.model_type in ['qwen', 'qwen3.5']:
+            # When using inputs_embeds, model.generate() returns only new token IDs.
+            # Extract only the last max_new_tokens tokens (the actual generated output).
+            new_tokens = outputs[:, -self.max_new_tokens:]
             responses = self.tokenizer.batch_decode(
-                outputs[:, 1:], 
+                new_tokens, 
                 add_special_tokens=False, 
                 skip_special_tokens=True, 
                 clean_up_tokenization_spaces=False
             )
-        else:  # llama2
+        else:  # llama2, deepseek
+            new_tokens = outputs[:, -self.max_new_tokens:]
             responses = self.tokenizer.batch_decode(
-                outputs[:, 1:], 
+                new_tokens, 
                 add_special_tokens=False, 
                 skip_special_tokens=True, 
                 clean_up_tokenization_spaces=False
@@ -235,8 +291,10 @@ class Language_model(nn.Module):
         """
         if self.model_type == 'chatglm3':
             return self._input_processing_chatglm3(fusion_embedding, labels, mode)
-        else:
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']:
             return self._input_processing_modelscope(fusion_embedding, labels, mode)
+        else:
+            raise ValueError(f"Unsupported model type in input_processing: {self.model_type}")
     
     def _input_processing_chatglm3(self, fusion_embedding, labels=None, mode=None):
         """ChatGLM3的输入处理"""
@@ -261,20 +319,20 @@ class Language_model(nn.Module):
         opt_tokens = torch.cat([fusion_embedding, task_prompt_embedding], dim=1)
         atts_fusion = torch.ones(opt_tokens.size()[:-1], dtype=torch.long).to(self.device)
         
-        if self.model_type == 'qwen':
+        if self.model_type in ['qwen', 'qwen3.5']:
             bos = torch.ones([batch_size, 1], dtype=atts_fusion.dtype, device=self.device) * self.tokenizer.bos_token_id
             bos_embeds = self.text_embedding(bos)
             atts_bos = atts_fusion[:, :1]
             opt_tokens = torch.cat([bos_embeds, opt_tokens], dim=1)
-        else:  # llama2
+        else:  # llama2, deepseek
             bos_embeds = None
             atts_bos = None
         
         opt_tokens, labels, labels_atts = self.input_labels_construct(opt_tokens, labels, mode)
         
-        if self.model_type == 'qwen':
+        if self.model_type in ['qwen', 'qwen3.5']:
             return opt_tokens, atts_bos, atts_fusion, labels, labels_atts
-        else:  # llama2
+        else:  # llama2, deepseek
             return opt_tokens, None, atts_fusion, labels, labels_atts
     
     def input_labels_construct(self, opt_tokens, labels=None, mode=None):
@@ -287,12 +345,17 @@ class Language_model(nn.Module):
         
         if mode == "train":
             if self.train_mode == "regression":
-                if self.model_type == 'qwen':
+                if self.model_type in ['qwen', 'qwen3.5']:
                     label_template = [f"+{label.item():.{1}f}" if label >= 0 else f"{label.item():.{1}f}" for label in labels]
                 else:
                     label_template = [f"{label.item():.{1}f}" for label in labels]
             else:
-                label_template = [f"{label.item()}" for label in labels]
+                # Append EOS token to classification labels to help model learn generation stopping
+                # This aligns with MSE-Qwen3.5-2B's append_eos_to_label behavior
+                eos_suffix = ''
+                if self.model_type in ['qwen', 'qwen3.5'] and hasattr(self.tokenizer, 'eos_token') and self.tokenizer.eos_token:
+                    eos_suffix = self.tokenizer.eos_token
+                label_template = [f"{label.item()}{eos_suffix}" for label in labels]
             
             if self.model_type == 'chatglm3':
                 labels_id = self.tokenizer(label_template, padding=True, return_tensors="pt", add_special_tokens=False)["input_ids"].to(self.device)

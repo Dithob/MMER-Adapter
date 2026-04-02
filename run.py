@@ -38,7 +38,7 @@ def run(args):
     if not os.path.exists(args.model_save_dir):
         os.makedirs(args.model_save_dir)
     args.model_save_path = os.path.join(args.model_save_dir,\
-                                        f'{args.modelName}-{args.datasetName}-{args.train_mode}.pth')
+                                        f'{args.modelName}-{args.datasetName}-{args.train_mode}-{args.timestamp}.pth')
     
     if len(args.gpu_ids) == 0 and torch.cuda.is_available():
         # load free-most gpu
@@ -143,7 +143,7 @@ def run_normal(args):
 
         criterions = list(model_results[0].keys())
         # load other results
-        save_path = os.path.join(args.res_save_dir, f'{args.datasetName}-{args.train_mode}-{args.warm_up_epochs}.csv')
+        save_path = os.path.join(args.res_save_dir, f'{args.datasetName}-{args.train_mode}-{args.warm_up_epochs}-{args.timestamp}.csv')
         if not os.path.exists(args.res_save_dir):
             os.makedirs(args.res_save_dir)
         if os.path.exists(save_path):
@@ -214,33 +214,60 @@ def parse_args():
                         help='path to save results.')
     parser.add_argument('--pretrain_LM', type=str, default='/root/autodl-tmp/models/chatglm3-6b-base/',
                         help='path to load pretrain LLM.')
-    parser.add_argument('--gpu_ids', type=list, default=[],
-                        help='indicates the gpus will be used. If none, the most-free gpu will be used!')   #使用GPU1
+    parser.add_argument('--gpu_ids', type=str, default='',
+                        help='indicates the gpus will be used (e.g. 0 or 0,1). If none, the most-free gpu will be used!')   #使用GPU1
+    parser.add_argument('--seeds', type=str, default='1111,2222,3333,4444,5555',
+                        help='random seeds (e.g. 1111,2222)')
+                        
+    # Ablation interfaces for MoE
+    parser.add_argument('--use_moe_fusion', action='store_true', help='whether to use MoE fusion strategy')
+    parser.add_argument('--use_gate', action='store_true', help='whether to use bias-aware adaptive gating')
+    parser.add_argument('--use_moe_lb_loss', action='store_true', help='enable load-balance loss for MoE routing')
+                        
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = parse_args()
+    args.timestamp = time.strftime("%Y%m%d_%H%M%S")
+    
+    # Parse list arguments
+    if args.gpu_ids:
+        clean_gpus = args.gpu_ids.replace('[', '').replace(']', '')
+        args.gpu_ids = [int(x) for x in clean_gpus.split(',') if x.strip()]
+    else:
+        args.gpu_ids = []
+        
+    if isinstance(args.seeds, str):
+        clean_seeds = args.seeds.replace('[', '').replace(']', '')
+        args.seeds = [int(x) for x in clean_seeds.split(',') if x.strip()]
+        
     logger = set_log(args)
     
     # 根据模型类型设置默认的预训练模型路径
     if args.pretrain_LM == '/root/autodl-tmp/models/chatglm3-6b-base/':
         if args.model_type == 'qwen':
-            args.pretrain_LM = '/root/autodl-tmp/models/Qwen/Qwen-1_8B/'
+            args.pretrain_LM = '/root/autodl-tmp/models/Qwen/Qwen-1.8B/'
         elif args.model_type == 'qwen3.5':
-            args.pretrain_LM = '/root/autodl-tmp/models/Qwen/Qwen-3_5B/'
+            args.pretrain_LM = '/root/autodl-tmp/models/Qwen/Qwen-3.5-25B/'
         elif args.model_type == 'llama2':
             args.pretrain_LM = '/root/autodl-tmp/models/Meta/Llama-2-7b-hf/'
         elif args.model_type == 'deepseek':
             args.pretrain_LM = '/root/autodl-tmp/models/deepseek-ai/deepseek-llm-7b-base/'
 
-    
-    for data_name in ['mosei', 'simsv2', 'meld', 'cherma']:
-        if data_name in ['mosei', 'simsv2']:
+    # 支持一次性传入多个数据集，如 "mosei,meld" 或 "all"
+    dataset_list = []
+    if args.datasetName.lower() == 'all':
+        dataset_list = ['mosei', 'simsv2', 'meld', 'cherma', 'iemocap4', 'iemocap6']
+    else:
+        dataset_list = [name.strip() for name in args.datasetName.split(',') if name.strip()]
+
+    for data_name in dataset_list:
+        # 自动设置 train_mode
+        if data_name in ['mosi', 'mosei', 'sims', 'simsv2']:
             args.train_mode = 'regression'
         else:
             args.train_mode = 'classification'
-
+            
         args.datasetName = data_name
-        args.seeds = [1111, 2222, 3333, 4444, 5555]
-        # args.seeds = [1111]
+        logger.info(f"========= 准备训练数据集: {data_name} ({args.train_mode}) =========")
         run_normal(args)

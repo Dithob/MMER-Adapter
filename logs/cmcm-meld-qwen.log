@@ -1,0 +1,383 @@
+2026-03-26 12:47:23:INFO:Start running cmcm...
+2026-03-26 12:47:23:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B', 'gpu_ids': [], 'use_moe_fusion': True, 'use_gate': True, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 12:47:23:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-26 12:47:23:INFO:Let's use the GPU 1 !
+2026-03-26 12:47:44:INFO:trainable params: 20279950 || all params: 1902105038 || trainable%: 1.0661845479008716
+2026-03-26 12:47:44:INFO:Init labels...
+2026-03-26 12:47:44:INFO:Start training...
+2026-03-26 13:16:05:INFO:Start running cmcm...
+2026-03-26 13:16:05:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B', 'gpu_ids': [], 'use_moe_fusion': True, 'use_gate': True, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 13:16:06:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-26 13:16:06:INFO:Let's use the GPU 1 !
+2026-03-26 13:16:21:INFO:trainable params: 10340558 || all params: 1892165646 || trainable%: 0.546493274616825
+2026-03-26 13:16:21:INFO:Init labels...
+2026-03-26 13:16:21:INFO:Start training...
+2026-03-26 13:29:49:INFO:TRAIN-(cmcm) (1/1/1)>> loss: 3.6067
+2026-03-26 13:30:13:INFO:VAL-(cmcm) >>
+2026-03-26 13:30:13:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 13:30:15:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-26 13:43:37:INFO:TRAIN-(cmcm) (1/2/1)>> loss: 1.4995
+2026-03-26 13:44:05:INFO:VAL-(cmcm) >>
+2026-03-26 13:44:05:INFO:M: >>  acc: 0.4166  weight_F1: 0.2558 
+2026-03-26 13:44:07:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-26 13:57:47:INFO:TRAIN-(cmcm) (1/3/1)>> loss: 1.4569
+2026-03-26 13:58:15:INFO:VAL-(cmcm) >>
+2026-03-26 13:58:15:INFO:M: >>  acc: 0.4202  weight_F1: 0.2509 
+2026-03-26 14:11:51:INFO:TRAIN-(cmcm) (2/4/1)>> loss: 1.3893
+2026-03-26 14:12:17:INFO:VAL-(cmcm) >>
+2026-03-26 14:12:17:INFO:M: >>  acc: 0.4256  weight_F1: 0.2582 
+2026-03-26 14:12:19:INFO:Saving checkpoint at epoch 4 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-26 14:30:18:INFO:Start running cmcm...
+2026-03-26 14:30:18:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B', 'gpu_ids': [], 'use_moe_fusion': True, 'use_gate': True, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 14:30:18:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-26 14:30:18:INFO:Let's use the GPU 1 !
+2026-03-26 14:30:35:INFO:trainable params: 10340558 || all params: 1892165646 || trainable%: 0.546493274616825
+2026-03-26 14:30:35:INFO:Init labels...
+2026-03-26 14:30:35:INFO:Start training...
+2026-03-26 14:32:03:INFO:Start running cmcm...
+2026-03-26 14:32:03:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B', 'gpu_ids': [], 'use_moe_fusion': True, 'use_gate': True, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 14:32:03:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-26 14:32:03:INFO:Let's use the GPU 1 !
+2026-03-26 14:32:17:INFO:trainable params: 10340558 || all params: 1892165646 || trainable%: 0.546493274616825
+2026-03-26 14:32:17:INFO:Init labels...
+2026-03-26 14:32:17:INFO:Start training...
+2026-03-26 14:45:58:INFO:TRAIN-(cmcm) (1/1/1)>> loss: 3.6077
+2026-03-26 14:46:24:INFO:VAL-(cmcm) >>
+2026-03-26 14:46:24:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 14:46:26:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-26 15:00:13:INFO:TRAIN-(cmcm) (1/2/1)>> loss: 1.5002
+2026-03-26 15:00:39:INFO:VAL-(cmcm) >>
+2026-03-26 15:00:39:INFO:M: >>  acc: 0.4202  weight_F1: 0.2543 
+2026-03-26 15:00:41:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-26 15:14:09:INFO:TRAIN-(cmcm) (1/3/1)>> loss: 1.4642
+2026-03-26 15:14:37:INFO:VAL-(cmcm) >>
+2026-03-26 15:14:37:INFO:M: >>  acc: 0.4229  weight_F1: 0.2521 
+2026-03-26 15:28:27:INFO:TRAIN-(cmcm) (2/4/1)>> loss: 1.3963
+2026-03-26 15:28:55:INFO:VAL-(cmcm) >>
+2026-03-26 15:28:55:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 15:42:45:INFO:TRAIN-(cmcm) (3/5/1)>> loss: 1.2954
+2026-03-26 15:43:12:INFO:VAL-(cmcm) >>
+2026-03-26 15:43:12:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 15:48:55:INFO:Start running cmcm...
+2026-03-26 15:48:55:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B', 'gpu_ids': [], 'use_moe_fusion': False, 'use_gate': False, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 15:48:55:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-26 15:48:55:INFO:Let's use the GPU 1 !
+2026-03-26 15:49:09:INFO:trainable params: 1352396 || all params: 1883177484 || trainable%: 0.07181457995809384
+2026-03-26 15:49:09:INFO:Init labels...
+2026-03-26 15:49:09:INFO:Start training...
+2026-03-26 16:02:35:INFO:TRAIN-(cmcm) (1/1/1)>> loss: 6.3553
+2026-03-26 16:03:02:INFO:VAL-(cmcm) >>
+2026-03-26 16:03:02:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 16:03:04:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-26 17:01:42:INFO:Start running cmcm...
+2026-03-26 17:01:42:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'use_moe_fusion': True, 'use_gate': True, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 17:01:42:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-26 17:01:42:INFO:Let's use the GPU 1 !
+2026-03-26 17:02:01:INFO:trainable params: 10340558 || all params: 1892165646 || trainable%: 0.546493274616825
+2026-03-26 17:02:01:INFO:Init labels...
+2026-03-26 17:02:01:INFO:Start training...
+2026-03-26 17:11:18:INFO:Start running cmcm...
+2026-03-26 17:11:18:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'use_moe_fusion': True, 'use_gate': True, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 16, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 17:11:18:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-26 17:11:18:INFO:Let's use the GPU 1 !
+2026-03-26 17:11:36:INFO:trainable params: 10340558 || all params: 1892165646 || trainable%: 0.546493274616825
+2026-03-26 17:11:36:INFO:Init labels...
+2026-03-26 17:11:36:INFO:Start training...
+2026-03-26 17:12:25:INFO:Start running cmcm...
+2026-03-26 17:12:25:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'use_moe_fusion': True, 'use_gate': True, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 8, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 17:12:25:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-26 17:12:25:INFO:Let's use the GPU 1 !
+2026-03-26 17:12:44:INFO:trainable params: 10340558 || all params: 1892165646 || trainable%: 0.546493274616825
+2026-03-26 17:12:44:INFO:Init labels...
+2026-03-26 17:12:44:INFO:Start training...
+2026-03-26 17:14:44:INFO:Start running cmcm...
+2026-03-26 17:14:44:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'use_moe_fusion': True, 'use_gate': True, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 15, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 17:14:44:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-26 17:14:44:INFO:Let's use the GPU 1 !
+2026-03-26 17:15:03:INFO:trainable params: 10340558 || all params: 1892165646 || trainable%: 0.546493274616825
+2026-03-26 17:15:03:INFO:Init labels...
+2026-03-26 17:15:03:INFO:Start training...
+2026-03-26 17:15:21:INFO:Start running cmcm...
+2026-03-26 17:15:21:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'use_moe_fusion': True, 'use_gate': True, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 14, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 17:15:21:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-26 17:15:21:INFO:Let's use the GPU 1 !
+2026-03-26 17:15:39:INFO:trainable params: 10340558 || all params: 1892165646 || trainable%: 0.546493274616825
+2026-03-26 17:15:39:INFO:Init labels...
+2026-03-26 17:15:39:INFO:Start training...
+2026-03-26 17:16:04:INFO:Start running cmcm...
+2026-03-26 17:16:04:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'use_moe_fusion': True, 'use_gate': True, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 13, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 17:16:04:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-26 17:16:04:INFO:Let's use the GPU 1 !
+2026-03-26 17:16:23:INFO:trainable params: 10340558 || all params: 1892165646 || trainable%: 0.546493274616825
+2026-03-26 17:16:23:INFO:Init labels...
+2026-03-26 17:16:23:INFO:Start training...
+2026-03-26 17:16:58:INFO:Start running cmcm...
+2026-03-26 17:16:58:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'use_moe_fusion': True, 'use_gate': True, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 17:16:58:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-26 17:16:58:INFO:Let's use the GPU 1 !
+2026-03-26 17:17:20:INFO:trainable params: 10340558 || all params: 1892165646 || trainable%: 0.546493274616825
+2026-03-26 17:17:20:INFO:Init labels...
+2026-03-26 17:17:20:INFO:Start training...
+2026-03-26 17:32:50:INFO:Start running cmcm...
+2026-03-26 17:32:50:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'use_moe_fusion': True, 'use_gate': True, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 17:32:50:INFO:Find gpu: 0, with memory: 23525130240 left!
+2026-03-26 17:32:50:INFO:Let's use the GPU 1 !
+2026-03-26 17:47:55:INFO:TRAIN-(cmcm) (1/1/1)>> loss: 3.9147
+2026-03-26 17:49:59:INFO:VAL-(cmcm) >>
+2026-03-26 17:49:59:INFO:M: >>  acc: 0.4076  weight_F1: 0.2713 
+2026-03-26 17:50:00:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-26 18:20:21:INFO:TRAIN-(cmcm) (1/2/1)>> loss: 1.5045
+2026-03-26 18:22:22:INFO:VAL-(cmcm) >>
+2026-03-26 18:22:22:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 18:52:12:INFO:TRAIN-(cmcm) (2/3/1)>> loss: 1.4720
+2026-03-26 18:54:21:INFO:VAL-(cmcm) >>
+2026-03-26 18:54:21:INFO:M: >>  acc: 0.4238  weight_F1: 0.2542 
+2026-03-26 18:55:48:INFO:Start running cmcm...
+2026-03-26 18:55:48:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'use_moe_fusion': False, 'use_gate': False, 'seeds': [1111, 2222, 3333, 4444, 5555], 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (4096, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 5e-05, 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 90, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 18:55:49:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-26 18:55:49:INFO:Let's use the GPU 1 !
+2026-03-26 18:56:03:INFO:trainable params: 1352396 || all params: 1883177484 || trainable%: 0.07181457995809384
+2026-03-26 18:56:03:INFO:Init labels...
+2026-03-26 18:56:03:INFO:Start training...
+2026-03-26 19:26:36:INFO:TRAIN-(cmcm) (1/1/1)>> loss: 7.3635
+2026-03-26 19:28:41:INFO:VAL-(cmcm) >>
+2026-03-26 19:28:41:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 19:28:44:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-26 22:27:42:INFO:========= 准备训练数据集: meld (classification) =========
+2026-03-26 22:27:42:INFO:Start running cmcm...
+2026-03-26 22:27:42:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'seeds': [1111, 2222, 3333, 4444, 5555], 'use_moe_fusion': True, 'use_gate': True, 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 22:27:42:INFO:Find gpu: 0, with memory: 548732928 left!
+2026-03-26 22:27:42:INFO:Let's use the GPU 1 !
+2026-03-26 22:28:00:INFO:trainable params: 6101834 || all params: 1887926922 || trainable%: 0.32320287024330063
+2026-03-26 22:28:00:INFO:Init labels...
+2026-03-26 22:28:00:INFO:Start training...
+2026-03-26 22:31:15:INFO:========= 准备训练数据集: meld (classification) =========
+2026-03-26 22:31:15:INFO:Start running cmcm...
+2026-03-26 22:31:15:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'seeds': [1111, 2222, 3333, 4444, 5555], 'use_moe_fusion': True, 'use_gate': True, 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 20, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-26 22:31:15:INFO:Find gpu: 0, with memory: 548732928 left!
+2026-03-26 22:31:15:INFO:Let's use the GPU 1 !
+2026-03-26 22:31:33:INFO:trainable params: 6101834 || all params: 1887926922 || trainable%: 0.32320287024330063
+2026-03-26 22:31:33:INFO:Init labels...
+2026-03-26 22:31:33:INFO:Start training...
+2026-03-26 22:42:02:INFO:TRAIN-(cmcm) (1/1/1)>> loss: 2.2053
+2026-03-26 22:42:22:INFO:VAL-(cmcm) >>
+2026-03-26 22:42:22:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 22:42:24:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-26 22:52:56:INFO:TRAIN-(cmcm) (1/2/1)>> loss: 0.6955
+2026-03-26 22:53:16:INFO:VAL-(cmcm) >>
+2026-03-26 22:53:16:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 23:03:48:INFO:TRAIN-(cmcm) (2/3/1)>> loss: 0.5921
+2026-03-26 23:04:09:INFO:VAL-(cmcm) >>
+2026-03-26 23:04:09:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 23:14:38:INFO:TRAIN-(cmcm) (3/4/1)>> loss: 0.5499
+2026-03-26 23:14:58:INFO:VAL-(cmcm) >>
+2026-03-26 23:14:58:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 23:25:27:INFO:TRAIN-(cmcm) (4/5/1)>> loss: 0.5303
+2026-03-26 23:25:46:INFO:VAL-(cmcm) >>
+2026-03-26 23:25:46:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 23:36:18:INFO:TRAIN-(cmcm) (5/6/1)>> loss: 0.5163
+2026-03-26 23:36:38:INFO:VAL-(cmcm) >>
+2026-03-26 23:36:38:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 23:47:06:INFO:TRAIN-(cmcm) (6/7/1)>> loss: 0.4973
+2026-03-26 23:47:26:INFO:VAL-(cmcm) >>
+2026-03-26 23:47:26:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-26 23:57:56:INFO:TRAIN-(cmcm) (7/8/1)>> loss: 0.4815
+2026-03-26 23:58:15:INFO:VAL-(cmcm) >>
+2026-03-26 23:58:15:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-27 00:08:43:INFO:TRAIN-(cmcm) (8/9/1)>> loss: 0.4630
+2026-03-27 00:09:03:INFO:VAL-(cmcm) >>
+2026-03-27 00:09:03:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-27 00:09:53:INFO:TEST-(cmcm) >>
+2026-03-27 00:09:53:INFO:M: >>  acc: 0.4812  weight_F1: 0.3127 
+2026-03-27 00:09:54:INFO:Results are added to /root/autodl-tmp/results/results/meld-classification-50.csv...
+2026-03-27 00:09:54:INFO:Start running cmcm...
+2026-03-27 00:09:54:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [0], 'seeds': [1111, 2222, 3333, 4444, 5555], 'use_moe_fusion': True, 'use_gate': True, 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 20, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 2222}>
+2026-03-27 00:09:54:INFO:Let's use the GPU 1 !
+2026-03-27 00:10:13:INFO:trainable params: 6101834 || all params: 1887926922 || trainable%: 0.32320287024330063
+2026-03-27 00:10:13:INFO:Init labels...
+2026-03-27 00:10:13:INFO:Start training...
+2026-03-27 00:20:50:INFO:TRAIN-(cmcm) (1/1/2)>> loss: 2.2853
+2026-03-27 00:21:10:INFO:VAL-(cmcm) >>
+2026-03-27 00:21:10:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-27 00:21:12:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-27 00:31:55:INFO:TRAIN-(cmcm) (1/2/2)>> loss: 0.6429
+2026-03-27 00:32:15:INFO:VAL-(cmcm) >>
+2026-03-27 00:32:15:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-27 00:42:54:INFO:TRAIN-(cmcm) (2/3/2)>> loss: 0.5781
+2026-03-27 00:43:14:INFO:VAL-(cmcm) >>
+2026-03-27 00:43:14:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-27 00:53:39:INFO:TRAIN-(cmcm) (3/4/2)>> loss: 0.5531
+2026-03-27 00:53:59:INFO:VAL-(cmcm) >>
+2026-03-27 00:53:59:INFO:M: >>  acc: 0.4238  weight_F1: 0.2523 
+2026-03-27 10:28:21:INFO:========= 准备训练数据集: meld (classification) =========
+2026-03-27 10:28:21:INFO:Start running cmcm...
+2026-03-27 10:28:21:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'seeds': [1111, 2222, 3333], 'use_moe_fusion': True, 'use_gate': True, 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 20, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-03-27 10:28:21:INFO:Find gpu: 0, with memory: 548732928 left!
+2026-03-27 10:28:21:INFO:Let's use the GPU 1 !
+2026-03-27 10:28:40:INFO:trainable params: 6101834 || all params: 1887926922 || trainable%: 0.32320287024330063
+2026-03-27 10:28:40:INFO:Init labels...
+2026-03-27 10:28:40:INFO:Start training...
+2026-03-27 10:47:20:INFO:TRAIN-(cmcm) (1/1/1)>> loss: 2.2057
+2026-03-27 10:48:28:INFO:VAL-(cmcm) >>
+2026-03-27 10:48:28:INFO:M: >>  acc: 0.4337  weight_F1: 0.3139 
+2026-03-27 10:48:30:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-27 11:06:53:INFO:TRAIN-(cmcm) (1/2/1)>> loss: 0.6958
+2026-03-27 11:08:01:INFO:VAL-(cmcm) >>
+2026-03-27 11:08:01:INFO:M: >>  acc: 0.5356  weight_F1: 0.4638 
+2026-03-27 11:08:03:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-27 11:26:31:INFO:TRAIN-(cmcm) (1/3/1)>> loss: 0.5938
+2026-03-27 11:27:40:INFO:VAL-(cmcm) >>
+2026-03-27 11:27:40:INFO:M: >>  acc: 0.6123  weight_F1: 0.5776 
+2026-03-27 11:27:42:INFO:Saving checkpoint at epoch 3 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-27 11:46:07:INFO:TRAIN-(cmcm) (1/4/1)>> loss: 0.5497
+2026-03-27 11:47:13:INFO:VAL-(cmcm) >>
+2026-03-27 11:47:13:INFO:M: >>  acc: 0.6032  weight_F1: 0.5833 
+2026-03-27 11:47:16:INFO:Saving checkpoint at epoch 4 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-27 12:05:50:INFO:TRAIN-(cmcm) (1/5/1)>> loss: 0.5301
+2026-03-27 12:06:56:INFO:VAL-(cmcm) >>
+2026-03-27 12:06:56:INFO:M: >>  acc: 0.6005  weight_F1: 0.5527 
+2026-03-27 12:25:11:INFO:TRAIN-(cmcm) (2/6/1)>> loss: 0.5144
+2026-03-27 12:26:20:INFO:VAL-(cmcm) >>
+2026-03-27 12:26:20:INFO:M: >>  acc: 0.6375  weight_F1: 0.6182 
+2026-03-27 12:26:22:INFO:Saving checkpoint at epoch 6 to /root/autodl-tmp/results/models/cmcm-meld-classification.pth.
+2026-03-27 12:44:48:INFO:TRAIN-(cmcm) (1/7/1)>> loss: 0.4962
+2026-03-27 12:45:58:INFO:VAL-(cmcm) >>
+2026-03-27 12:45:58:INFO:M: >>  acc: 0.6168  weight_F1: 0.5801 
+2026-03-27 13:04:18:INFO:TRAIN-(cmcm) (2/8/1)>> loss: 0.4816
+2026-03-27 13:05:26:INFO:VAL-(cmcm) >>
+2026-03-27 13:05:26:INFO:M: >>  acc: 0.6330  weight_F1: 0.6119 
+2026-03-27 13:23:41:INFO:TRAIN-(cmcm) (3/9/1)>> loss: 0.4636
+2026-03-27 13:24:48:INFO:VAL-(cmcm) >>
+2026-03-27 13:24:48:INFO:M: >>  acc: 0.6240  weight_F1: 0.5863 
+2026-03-27 13:43:12:INFO:TRAIN-(cmcm) (4/10/1)>> loss: 0.4426
+2026-03-27 13:44:20:INFO:VAL-(cmcm) >>
+2026-03-27 13:44:20:INFO:M: >>  acc: 0.6231  weight_F1: 0.5933 
+2026-03-27 14:02:42:INFO:TRAIN-(cmcm) (5/11/1)>> loss: 0.4166
+2026-03-27 14:03:49:INFO:VAL-(cmcm) >>
+2026-03-27 14:03:49:INFO:M: >>  acc: 0.6087  weight_F1: 0.5803 
+2026-03-27 14:22:17:INFO:TRAIN-(cmcm) (6/12/1)>> loss: 0.3863
+2026-03-27 14:23:25:INFO:VAL-(cmcm) >>
+2026-03-27 14:23:25:INFO:M: >>  acc: 0.6168  weight_F1: 0.6021 
+2026-03-27 14:41:36:INFO:TRAIN-(cmcm) (7/13/1)>> loss: 0.3560
+2026-03-27 14:42:44:INFO:VAL-(cmcm) >>
+2026-03-27 14:42:44:INFO:M: >>  acc: 0.6050  weight_F1: 0.5806 
+2026-03-27 15:01:07:INFO:TRAIN-(cmcm) (8/14/1)>> loss: 0.3190
+2026-03-27 15:02:14:INFO:VAL-(cmcm) >>
+2026-03-27 15:02:14:INFO:M: >>  acc: 0.5996  weight_F1: 0.5852 
+2026-03-27 15:04:54:INFO:TEST-(cmcm) >>
+2026-03-27 15:04:54:INFO:M: >>  acc: 0.6410  weight_F1: 0.6227 
+2026-03-27 15:04:55:INFO:Results are added to /root/autodl-tmp/results/results/meld-classification-50.csv...
+2026-03-27 15:04:55:INFO:Start running cmcm...
+2026-03-27 15:04:55:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [0], 'seeds': [1111, 2222, 3333], 'use_moe_fusion': True, 'use_gate': True, 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 20, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 2222}>
+2026-03-27 15:04:55:INFO:Let's use the GPU 1 !
+2026-03-27 15:05:13:INFO:trainable params: 6101834 || all params: 1887926922 || trainable%: 0.32320287024330063
+2026-03-27 15:05:13:INFO:Init labels...
+2026-03-27 15:05:13:INFO:Start training...
+2026-03-31 19:38:39:INFO:========= 准备训练数据集: meld (classification) =========
+2026-03-31 19:38:39:INFO:Start running cmcm...
+2026-03-31 19:38:39:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'seeds': [3333], 'use_moe_fusion': True, 'use_gate': True, 'use_moe_lb_loss': True, 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 3333}>
+2026-03-31 19:38:39:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-03-31 19:38:39:INFO:Let's use the GPU 1 !
+2026-04-01 13:06:51:INFO:========= 准备训练数据集: meld (classification) =========
+2026-04-01 13:06:51:INFO:Start running cmcm...
+2026-04-01 13:06:51:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'seeds': [1111], 'use_moe_fusion': True, 'use_gate': True, 'use_moe_lb_loss': True, 'timestamp': '20260401_130651', 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 20, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-04-01 13:06:51:INFO:Find gpu: 0, with memory: 548732928 left!
+2026-04-01 13:06:51:INFO:Let's use the GPU 1 !
+2026-04-01 13:14:04:INFO:========= 准备训练数据集: meld (classification) =========
+2026-04-01 13:14:04:INFO:Start running cmcm...
+2026-04-01 13:14:04:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'seeds': [1111], 'use_moe_fusion': True, 'use_gate': True, 'use_moe_lb_loss': True, 'timestamp': '20260401_131404', 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 20, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-04-01 13:14:04:INFO:Find gpu: 0, with memory: 548732928 left!
+2026-04-01 13:14:04:INFO:Let's use the GPU 1 !
+2026-04-01 13:14:22:INFO:trainable params: 1904848 || all params: 1883729936 || trainable%: 0.1011210770501871
+2026-04-01 13:14:22:INFO:Init labels...
+2026-04-01 13:14:22:INFO:Start training...
+2026-04-01 13:15:25:INFO:========= 准备训练数据集: meld (classification) =========
+2026-04-01 13:15:25:INFO:Start running cmcm...
+2026-04-01 13:15:25:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'seeds': [1111], 'use_moe_fusion': True, 'use_gate': True, 'use_moe_lb_loss': True, 'timestamp': '20260401_131525', 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 24, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-04-01 13:15:25:INFO:Find gpu: 0, with memory: 548732928 left!
+2026-04-01 13:15:25:INFO:Let's use the GPU 1 !
+2026-04-01 13:15:43:INFO:trainable params: 1904848 || all params: 1883729936 || trainable%: 0.1011210770501871
+2026-04-01 13:15:43:INFO:Init labels...
+2026-04-01 13:15:43:INFO:Start training...
+2026-04-01 13:16:05:INFO:========= 准备训练数据集: meld (classification) =========
+2026-04-01 13:16:05:INFO:Start running cmcm...
+2026-04-01 13:16:05:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'cmcm', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-2B-Base', 'gpu_ids': [], 'seeds': [1111], 'use_moe_fusion': True, 'use_gate': True, 'use_moe_lb_loss': True, 'timestamp': '20260401_131605', 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 22, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 8, 'H': 3.0, 'seed': 1111}>
+2026-04-01 13:16:06:INFO:Find gpu: 0, with memory: 548732928 left!
+2026-04-01 13:16:06:INFO:Let's use the GPU 1 !
+2026-04-01 13:16:23:INFO:trainable params: 1904848 || all params: 1883729936 || trainable%: 0.1011210770501871
+2026-04-01 13:16:23:INFO:Init labels...
+2026-04-01 13:16:23:INFO:Start training...
+2026-04-01 13:27:00:INFO:TRAIN-(cmcm) (1/1/1)>> loss: 2.5017
+2026-04-01 13:27:20:INFO:VAL-(cmcm) >>
+2026-04-01 13:27:20:INFO:M: >>  acc: 0.4238  weight_F1: 0.2565 
+2026-04-01 13:27:22:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/cmcm-meld-classification-20260401_131605.pth.
+2026-04-01 13:37:36:INFO:TRAIN-(cmcm) (1/2/1)>> loss: 0.7246
+2026-04-01 13:37:55:INFO:VAL-(cmcm) >>
+2026-04-01 13:37:55:INFO:M: >>  acc: 0.5023  weight_F1: 0.4310 
+2026-04-01 13:37:57:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/cmcm-meld-classification-20260401_131605.pth.
+2026-04-01 13:48:13:INFO:TRAIN-(cmcm) (1/3/1)>> loss: 0.6352
+2026-04-01 13:48:33:INFO:VAL-(cmcm) >>
+2026-04-01 13:48:33:INFO:M: >>  acc: 0.5500  weight_F1: 0.5107 
+2026-04-01 13:48:35:INFO:Saving checkpoint at epoch 3 to /root/autodl-tmp/results/models/cmcm-meld-classification-20260401_131605.pth.
+2026-04-01 13:58:39:INFO:TRAIN-(cmcm) (1/4/1)>> loss: 0.5914
+2026-04-01 13:58:58:INFO:VAL-(cmcm) >>
+2026-04-01 13:58:58:INFO:M: >>  acc: 0.5933  weight_F1: 0.5653 
+2026-04-01 13:59:00:INFO:Saving checkpoint at epoch 4 to /root/autodl-tmp/results/models/cmcm-meld-classification-20260401_131605.pth.
+2026-04-01 14:09:04:INFO:TRAIN-(cmcm) (1/5/1)>> loss: 0.5660
+2026-04-01 14:09:23:INFO:VAL-(cmcm) >>
+2026-04-01 14:09:23:INFO:M: >>  acc: 0.5879  weight_F1: 0.5383 
+2026-04-01 14:19:24:INFO:TRAIN-(cmcm) (2/6/1)>> loss: 0.5571
+2026-04-01 14:19:44:INFO:VAL-(cmcm) >>
+2026-04-01 14:19:44:INFO:M: >>  acc: 0.5987  weight_F1: 0.5711 
+2026-04-01 14:19:46:INFO:Saving checkpoint at epoch 6 to /root/autodl-tmp/results/models/cmcm-meld-classification-20260401_131605.pth.
+2026-04-01 14:30:09:INFO:TRAIN-(cmcm) (1/7/1)>> loss: 0.5456
+2026-04-01 14:30:28:INFO:VAL-(cmcm) >>
+2026-04-01 14:30:28:INFO:M: >>  acc: 0.5996  weight_F1: 0.5837 
+2026-04-01 14:30:30:INFO:Saving checkpoint at epoch 7 to /root/autodl-tmp/results/models/cmcm-meld-classification-20260401_131605.pth.
+2026-04-01 14:40:58:INFO:TRAIN-(cmcm) (1/8/1)>> loss: 0.5369
+2026-04-01 14:41:20:INFO:VAL-(cmcm) >>
+2026-04-01 14:41:20:INFO:M: >>  acc: 0.6114  weight_F1: 0.5779 
+2026-04-01 14:51:41:INFO:TRAIN-(cmcm) (2/9/1)>> loss: 0.5310
+2026-04-01 14:52:01:INFO:VAL-(cmcm) >>
+2026-04-01 14:52:01:INFO:M: >>  acc: 0.5942  weight_F1: 0.5571 
+2026-04-01 15:02:29:INFO:TRAIN-(cmcm) (3/10/1)>> loss: 0.5266
+2026-04-01 15:02:49:INFO:VAL-(cmcm) >>
+2026-04-01 15:02:49:INFO:M: >>  acc: 0.6222  weight_F1: 0.5892 
+2026-04-01 15:02:51:INFO:Saving checkpoint at epoch 10 to /root/autodl-tmp/results/models/cmcm-meld-classification-20260401_131605.pth.
+2026-04-01 15:13:19:INFO:TRAIN-(cmcm) (1/11/1)>> loss: 0.5160
+2026-04-01 15:13:39:INFO:VAL-(cmcm) >>
+2026-04-01 15:13:39:INFO:M: >>  acc: 0.5951  weight_F1: 0.5792 
+2026-04-01 15:24:10:INFO:TRAIN-(cmcm) (2/12/1)>> loss: 0.5088
+2026-04-01 15:24:30:INFO:VAL-(cmcm) >>
+2026-04-01 15:24:30:INFO:M: >>  acc: 0.6105  weight_F1: 0.5716 
+2026-04-01 15:34:56:INFO:TRAIN-(cmcm) (3/13/1)>> loss: 0.4999
+2026-04-01 15:35:16:INFO:VAL-(cmcm) >>
+2026-04-01 15:35:16:INFO:M: >>  acc: 0.6249  weight_F1: 0.5960 
+2026-04-01 15:35:18:INFO:Saving checkpoint at epoch 13 to /root/autodl-tmp/results/models/cmcm-meld-classification-20260401_131605.pth.
+2026-04-01 15:45:46:INFO:TRAIN-(cmcm) (1/14/1)>> loss: 0.4907
+2026-04-01 15:46:05:INFO:VAL-(cmcm) >>
+2026-04-01 15:46:05:INFO:M: >>  acc: 0.6087  weight_F1: 0.5844 
+2026-04-01 15:56:30:INFO:TRAIN-(cmcm) (2/15/1)>> loss: 0.4764
+2026-04-01 15:56:49:INFO:VAL-(cmcm) >>
+2026-04-01 15:56:49:INFO:M: >>  acc: 0.6096  weight_F1: 0.5727 
+2026-04-01 16:07:22:INFO:TRAIN-(cmcm) (3/16/1)>> loss: 0.4621
+2026-04-01 16:07:42:INFO:VAL-(cmcm) >>
+2026-04-01 16:07:42:INFO:M: >>  acc: 0.6141  weight_F1: 0.5922 
+2026-04-01 16:18:35:INFO:TRAIN-(cmcm) (4/17/1)>> loss: 0.4458
+2026-04-01 16:18:54:INFO:VAL-(cmcm) >>
+2026-04-01 16:18:54:INFO:M: >>  acc: 0.6132  weight_F1: 0.5915 
+2026-04-01 16:29:55:INFO:TRAIN-(cmcm) (5/18/1)>> loss: 0.4305
+2026-04-01 16:30:15:INFO:VAL-(cmcm) >>
+2026-04-01 16:30:15:INFO:M: >>  acc: 0.6096  weight_F1: 0.5815 
+2026-04-01 16:40:39:INFO:TRAIN-(cmcm) (6/19/1)>> loss: 0.4115
+2026-04-01 16:41:01:INFO:VAL-(cmcm) >>
+2026-04-01 16:41:01:INFO:M: >>  acc: 0.6087  weight_F1: 0.5953 
+2026-04-01 16:51:52:INFO:TRAIN-(cmcm) (7/20/1)>> loss: 0.3880
+2026-04-01 16:52:14:INFO:VAL-(cmcm) >>
+2026-04-01 16:52:14:INFO:M: >>  acc: 0.6014  weight_F1: 0.5865 
+2026-04-01 17:03:10:INFO:TRAIN-(cmcm) (8/21/1)>> loss: 0.3644
+2026-04-01 17:03:33:INFO:VAL-(cmcm) >>
+2026-04-01 17:03:33:INFO:M: >>  acc: 0.6041  weight_F1: 0.5893 
+2026-04-01 17:04:20:INFO:TEST-(cmcm) >>
+2026-04-01 17:04:20:INFO:M: >>  acc: 0.6391  weight_F1: 0.6133 
+2026-04-01 17:04:21:INFO:Results are added to /root/autodl-tmp/results/results/meld-classification-50-20260401_131605.csv...

@@ -279,6 +279,12 @@ if __name__ == '__main__':
     if isinstance(args.seeds, str):
         clean_seeds = args.seeds.replace('[', '').replace(']', '')
         args.seeds = [int(x) for x in clean_seeds.split(',') if x.strip()]
+    
+    # Resolve mutually exclusive switches (so config log shows correct state)
+    if args.use_amm:
+        args.use_tgm = False
+    if args.use_moe_fusion:
+        args.use_msf = False
         
     logger = set_log(args)
     

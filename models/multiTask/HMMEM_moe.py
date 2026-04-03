@@ -20,9 +20,15 @@ class GlobalMoE(nn.Module):
         self.input_size = input_size
         self.num_experts = 3
 
-        # ── Expert 1: Bilinear Interaction ──
+        # ── Expert 1: Low-Rank Bilinear Interaction ──
+        # Full nn.Bilinear(128,128,256) would be 4.19M params.
+        # Low-rank factorization: project each half to rank-r, elementwise multiply, project back.
+        # Params: 2*(128*32) + 32*256 ≈ 16K (vs 4.19M)
         half = input_size // 2
-        self.bilinear = nn.Bilinear(half, half, input_size)
+        rank = 32
+        self.bilinear_proj1 = nn.Linear(half, rank)
+        self.bilinear_proj2 = nn.Linear(half, rank)
+        self.bilinear_out = nn.Linear(rank, input_size)
 
         # ── Expert 2: SE Channel Attention ──
         self.se = nn.Sequential(
@@ -52,9 +58,11 @@ class GlobalMoE(nn.Module):
         if x.dim() == 1:
             x = x.unsqueeze(0)
 
-        # Expert 1: Bilinear
-        x1, x2 = x.chunk(2, dim=-1)       # each [B, D/2]
-        e1 = self.bilinear(x1, x2)         # [B, D]
+        # Expert 1: Low-Rank Bilinear
+        x1, x2 = x.chunk(2, dim=-1)               # each [B, D/2]
+        e1 = self.bilinear_out(
+            self.bilinear_proj1(x1) * self.bilinear_proj2(x2)  # [B, rank]
+        )                                           # [B, D]
 
         # Expert 2: SE channel attention
         channel_w = self.se(x)             # [B, D] sigmoid weights

@@ -219,24 +219,49 @@ def parse_args():
     parser.add_argument('--seeds', type=str, default='1111,2222,3333,4444,5555',
                         help='random seeds (e.g. 1111,2222)')
                         
-    # Ablation interfaces for MoE
-    parser.add_argument('--use_moe_fusion', action='store_true', help='enable Dual-Branch MoE fusion')
-    parser.add_argument('--use_gate', action='store_true', help='Meta-Gate uses cosine bias from audio-video similarity')
-    parser.add_argument('--use_moe_lb_loss', action='store_true', help='enable load-balance loss for MoE routing')
-    parser.add_argument('--num_global_experts', type=int, default=3, help='number of Global MoE experts')
-    parser.add_argument('--num_local_experts', type=int, default=3, help='number of Local MoE experts')
-    parser.add_argument('--expert_bottleneck', type=int, default=64, help='bottleneck dim for Local MoE experts')
+    # ── Mixer layer ablation (mutually exclusive: use_amm overrides use_tgm) ──
+    parser.add_argument('--use_tgm', action='store_true', default=True,
+                        help='use Text-Guided Mixer (default baseline)')
+    parser.add_argument('--use_amm', action='store_true',
+                        help='use Adaptive Modal Mixer (overrides TGM)')
     
-    # DiffLoss
-    parser.add_argument('--use_diff_loss', action='store_true', help='enable DiffLoss between Global and Local branches')
-    parser.add_argument('--use_expert_diff_loss', action='store_true', help='enable DiffLoss between experts within each branch')
-    parser.add_argument('--diff_loss_weight', type=float, default=0.01, help='weight for DiffLoss')
+    # ── Fusion layer ablation (mutually exclusive: use_moe_fusion overrides use_msf) ──
+    parser.add_argument('--use_msf', action='store_true', default=True,
+                        help='use Multi-Scale Fusion (default baseline)')
+    parser.add_argument('--use_moe_fusion', action='store_true',
+                        help='enable Dual-Branch MoE fusion (overrides MSF)')
     
-    # NCE Loss
-    parser.add_argument('--use_nce_loss', action='store_true', help='enable cross-modal NCE (CPC) loss')
-    parser.add_argument('--nce_hidden_dim', type=int, default=32, help='hidden dim for NCE CPC module')
-    parser.add_argument('--nce_pred_steps', type=int, default=2, help='prediction steps for NCE CPC')
-    parser.add_argument('--nce_weight', type=float, default=0.05, help='weight for NCE loss')
+    # ── MoE configuration ──
+    parser.add_argument('--use_gate', action='store_true',
+                        help='Meta-Gate uses cosine bias from audio-video similarity')
+    parser.add_argument('--use_moe_lb_loss', action='store_true',
+                        help='enable load-balance loss for MoE routing')
+    parser.add_argument('--num_local_experts', type=int, default=3,
+                        help='number of Local MoE experts')
+    parser.add_argument('--expert_bottleneck', type=int, default=64,
+                        help='bottleneck dim for Local MoE experts')
+    
+    # ── DiffLoss ──
+    parser.add_argument('--use_diff_loss', action='store_true',
+                        help='enable DiffLoss between Global and Local branches')
+    parser.add_argument('--use_expert_diff_loss', action='store_true',
+                        help='enable DiffLoss between experts within each branch')
+    parser.add_argument('--diff_loss_weight', type=float, default=0.01,
+                        help='weight for DiffLoss')
+    
+    # ── NCE Loss ──
+    parser.add_argument('--use_nce_loss', action='store_true',
+                        help='enable cross-modal NCE (CPC) loss')
+    parser.add_argument('--nce_hidden_dim', type=int, default=32,
+                        help='hidden dim for NCE CPC module')
+    parser.add_argument('--nce_pred_steps', type=int, default=2,
+                        help='prediction steps for NCE CPC')
+    parser.add_argument('--nce_weight', type=float, default=0.05,
+                        help='weight for NCE loss')
+    
+    # ── Feature Adapter (for high-dim encoders: HuBERT/Whisper) ──
+    parser.add_argument('--adapter_dim', type=int, default=128,
+                        help='adapter output dim; only activates when feature_dim > adapter_dim')
                         
     return parser.parse_args()
 

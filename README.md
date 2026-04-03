@@ -1,40 +1,40 @@
-# MSE-Adapter: Unified Multimodal Sentiment Analysis Framework
+# HMMEM: Hierarchical MoE Multimodal ERC Model
 
 ## 项目概述
 
-MSE-Adapter 是一个统一的多模态情感分析框架，支持多种大语言模型（ChatGLM3-6B、Qwen-1.8B、Llama2-7B）的后端适配。该项目通过文本引导的多模态融合技术，实现了对文本、音频和视频三种模态信息的有效整合。
+HMMEM (Hierarchical MoE Multimodal Emotion Recognition in Conversation) 是一个统一的多模态情感识别框架，支持多种大语言模型后端适配。该项目通过可插拔的 Mixer-Fusion 两阶段架构，实现了对文本、音频和视频三种模态信息的灵活整合与消融实验。
 
 ## 项目结构
 
 ```
-MSE-Adapter-main/
-├── config/                    # 配置文件
-│   ├── config_classification.py # 分类任务配置
-│   └── config_regression.py    # 回归任务配置
-├── data/                      # 数据处理
-│   ├── DataPre.py             # 数据预处理
-│   ├── TextPre.py            # 文本预处理
-│   └── load_data.py          # 数据加载器
-├── models/                    # 模型定义
-│   ├── AMIO.py               # 模型包装器
-│   ├── ChatGLM3/             # ChatGLM3模型文件
-│   ├── multiTask/            # 多任务模型
-│   │   └── HMMEM.py          # 核心多模态融合模型
-│   └── subNets/             # 子网络
-│       └── Textmodel.py      # 统一的语言模型加载器
-├── trains/                    # 训练器
-│   ├── ATIO.py               # 训练器包装器
-│   └── multiTask/            # 多任务训练器
-│       └── HMMEM.py          # HMMEM训练器
-├── utils/                     # 工具函数
-│   ├── functions.py          # 辅助函数
-│   └── metricsTop.py        # 评估指标
-├── logs/                      # 日志文件
-├── results/                   # 结果保存目录
-│   ├── models/               # 模型保存
-│   └── results/             # 实验结果
-├── run.py                    # 主运行脚本
-└── test_load.py              # 数据加载测试脚本
+MMER-Adapter/
+├── config/                        # 配置文件
+│   ├── config_classification.py   # 分类任务配置
+│   └── config_regression.py       # 回归任务配置
+├── data/                          # 数据处理
+│   ├── DataPre.py                 # 数据预处理
+│   ├── TextPre.py                 # 文本预处理
+│   └── load_data.py               # 数据加载器
+├── models/                        # 模型定义
+│   ├── AMIO.py                    # 模型包装器
+│   ├── ChatGLM3/                  # ChatGLM3模型文件
+│   ├── multiTask/                 # HMMEM 核心模块
+│   │   ├── HMMEM.py               # 主模型 (forward/generate)
+│   │   ├── HMMEM_mixer.py         # Mixer 层: AMM (Adaptive Modal Mixer)
+│   │   ├── HMMEM_moe.py           # Fusion 层: GlobalMoE / LocalMoE
+│   │   ├── HMMEM_loss.py          # 辅助损失: DiffLoss / NCE (CPC)
+│   │   └── HMMEM_modules.py       # 基础组件: LSTM / TGM / MSF / FeatureAdapter
+│   └── subNets/
+│       └── Textmodel.py           # 统一的语言模型加载器
+├── trains/                        # 训练器
+│   ├── ATIO.py                    # 训练器路由
+│   └── multiTask/
+│       └── HMMEM.py               # HMMEM 训练器
+├── utils/                         # 工具函数
+├── logs/                          # 日志文件
+├── results/                       # 结果保存目录
+├── run.py                         # 主运行脚本
+└── test_load.py                   # 数据加载测试脚本
 ```
 
 ## 重构亮点
@@ -95,54 +95,61 @@ python run.py --model_type llama2 --datasetName mosei --pretrain_LM /path/to/lla
 
 ### 参数说明
 
-- `--model_type`: 语言模型类型，可选 `chatglm3`、`qwen`、`qwen3.5`、`llama2`、`deepseek`
-- `--datasetName`: 数据集名称，支持 `mosei`、`simsv2`、`meld`、`cherma`、`iemocap4`、`iemocap6`
-- `--pretrain_LM`: 预训练语言模型路径
-- `--train_mode`: 训练模式，`regression`（回归）或 `classification`（分类）
-- `--modelName`: 模型名称，目前支持 `hmmem`
-- `--root_dataset_dir`: 数据集根目录
-- `--gpu_ids`: 使用的GPU ID列表
-- `--seeds`: 随机种子列表
-- `--use_moe_fusion`: 是否启用 Dual-Branch MoE 双分支融合机制
-- `--num_global_experts`: Global MoE 的专家数量 (默认: 3)
-- `--num_local_experts`: Local MoE 的专家数量 (默认: 3)
-- `--use_gate`: Meta-Gate 是否使用音视频语义相似度作为 cosine bias
-- `--use_moe_lb_loss`: 是否启用 MoE 负载均衡损失 (防止路由坍缩)
-- `--use_diff_loss`: 是否启用分支间差异化损失 (DiffLoss)
-- `--use_expert_diff_loss`: 是否启用 Expert 间差异化损失
-- `--use_nce_loss`: 是否启用跨模态 NCE (CPC) 时序对比学习损失
+**基础参数：**
+
+| 参数 | 说明 | 默认值 |
+|---|---|---|
+| `--model_type` | 语言模型类型 | `chatglm3` |
+| `--datasetName` | 数据集名称 | `mosi` |
+| `--pretrain_LM` | 预训练语言模型路径 | 自动推断 |
+| `--seeds` | 随机种子列表 | `1111,2222,3333,4444,5555` |
+
+**Mixer 层消融（互斥）：**
+
+| 参数 | 说明 | 默认 |
+|---|---|---|
+| `--use_tgm` | 使用 Text-Guided Mixer（原版基线） | True |
+| `--use_amm` | 使用 Adaptive Modal Mixer（覆盖 TGM） | False |
+
+**Fusion 层消融（互斥）：**
+
+| 参数 | 说明 | 默认 |
+|---|---|---|
+| `--use_msf` | 使用 Multi-Scale Fusion（原版基线） | True |
+| `--use_moe_fusion` | 使用 Dual-Branch MoE（覆盖 MSF） | False |
+
+**MoE 配置：**
+
+| 参数 | 说明 | 默认 |
+|---|---|---|
+| `--use_gate` | Meta-Gate 使用 cosine bias | False |
+| `--use_moe_lb_loss` | MoE 负载均衡损失 | False |
+| `--num_local_experts` | Local MoE 专家数量 | 3 |
+| `--expert_bottleneck` | Local Expert 瓶颈维度 | 64 |
+
+**辅助损失：**
+
+| 参数 | 说明 | 默认 |
+|---|---|---|
+| `--use_diff_loss` | 分支间 DiffLoss | False |
+| `--use_expert_diff_loss` | Expert 间 DiffLoss | False |
+| `--use_nce_loss` | 跨模态 NCE 损失 | False |
+| `--nce_weight` | NCE 损失权重 | 0.05 |
+
+**高维特征适配：**
+
+| 参数 | 说明 | 默认 |
+|---|---|---|
+| `--adapter_dim` | FeatureAdapter 输出维度（仅当特征维度 > adapter_dim 时激活） | 128 |
 
 ### 示例
 
 ```bash
-# 在MOSEI数据集上训练ChatGLM3-6B模型 (默认参数)
-python run.py --model_type chatglm3 --datasetName mosei
+# 在MELD数据集上训练 (默认: TGM + MSF)
+python run.py --model_type chatglm3 --datasetName meld --seeds 1111,2222,3333
 
-# 在SIMSV2数据集上训练Qwen-1.8B模型，并指定使用 GPU 1
-python run.py --model_type qwen --datasetName simsv2 --gpu_ids 1
-
-# 在MELD数据集上训练ChatGLM3-6B模型
-python run.py --model_type chatglm3 --datasetName meld
-
-# 在IEMOCAP数据集上训练（4分类）
-python run.py --model_type chatglm3 --datasetName iemocap4
-
-# 在IEMOCAP数据集上训练（6分类）- 启用MoE和偏差感知门控
-python run.py --model_type qwen --datasetName iemocap6 --use_moe_fusion --use_gate
-
-# 一次性训练多个数据集（按顺序训练）
-python run.py --model_type chatglm3 --datasetName mosei,simsv2,meld
-
-# 一次性训练所有支持的数据集
-python run.py --model_type qwen --datasetName all
-
-# 自定义预训练路径和随机种子
-python run.py \
-    --model_type llama2 \
-    --datasetName mosei \
-    --pretrain_LM /custom/path/to/llama2-7b/ \
-    --seeds 1111,2222 \
-    --gpu_ids 0
+# 在IEMOCAP数据集上训练（6分类）- 启用MoE
+python run.py --model_type chatglm3 --datasetName iemocap6 --use_moe_fusion
 ```
 
 ## 支持的数据集
@@ -160,32 +167,102 @@ python run.py \
   - **iemocap4**: 4类情感（angry, happy, sad, neutral）
   - **iemocap6**: 6类情感（angry, happy, excited, sad, neutral, frustrated）
 
-## 模型架构
+## 模型架构 (HMMEM v2)
 
-HMMEM模型包含以下组件：
+### 信号流
 
-1. **文本编码器**: 使用预训练语言模型（ChatGLM3/Qwen/Llama2/DeepSeek）
-2. **音频编码器**: LSTM网络 (支持时序特征提取)
-3. **视频编码器**: LSTM网络 (支持时序特征提取)
-4. **文本引导混合器**: 利用文本语义特征引导音频和视频特征融合
-5. **多尺度融合 (Baseline)**: 非 MoE 模式下的基础特征整合模块
-6. **Dual-Branch MoE 融合**:
-   - **Global Emotion MoE**: 改进自多尺度融合方案，利用 N 个多尺度 Expert 捕获全局情感。
-   - **Local Emotion MoE**: 利用 N 个轻量 Bottleneck Expert 提取微观情绪线索。
-   - **Meta-Gate**: 根据多模态特征输入动态分配 Global 与 Local 分支权重的门控机制。
-7. **辅助优化机制**: 
-   - **Load-balance Loss (LB Loss)**: 保持同构专家们的负载均衡，防止路由坍缩。
-   - **Cross-Modal NCE Loss (CPC)**: 基于轻量化构建，通过时间序列相互预测强化 文本↔音频 以及 文本↔视频特征对齐。
-   - **DiffLoss**: 促使 Expert 与不同分支所学习的情感特征保持差异、实现互补信息。
+```
+audio → [FeatureAdapter] → LSTM → audio_h ─┐
+video → [FeatureAdapter] → LSTM → video_h ─┤──→ 【Mixer 层】──→ feature_f ──→ 【Fusion 层】──→ fusion_h ──→ LLM
+text  → LLM Embedding → text_embed ────────┘
+```
+
+### Mixer 层（模态交互）
+
+| 模块 | 说明 |
+|---|---|
+| **TGM** (Text-Guided Mixer) | 文本主导：GAP 池化文本 → 逐元素调制音频/视频 → 相加。基线方案。 |
+| **AMM** (Adaptive Modal Mixer) | 三模态对等：Self-Attention 让音频↔视频直接交互 → 自适应加权池化。 |
+
+### Fusion 层（特征映射）
+
+| 模块 | 说明 |
+|---|---|
+| **MSF** (Multi-Scale Fusion) | 3 条不同瓶颈的scale path + Conv1d 整合。基线方案。 |
+| **Dual-Branch MoE** | Global MoE (异构 Expert: Bilinear/SE/Linear) + Local MoE (Bottleneck Expert，接收原始音视频拼接) + 后验感知 Meta-Gate。 |
+
+### 辅助优化机制
+
+| 模块 | 说明 | 依赖 |
+|---|---|---|
+| **LB Loss** | Expert 负载均衡 | `use_moe_fusion` |
+| **DiffLoss** | 分支/Expert 间正交互补 | `use_moe_fusion` |
+| **NCE Loss** | 跨模态时序对比学习 (text↔audio, text↔video) | 无（独立） |
+
+### 高维特征适配
+
+| 模块 | 说明 |
+|---|---|
+| **FeatureAdapter** | 当输入特征维度 > `adapter_dim` 时自动启用的轻量降维层，支持 HuBERT (768) / Whisper (1280) 等高维 Encoder。 |
+
+## 消融实验命令参考
+
+以 MELD 数据集为例，基础命令前缀：
+
+```bash
+BASE="python run.py --model_type chatglm3 --datasetName meld --pretrain_LM /path/to/chatglm3-6b --seeds 1111,2222,3333"
+```
+
+### 第一阶段：Mixer × Fusion 组合验证
+
+```bash
+# A0: TGM + MSF (Base 锚点)
+$BASE
+
+# A1: AMM + MSF — 单独验证 AMM 是否优于 TGM
+$BASE --use_amm
+
+# A2: TGM + MoE — 单独验证新 MoE 是否优于 MSF
+$BASE --use_moe_fusion
+
+# A3: AMM + MoE — 组合
+$BASE --use_amm --use_moe_fusion
+```
+
+### 第二阶段：辅助机制消融（在 A3 基础上逐个加入）
+
+```bash
+# A4: + cosine bias 门控
+$BASE --use_amm --use_moe_fusion --use_gate
+
+# A5: + 分支间 DiffLoss
+$BASE --use_amm --use_moe_fusion --use_diff_loss
+
+# A6: + 跨模态 NCE
+$BASE --use_amm --use_moe_fusion --use_nce_loss
+
+# A7: 最优组合 (根据 A4-A6 结果选择)
+$BASE --use_amm --use_moe_fusion --use_gate --use_diff_loss
+```
+
+### 第三阶段：特殊消融
+
+```bash
+# 无 Mixer (Lightweight: audio + video) + MSF
+$BASE --no_use_tgm
+
+# NCE 独立于 MoE 测试
+$BASE --use_nce_loss
+```
 
 ## 技术特点
 
-1. **多级情感细粒度捕捉**: 借由双分支 MoE (Global/Local) 使网络在宏观与微观层面自我寻找分工。
-2. **轻量化同构 MoE**: MoE 网络中的大量特征均采用较小的中间层，配合 LB loss 在几乎不增加显存压力的前提下提高特征灵敏度。
-3. **动态 Meta-Gate 决策**: 融合过程中根据音频和视频的直接相关程度等前置信息（Cosine Bias），决定情感是以微观线索主导还是全局特征主导。
-4. **轻量跨模态对比 (NCE)**: 只使用单层降维 LSTM 复用既往的时序输出生成对比特征，用非常低的参数量完成了强大的前后文对齐。
-5. **灵活的消融体系**: 各路 MoE 开关、Gate 机制、各类辅助 Loss (NCE、DiffLoss) 均可通过独立命令接口开启或关闭，便于科学实验对比。
-6. **大语言模型适配**: 支持多种主流语言模型并在同一架构实现。
+1. **两阶段可插拔架构**: Mixer (模态交互) 与 Fusion (特征映射) 完全解耦，每层各有 2+ 种实现，可独立消融。
+2. **异构 Expert 设计**: GlobalMoE 的 3 个 Expert 使用不同计算范式 (Bilinear 交互 / SE 通道注意力 / 线性残差)，让 Gate 有真正有意义的选择。
+3. **差异化 MoE 输入**: Global 分支接收融合后语义特征，Local 分支接收原始音视频拼接，天然实现宏观/微观分化。
+4. **后验感知 Meta-Gate**: 在分支路由中引入两分支输出差异作为后验信号，提升决策精度。
+5. **三模态对等交互 (AMM)**: 通过 Self-Attention 让音频和视频直接对话，不再被文本单向束缚。
+6. **高维 Encoder 无缝适配**: FeatureAdapter 自动按需启用，支持从 Librosa 64 维到 HuBERT/Whisper 1280 维的无缝切换。
 
 ## 依赖项
 

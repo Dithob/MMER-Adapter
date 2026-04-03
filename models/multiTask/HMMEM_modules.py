@@ -2,7 +2,27 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
-__all__ = ['TVA_LSTM', 'Text_guide_mixer', 'Lightweight_mixer', 'mutli_scale_fusion', 'Integrating']
+__all__ = ['TVA_LSTM', 'Text_guide_mixer', 'Lightweight_mixer', 'mutli_scale_fusion', 'Integrating', 'FeatureAdapter']
+
+
+class FeatureAdapter(nn.Module):
+    """Lightweight adapter to reduce high-dim encoder features (HuBERT/Whisper)
+    to a dimension suitable for LSTM processing.
+    Only instantiated when input feature dim > adapter_dim.
+    """
+    def __init__(self, in_dim, out_dim, dropout=0.1):
+        super().__init__()
+        self.adapter = nn.Sequential(
+            nn.Linear(in_dim, out_dim * 2),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(out_dim * 2, out_dim),
+            nn.LayerNorm(out_dim)
+        )
+
+    def forward(self, x):
+        # x: [B, T, in_dim] → [B, T, out_dim]
+        return self.adapter(x)
 
 class TVA_LSTM(nn.Module):
     def __init__(self, in_size, hidden_size, num_layers=1, dropout=0.2, bidirectional=False):

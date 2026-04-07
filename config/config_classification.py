@@ -134,7 +134,8 @@ class ConfigClassification():
                     #loss weight   best：1
                     'gamma': 1,
                     'update_epochs': 1,
-                    'early_stop': 8,
+                    # 'early_stop': 8,
+                    'early_stop': 6,
                     # res
                     'H': 3.0
                 },
@@ -183,7 +184,8 @@ class ConfigClassification():
                     'warm_up_epochs': 90,
                     'gamma':1,
                     'update_epochs': 1,
-                    'early_stop': 8,
+                    # 'early_stop': 8,
+                    'early_stop': 6,
                     'H': 3.0
                 },
             },

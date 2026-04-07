@@ -70,8 +70,14 @@ class Language_model(nn.Module):
         self.model = AutoModelForCausalLM.from_pretrained(
             pretrained_model,
             trust_remote_code=True,
-            torch_dtype=torch.bfloat16
-        ).half()
+            dtype=torch.float16
+        )
+        
+        # 缓存 PLE 维度信息，用于构造 dummy per_layer_inputs
+        base_cfg = self.model.config
+        text_cfg = getattr(base_cfg, 'text_config', base_cfg)
+        self._gemma_ple_dim = getattr(text_cfg, 'hidden_size_per_layer_input', 0)
+        self._gemma_num_layers = getattr(text_cfg, 'num_hidden_layers', 0)
         
         # Gemma 使用 eos_token 作为 pad_token
         if self.tokenizer.pad_token_id is None:
@@ -149,7 +155,7 @@ class Language_model(nn.Module):
     
     def _forward_modelscope(self, fusion_embedding, labels):
         """ModelScope/Gemma模型的前向传播"""
-        opt_tokens, atts_bos, atts_fusion, labels, labels_atts = self.input_processing(
+        opt_tokens, atts_bos, atts_fusion, labels, labels_atts, opt_input_ids = self.input_processing(
             fusion_embedding, labels, mode='train'
         )
         
@@ -160,16 +166,65 @@ class Language_model(nn.Module):
             attention_mask = torch.cat([atts_fusion, labels_atts], dim=1)
         
         # 确保 pad_token_id 有值，避免后续生成警告
-        if self.model.config.pad_token_id is None and hasattr(self.tokenizer, 'pad_token_id'):
-            self.model.config.pad_token_id = self.tokenizer.pad_token_id
+        if getattr(self.model.config, 'pad_token_id', None) is None and hasattr(self.tokenizer, 'pad_token_id'):
+            try:
+                self.model.config.pad_token_id = self.tokenizer.pad_token_id
+            except AttributeError:
+                pass  # Gemma4Config 等嵌套 config 不支持直接设置顶层 pad_token_id
 
-        with torch.amp.autocast(device_type='cuda'):
-            output = self.model(
+        if self.model_type == 'gemma' and self._gemma_ple_dim > 0:
+            # Gemma 4 PLE 机制：当仅传 inputs_embeds 时，多模态模型的 wrap(Gemma4Model)
+            # 在自己内部前向计算时，忽略传入的 per_layer_inputs 参数，并强行反向查找 input_ids
+            # （创建 [B, seq, vocab, hidden] 的巨大张量导致 937GiB OOM）。
+            # 解决方案：完全绕过多模态外壳，直接调用底层的 language_model (Gemma4TextModel)，
+            # 这样才能接收我们传入的零值 dummy_pli 并跳过 OOM 逻辑。
+            inner_text_model = getattr(self.model.model, 'language_model', self.model.model)
+            
+            if opt_input_ids is not None and hasattr(inner_text_model, 'get_per_layer_inputs'):
+                per_layer_inputs = inner_text_model.get_per_layer_inputs(
+                    input_ids=opt_input_ids.to(self.device),
+                    inputs_embeds=None
+                )
+            else:
+                per_layer_inputs = torch.zeros(
+                    opt_tokens.shape[0], opt_tokens.shape[1], self._gemma_num_layers, self._gemma_ple_dim,
+                    dtype=opt_tokens.dtype, device=opt_tokens.device
+                )
+                
+            with torch.amp.autocast(device_type='cuda'):
+                base_outputs = inner_text_model(
+                    inputs_embeds=opt_tokens,
+                    attention_mask=attention_mask,
+                    per_layer_inputs=per_layer_inputs,
+                    return_dict=True
+                )
+                hidden_states = base_outputs.last_hidden_state
+                logits = self.model.lm_head(hidden_states)
+                
+                if labels is not None:
+                    if hasattr(self.model, 'loss_function'):
+                        base_cfg = self.model.config
+                        text_cfg = getattr(base_cfg, 'text_config', base_cfg)
+                        vocab_size = getattr(self.model, 'vocab_size', getattr(text_cfg, 'vocab_size', 262144))
+                        loss = self.model.loss_function(logits, labels, vocab_size)
+                    else:
+                        shift_logits = logits[..., :-1, :].contiguous()
+                        shift_labels = labels[..., 1:].contiguous()
+                        loss = torch.nn.CrossEntropyLoss()(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+                else:
+                    loss = None
+            
+            from transformers.modeling_outputs import CausalLMOutputWithPast
+            output = CausalLMOutputWithPast(loss=loss, logits=logits)
+        else:
+            model_kwargs = dict(
                 inputs_embeds=opt_tokens,
                 attention_mask=attention_mask,
                 return_dict=True,
                 labels=labels
             )
+            with torch.amp.autocast(device_type='cuda'):
+                output = self.model(**model_kwargs)
 
         return output
     
@@ -236,7 +291,7 @@ class Language_model(nn.Module):
     
     def _generate_modelscope(self, fusion_embedding):
         """ModelScope模型的生成"""
-        opt_tokens, atts_bos, atts_fusion, _, _ = self.input_processing(fusion_embedding, mode='generate')
+        opt_tokens, atts_bos, atts_fusion, _, _, opt_input_ids = self.input_processing(fusion_embedding, mode='generate')
         
         if self.model_type in ['qwen', 'qwen3.5']:
             attention_mask = torch.cat([atts_bos, atts_fusion], dim=1)
@@ -263,16 +318,59 @@ class Language_model(nn.Module):
                 "max_new_tokens": self.max_new_tokens
             }
 
-        if self.model.config.pad_token_id is None and hasattr(self.tokenizer, 'pad_token_id'):
-            self.model.config.pad_token_id = self.tokenizer.pad_token_id
+        # 获取 pad_token_id：优先从 config，回退到 tokenizer
+        pad_id = getattr(self.model.config, 'pad_token_id', None) or getattr(self.tokenizer, 'pad_token_id', None)
 
-        outputs = self.model.generate(
-            inputs_embeds=opt_tokens,
-            attention_mask=attention_mask,
-            pad_token_id=self.model.config.pad_token_id,
-            **gen_kwargs
-        )
-        
+        if self.model_type == 'gemma' and self._gemma_ple_dim > 0:
+            # Gemma 4 PLE: model.generate() 同样会触发反向 embedding 查找导致 OOM
+            # 手动贪心解码：通过内部 TextModel + lm_head 逐步生成
+            with torch.no_grad(), torch.amp.autocast(device_type='cuda'):
+                current_embeds = opt_tokens
+                current_input_ids = opt_input_ids
+                generated_ids = []
+                # 关键：调用 self.model.model.language_model 而不是 self.model.model
+                inner_text_model = getattr(self.model.model, 'language_model', self.model.model)
+                for _ in range(self.max_new_tokens):
+                    batch_size = current_embeds.shape[0]
+                    if current_input_ids is not None and hasattr(inner_text_model, 'get_per_layer_inputs'):
+                        per_layer_inputs = inner_text_model.get_per_layer_inputs(
+                            input_ids=current_input_ids.to(self.device),
+                            inputs_embeds=None
+                        )
+                    else:
+                        per_layer_inputs = torch.zeros(
+                            current_embeds.shape[0], current_embeds.shape[1], self._gemma_num_layers, self._gemma_ple_dim,
+                            dtype=current_embeds.dtype, device=current_embeds.device
+                        )
+                    base_out = inner_text_model(
+                        inputs_embeds=current_embeds,
+                        attention_mask=attention_mask,
+                        per_layer_inputs=per_layer_inputs,
+                        return_dict=True
+                    )
+                    last_hidden = base_out.last_hidden_state[:, -1:, :]
+                    next_logits = self.model.lm_head(last_hidden)  # [B, 1, vocab]
+                    next_token_id = next_logits.argmax(dim=-1)  # [B, 1]
+                    generated_ids.append(next_token_id)
+                    # 准备下一步输入
+                    next_embed = self.text_embedding(next_token_id)
+                    current_embeds = torch.cat([current_embeds, next_embed], dim=1)
+                    if current_input_ids is not None:
+                        current_input_ids = torch.cat([current_input_ids, next_token_id], dim=1)
+                    attention_mask = torch.cat([
+                        attention_mask,
+                        torch.ones(batch_size, 1, dtype=attention_mask.dtype, device=attention_mask.device)
+                    ], dim=1)
+
+                outputs = torch.cat(generated_ids, dim=1)  # [B, max_new_tokens]
+        else:
+            outputs = self.model.generate(
+                inputs_embeds=opt_tokens,
+                attention_mask=attention_mask,
+                pad_token_id=pad_id,
+                **gen_kwargs
+            )
+
         if self.model_type in ['qwen', 'qwen3.5']:
             # When using inputs_embeds, model.generate() returns only new token IDs.
             # Extract only the last max_new_tokens tokens (the actual generated output).
@@ -283,7 +381,7 @@ class Language_model(nn.Module):
                 skip_special_tokens=True, 
                 clean_up_tokenization_spaces=False
             )
-        else:  # llama2, deepseek
+        else:  # llama2, deepseek, gemma
             new_tokens = outputs[:, -self.max_new_tokens:]
             responses = self.tokenizer.batch_decode(
                 new_tokens, 
@@ -342,28 +440,35 @@ class Language_model(nn.Module):
         batch_size = fusion_embedding.shape[0]
         
         task_prompt = self.get_task_prompt()
-        task_prompt_embedding = self.text_embedding(task_prompt.expand(batch_size, -1))
+        prompt_ids = task_prompt.expand(batch_size, -1)
+        task_prompt_embedding = self.text_embedding(prompt_ids)
         
         opt_tokens = torch.cat([fusion_embedding, task_prompt_embedding], dim=1)
         atts_fusion = torch.ones(opt_tokens.size()[:-1], dtype=torch.long).to(self.device)
         
+        # 针对 Gemma 4 等模型构建真实的 input_ids，fusion位由 pad_token_id 填充
+        pad_id = getattr(self.tokenizer, 'pad_token_id', 0)
+        fusion_ids = torch.full(fusion_embedding.shape[:-1], pad_id, dtype=torch.long, device=self.device)
+        opt_input_ids = torch.cat([fusion_ids, prompt_ids], dim=1)
+        
         if self.model_type in ['qwen', 'qwen3.5']:
-            bos = torch.ones([batch_size, 1], dtype=atts_fusion.dtype, device=self.device) * self.tokenizer.bos_token_id
-            bos_embeds = self.text_embedding(bos)
+            bos_ids = torch.ones([batch_size, 1], dtype=atts_fusion.dtype, device=self.device) * self.tokenizer.bos_token_id
+            bos_embeds = self.text_embedding(bos_ids)
             atts_bos = atts_fusion[:, :1]
             opt_tokens = torch.cat([bos_embeds, opt_tokens], dim=1)
-        else:  # llama2, deepseek
+            opt_input_ids = torch.cat([bos_ids, opt_input_ids], dim=1)
+        else:  # llama2, deepseek, gemma
             bos_embeds = None
             atts_bos = None
         
-        opt_tokens, labels, labels_atts = self.input_labels_construct(opt_tokens, labels, mode)
+        opt_tokens, labels, labels_atts, opt_input_ids = self.input_labels_construct(opt_tokens, labels, mode, opt_input_ids)
         
         if self.model_type in ['qwen', 'qwen3.5']:
-            return opt_tokens, atts_bos, atts_fusion, labels, labels_atts
-        else:  # llama2, deepseek
-            return opt_tokens, None, atts_fusion, labels, labels_atts
+            return opt_tokens, atts_bos, atts_fusion, labels, labels_atts, opt_input_ids
+        else:  # llama2, deepseek, gemma
+            return opt_tokens, None, atts_fusion, labels, labels_atts, opt_input_ids
     
-    def input_labels_construct(self, opt_tokens, labels=None, mode=None):
+    def input_labels_construct(self, opt_tokens, labels=None, mode=None, opt_input_ids=None):
         """
         Args:
             opt_tokens: the "concatenate" size of multimodal fusion, text embedding and prompt
@@ -390,22 +495,32 @@ class Language_model(nn.Module):
                 labels_matrix = torch.empty_like(opt_tokens).fill_(-100).long().to(self.device)
                 opt_tokens = torch.cat([opt_tokens, labels_id], dim=1)
                 labels = torch.cat([labels_matrix, labels_id], dim=1)
+                if opt_input_ids is not None:
+                    opt_input_ids = torch.cat([opt_input_ids, labels_id], dim=1)
+                    return opt_tokens, labels, opt_input_ids
                 return opt_tokens, labels
             else:
-                labels = self.tokenizer(label_template, padding=True, return_tensors="pt", add_special_tokens=False).to(self.device)
-                labels_id = labels["input_ids"]
-                labels_atts = labels["attention_mask"]
+                labels_dict = self.tokenizer(label_template, padding=True, return_tensors="pt", add_special_tokens=False).to(self.device)
+                labels_id = labels_dict["input_ids"]
+                labels_atts = labels_dict["attention_mask"]
                 
                 labels_embedding = self.text_embedding(labels_id)
                 labels_matrix = torch.empty(opt_tokens.size(0), opt_tokens.size(1)).fill_(-100).long().to(self.device)
                 opt_tokens = torch.cat([opt_tokens, labels_embedding], dim=1)
                 labels = torch.cat([labels_matrix, labels_id], dim=1)
                 
+                if opt_input_ids is not None:
+                    opt_input_ids = torch.cat([opt_input_ids, labels_id], dim=1)
+                    return opt_tokens, labels, labels_atts, opt_input_ids
                 return opt_tokens, labels, labels_atts
         else:
             if self.model_type == 'chatglm3':
+                if opt_input_ids is not None:
+                    return opt_tokens, None, opt_input_ids
                 return opt_tokens, None
             else:
+                if opt_input_ids is not None:
+                    return opt_tokens, None, None, opt_input_ids
                 return opt_tokens, None, None
     
     def get_task_prompt(self):

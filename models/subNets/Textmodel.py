@@ -36,6 +36,8 @@ class Language_model(nn.Module):
         """根据模型类型加载不同的语言模型"""
         if self.model_type == 'chatglm3':
             self._load_chatglm3(pretrained_model)
+        elif self.model_type == 'gemma':
+            self._load_gemma(pretrained_model)
         elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']:
             self._load_modelscope_model(pretrained_model)
         else:
@@ -55,6 +57,25 @@ class Language_model(nn.Module):
             pretrained_model, 
             trust_remote_code=True
         )
+    
+    def _load_gemma(self, pretrained_model):
+        """加载Gemma模型（使用HuggingFace transformers）"""
+        from transformers import AutoTokenizer, AutoModelForCausalLM
+        
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            pretrained_model,
+            padding_side='left',
+            trust_remote_code=True
+        )
+        self.model = AutoModelForCausalLM.from_pretrained(
+            pretrained_model,
+            trust_remote_code=True,
+            torch_dtype=torch.bfloat16
+        ).half()
+        
+        # Gemma 使用 eos_token 作为 pad_token
+        if self.tokenizer.pad_token_id is None:
+            self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
     
     def _load_modelscope_model(self, pretrained_model):
         """加载ModelScope模型（Qwen, Llama2等）"""
@@ -92,7 +113,10 @@ class Language_model(nn.Module):
                 self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
     
     def text_embedding(self, text_ids):
-        embeddings = self.model.base_model.get_input_embeddings()
+        if self.model_type == 'gemma':
+            embeddings = self.model.get_input_embeddings()
+        else:
+            embeddings = self.model.base_model.get_input_embeddings()
         return embeddings(text_ids)
     
     def forward(self, fusion_embedding, labels):
@@ -105,7 +129,7 @@ class Language_model(nn.Module):
         
         if self.model_type == 'chatglm3':
             return self._forward_chatglm3(fusion_embedding, labels)
-        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']:
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek', 'gemma']:
             return self._forward_modelscope(fusion_embedding, labels)
         else:
             raise ValueError(f"Unsupported model type in forward: {self.model_type}")
@@ -124,12 +148,16 @@ class Language_model(nn.Module):
         return output
     
     def _forward_modelscope(self, fusion_embedding, labels):
-        """ModelScope模型的前向传播"""
+        """ModelScope/Gemma模型的前向传播"""
         opt_tokens, atts_bos, atts_fusion, labels, labels_atts = self.input_processing(
             fusion_embedding, labels, mode='train'
         )
         
-        attention_mask = torch.cat([atts_bos, atts_fusion, labels_atts], dim=1)
+        # 构建 attention_mask：有 bos 的拼接 bos，否则只用 fusion + labels
+        if atts_bos is not None:
+            attention_mask = torch.cat([atts_bos, atts_fusion, labels_atts], dim=1)
+        else:
+            attention_mask = torch.cat([atts_fusion, labels_atts], dim=1)
         
         # 确保 pad_token_id 有值，避免后续生成警告
         if self.model.config.pad_token_id is None and hasattr(self.tokenizer, 'pad_token_id'):
@@ -151,7 +179,7 @@ class Language_model(nn.Module):
         
         if self.model_type == 'chatglm3':
             return self._generate_chatglm3(fusion_embedding)
-        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']:
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek', 'gemma']:
             return self._generate_modelscope(fusion_embedding)
         else:
             raise ValueError(f"Unsupported model type in generate: {self.model_type}")
@@ -227,8 +255,8 @@ class Language_model(nn.Module):
                 "top_p": None,
                 "max_new_tokens": self.max_new_tokens
             }
-        else:  # deepseek
-            attention_mask = torch.cat([atts_bos, atts_fusion], dim=1)
+        else:  # deepseek, gemma
+            attention_mask = atts_fusion  # 无 bos 的模型直接使用 fusion 的 attention_mask
             gen_kwargs = {
                 "num_beams": 1,
                 "do_sample": False,
@@ -291,7 +319,7 @@ class Language_model(nn.Module):
         """
         if self.model_type == 'chatglm3':
             return self._input_processing_chatglm3(fusion_embedding, labels, mode)
-        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']:
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek', 'gemma']:
             return self._input_processing_modelscope(fusion_embedding, labels, mode)
         else:
             raise ValueError(f"Unsupported model type in input_processing: {self.model_type}")

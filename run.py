@@ -200,8 +200,8 @@ def parse_args():
     parser.add_argument('--modelName', type=str, default='hmmem',
                         help='support HMMEM')
     parser.add_argument('--model_type', type=str, default='chatglm3',
-                        choices=['chatglm3', 'qwen', 'qwen3.5', 'llama2', 'deepseek'],
-                        help='type of language model: chatglm3, qwen, qwen3.5, llama2, or deepseek')
+                        choices=['chatglm3', 'qwen', 'qwen3.5', 'llama2', 'deepseek', 'gemma'],
+                        help='type of language model: chatglm3, qwen, qwen3.5, llama2, deepseek, or gemma')
     parser.add_argument('--datasetName', type=str, default='mosi',
                         help='support mosei/simsv2/meld/cherma')
     parser.add_argument('--root_dataset_dir', type=str, default='/root/autodl-tmp/datasets/',
@@ -298,6 +298,8 @@ if __name__ == '__main__':
             args.pretrain_LM = '/root/autodl-tmp/models/Meta/Llama-2-7b-hf/'
         elif args.model_type == 'deepseek':
             args.pretrain_LM = '/root/autodl-tmp/models/deepseek-ai/deepseek-llm-7b-base/'
+        elif args.model_type == 'gemma':
+            args.pretrain_LM = '/root/autodl-tmp/models/google/gemma-4-E4B/'
 
     # 支持一次性传入多个数据集，如 "mosei,meld" 或 "all"
     dataset_list = []

@@ -223,13 +223,13 @@ def parse_args():
                         help='random seeds (e.g. 1111,2222)')
                         
     # ── Mixer layer ablation (mutually exclusive: use_amm overrides use_tgm) ──
-    parser.add_argument('--use_tgm', action='store_true', default=True,
+    parser.add_argument('--use_tgm', action='store_true', default=False,
                         help='use Text-Guided Mixer (default baseline)')
     parser.add_argument('--use_amm', action='store_true',
                         help='use Adaptive Modal Mixer (overrides TGM)')
     
     # ── Fusion layer ablation (mutually exclusive: use_moe_fusion overrides use_msf) ──
-    parser.add_argument('--use_msf', action='store_true', default=True,
+    parser.add_argument('--use_msf', action='store_true', default=False,
                         help='use Multi-Scale Fusion (default baseline)')
     parser.add_argument('--use_moe_fusion', action='store_true',
                         help='enable Dual-Branch MoE fusion (overrides MSF)')

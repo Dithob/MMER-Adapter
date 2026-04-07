@@ -28,7 +28,16 @@ class HMMEM(nn.Module):
 
         # Dynamically resolve text_in from LLM hidden_size
         if hasattr(self.LLM.model, 'config'):
-            llm_hidden_size = getattr(self.LLM.model.config, 'hidden_size', None)
+            config = self.LLM.model.config
+            llm_hidden_size = getattr(config, 'hidden_size', None)
+            # Fallback: multimodal models (e.g. Gemma 4) nest hidden_size under text_config
+            if llm_hidden_size is None and hasattr(config, 'text_config'):
+                llm_hidden_size = getattr(config.text_config, 'hidden_size', None)
+            # Fallback: detect from embedding layer output dimension
+            if llm_hidden_size is None:
+                embed_layer = self.LLM.model.get_input_embeddings()
+                if embed_layer is not None and hasattr(embed_layer, 'embedding_dim'):
+                    llm_hidden_size = embed_layer.embedding_dim
             if llm_hidden_size is not None and (text_in == 0 or text_in != llm_hidden_size):
                 text_in = llm_hidden_size
                 args.feature_dims = (text_in, audio_in, video_in)

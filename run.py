@@ -38,7 +38,7 @@ def run(args):
     if not os.path.exists(args.model_save_dir):
         os.makedirs(args.model_save_dir)
     args.model_save_path = os.path.join(args.model_save_dir,\
-                                        f'{args.modelName}-{args.datasetName}-{args.train_mode}-{args.timestamp}.pth')
+                                        f'{args.modelName}-{args.model_type}-{args.datasetName}-{args.train_mode}-{args.timestamp}.pth')
     
     if len(args.gpu_ids) == 0 and torch.cuda.is_available():
         # load free-most gpu
@@ -142,28 +142,31 @@ def run_normal(args):
         model_results.append(test_results)
 
         criterions = list(model_results[0].keys())
-        # load other results
-        save_path = os.path.join(args.res_save_dir, f'{args.datasetName}-{args.train_mode}-{args.warm_up_epochs}-{args.timestamp}.csv')
+        # 移除时间后缀，按模型、架构、数据集保存csv，方便追加记录
+        save_path = os.path.join(args.res_save_dir, f'{args.modelName}-{args.model_type}-{args.datasetName}-{args.train_mode}.csv')
         if not os.path.exists(args.res_save_dir):
             os.makedirs(args.res_save_dir)
+            
+        columns = ["Model", "ModelType", "Dataset", "Seed", "Timestamp", "PTH Path"] + criterions
         if os.path.exists(save_path):
             df = pd.read_csv(save_path)
+            # 兼容旧表，如果列数不对齐可以重建列头
+            if "Timestamp" not in df.columns or "PTH Path" not in df.columns:
+                df = df.reindex(columns=columns)
         else:
-            # df = pd.DataFrame(columns=["Model"] + criterions)
-            df = pd.DataFrame(columns=["Model", "Seed"] + criterions)
-        # save results
-        # res = [args.modelName]
+            df = pd.DataFrame(columns=columns)
 
         for k, test_results in enumerate(model_results):
-            res = [args.modelName, f'{seed}']
+            res = [args.modelName, args.model_type, args.datasetName, f'{seed}', args.timestamp, args.model_save_path]
             for c in criterions:
                 res.append(round(test_results[c] * 100, 2))
-            df.loc[len(df)] = res
+            
+            # 使用 pd.DataFrame 追加来兼容老版本的 pandas
+            new_row = pd.DataFrame([res], columns=columns)
+            df = pd.concat([df, new_row], ignore_index=True)
 
-        # df.loc[len(df)] = res
         df.to_csv(save_path, index=None)
         logger.info('Results are added to %s...' % (save_path))
-        df = df.iloc[0:0]  # 保存后清0
         model_results = []
 
 

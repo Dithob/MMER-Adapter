@@ -33,7 +33,25 @@ class ConfigClassification():
         
         # Get data parameters
         dataArgs = HYPER_DATASET_MAP[base_dataset_name]
-        dataArgs = dataArgs['aligned'] if (commonArgs['need_data_aligned'] and 'aligned' in dataArgs) else dataArgs['unaligned']
+        if base_dataset_name == 'iemocap':
+            # Switchable IEMOCAP feature mode:
+            # - raw: Emotion-LLaMA-v2 native dimensions (audio 1280 / video 1408)
+            # - compressed: legacy MMER-Adapter dimensions (audio 64 / video 64)
+            iemocap_feature_mode = str(getattr(args, 'iemocap_feature_mode', 'raw')).lower()
+            if commonArgs['need_data_aligned'] and 'aligned' in dataArgs:
+                dataArgs = dataArgs['aligned']
+            else:
+                if iemocap_feature_mode == 'raw':
+                    dataArgs = dataArgs['unaligned_raw']
+                elif iemocap_feature_mode == 'compressed':
+                    dataArgs = dataArgs['unaligned_compressed']
+                else:
+                    raise ValueError(
+                        f"Unsupported iemocap_feature_mode={iemocap_feature_mode}. "
+                        f"Use 'raw' or 'compressed'."
+                    )
+        else:
+            dataArgs = dataArgs['aligned'] if (commonArgs['need_data_aligned'] and 'aligned' in dataArgs) else dataArgs['unaligned']
         
         # Only override num_classes for iemocap (where it's dynamically determined)
         if num_classes is not None:
@@ -62,7 +80,10 @@ class ConfigClassification():
         root_dataset_dir = self.root_dataset_dir
         tmp = {
             'iemocap':{
-                'unaligned': {
+                # Old compressed setting (kept here as reference):
+                # 'seq_lens': (84, 157, 32)
+                # 'feature_dims': (0, 64, 64)
+                'unaligned_compressed': {
                     'dataPath': os.path.join(root_dataset_dir, 'IEMOCAP', 'iemocap_data_0610.pkl'),
                     'seq_lens': (84, 157, 32),
                     # (text, audio, video) text_dim=0 means auto-detect from LLM hidden_size
@@ -71,7 +92,17 @@ class ConfigClassification():
                     'num_classes': 4,
                     'language': 'en',
                     'KeyEval': 'weight_F1'
-                }
+                },
+                'unaligned_raw': {
+                    'dataPath': os.path.join(root_dataset_dir, 'IEMOCAP', 'iemocap_data_0610.pkl'),
+                    'seq_lens': (84, 64, 64),
+                    # (text, audio, video) text_dim=0 means auto-detect from LLM hidden_size
+                    'feature_dims': (0, 1280, 1408),
+                    'train_samples': 4290,
+                    'num_classes': 4,
+                    'language': 'en',
+                    'KeyEval': 'weight_F1'
+                },
             },
             'meld':{
                 'unaligned': {

@@ -265,6 +265,8 @@ def parse_args():
     # ── Feature Adapter (for high-dim encoders: HuBERT/Whisper) ──
     parser.add_argument('--adapter_dim', type=int, default=128,
                         help='adapter output dim; only activates when feature_dim > adapter_dim')
+    parser.add_argument('--iemocap_feature_mode', type=str, default='raw', choices=['raw', 'compressed'],
+                        help='IEMOCAP feature preset: raw(64x1280/64x1408) or compressed(157x64/32x64)')
                         
     return parser.parse_args()
 

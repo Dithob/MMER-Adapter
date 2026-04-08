@@ -514,3 +514,364 @@
 2026-04-07 01:08:57:INFO:TEST-(hmmem) >>
 2026-04-07 01:08:57:INFO:M: >>  acc: 0.6632  weight_F1: 0.6579 
 2026-04-07 01:08:57:INFO:Results are added to /root/autodl-tmp/results/results/meld-classification-50-20260406_233547.csv...
+2026-04-07 20:25:09:INFO:========= 准备训练数据集: meld (classification) =========
+2026-04-07 20:25:09:INFO:Start running hmmem...
+2026-04-07 20:25:09:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [], 'seeds': [1111, 2222, 3333], 'use_tgm': False, 'use_amm': True, 'use_msf': False, 'use_moe_fusion': False, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'timestamp': '20260407_202509', 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 6, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 6, 'H': 3.0, 'seed': 1111}>
+2026-04-07 20:25:09:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-04-07 20:25:09:INFO:Let's use the GPU 1 !
+2026-04-07 20:25:41:INFO:trainable params: 2661511 || all params: 6246245511 || trainable%: 0.04260977246752349
+2026-04-07 20:25:42:INFO:Init labels...
+2026-04-07 20:25:42:INFO:Start training...
+2026-04-07 20:26:33:INFO:========= 准备训练数据集: meld (classification) =========
+2026-04-07 20:26:33:INFO:Start running hmmem...
+2026-04-07 20:26:33:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [], 'seeds': [1111, 2222, 3333], 'use_tgm': False, 'use_amm': True, 'use_msf': False, 'use_moe_fusion': False, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'timestamp': '20260407_202633', 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 6, 'H': 3.0, 'seed': 1111}>
+2026-04-07 20:26:33:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-04-07 20:26:33:INFO:Let's use the GPU 1 !
+2026-04-07 20:27:06:INFO:trainable params: 2661511 || all params: 6246245511 || trainable%: 0.04260977246752349
+2026-04-07 20:27:06:INFO:Init labels...
+2026-04-07 20:27:06:INFO:Start training...
+2026-04-07 20:33:20:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 1.1696
+2026-04-07 20:33:59:INFO:VAL-(hmmem) >>
+2026-04-07 20:33:59:INFO:M: >>  acc: 0.5464  weight_F1: 0.4965 
+2026-04-07 20:34:06:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 20:40:23:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 0.5778
+2026-04-07 20:41:01:INFO:VAL-(hmmem) >>
+2026-04-07 20:41:01:INFO:M: >>  acc: 0.5798  weight_F1: 0.5306 
+2026-04-07 20:41:08:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 20:47:24:INFO:TRAIN-(hmmem) (1/3/1)>> loss: 0.5412
+2026-04-07 20:48:02:INFO:VAL-(hmmem) >>
+2026-04-07 20:48:02:INFO:M: >>  acc: 0.6087  weight_F1: 0.5835 
+2026-04-07 20:48:08:INFO:Saving checkpoint at epoch 3 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 20:54:27:INFO:TRAIN-(hmmem) (1/4/1)>> loss: 0.5214
+2026-04-07 20:55:05:INFO:VAL-(hmmem) >>
+2026-04-07 20:55:05:INFO:M: >>  acc: 0.6231  weight_F1: 0.5924 
+2026-04-07 20:55:12:INFO:Saving checkpoint at epoch 4 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 21:01:29:INFO:TRAIN-(hmmem) (1/5/1)>> loss: 0.5058
+2026-04-07 21:02:07:INFO:VAL-(hmmem) >>
+2026-04-07 21:02:07:INFO:M: >>  acc: 0.6276  weight_F1: 0.5934 
+2026-04-07 21:02:13:INFO:Saving checkpoint at epoch 5 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 21:08:35:INFO:TRAIN-(hmmem) (1/6/1)>> loss: 0.4937
+2026-04-07 21:09:14:INFO:VAL-(hmmem) >>
+2026-04-07 21:09:14:INFO:M: >>  acc: 0.6411  weight_F1: 0.6120 
+2026-04-07 21:09:21:INFO:Saving checkpoint at epoch 6 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 21:15:41:INFO:TRAIN-(hmmem) (1/7/1)>> loss: 0.4812
+2026-04-07 21:16:20:INFO:VAL-(hmmem) >>
+2026-04-07 21:16:20:INFO:M: >>  acc: 0.6537  weight_F1: 0.6394 
+2026-04-07 21:16:27:INFO:Saving checkpoint at epoch 7 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 21:22:50:INFO:TRAIN-(hmmem) (1/8/1)>> loss: 0.4719
+2026-04-07 21:23:29:INFO:VAL-(hmmem) >>
+2026-04-07 21:23:29:INFO:M: >>  acc: 0.6519  weight_F1: 0.6293 
+2026-04-07 21:29:47:INFO:TRAIN-(hmmem) (2/9/1)>> loss: 0.4603
+2026-04-07 21:30:25:INFO:VAL-(hmmem) >>
+2026-04-07 21:30:25:INFO:M: >>  acc: 0.6555  weight_F1: 0.6428 
+2026-04-07 21:30:32:INFO:Saving checkpoint at epoch 9 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 21:36:50:INFO:TRAIN-(hmmem) (1/10/1)>> loss: 0.4442
+2026-04-07 21:37:28:INFO:VAL-(hmmem) >>
+2026-04-07 21:37:28:INFO:M: >>  acc: 0.6492  weight_F1: 0.6364 
+2026-04-07 21:43:42:INFO:TRAIN-(hmmem) (2/11/1)>> loss: 0.4227
+2026-04-07 21:44:20:INFO:VAL-(hmmem) >>
+2026-04-07 21:44:20:INFO:M: >>  acc: 0.6528  weight_F1: 0.6357 
+2026-04-07 21:50:34:INFO:TRAIN-(hmmem) (3/12/1)>> loss: 0.3978
+2026-04-07 21:51:12:INFO:VAL-(hmmem) >>
+2026-04-07 21:51:12:INFO:M: >>  acc: 0.6501  weight_F1: 0.6363 
+2026-04-07 21:57:27:INFO:TRAIN-(hmmem) (4/13/1)>> loss: 0.3643
+2026-04-07 21:58:05:INFO:VAL-(hmmem) >>
+2026-04-07 21:58:05:INFO:M: >>  acc: 0.6447  weight_F1: 0.6310 
+2026-04-07 22:04:20:INFO:TRAIN-(hmmem) (5/14/1)>> loss: 0.3291
+2026-04-07 22:04:58:INFO:VAL-(hmmem) >>
+2026-04-07 22:04:58:INFO:M: >>  acc: 0.6159  weight_F1: 0.6134 
+2026-04-07 22:11:11:INFO:TRAIN-(hmmem) (6/15/1)>> loss: 0.2914
+2026-04-07 22:11:49:INFO:VAL-(hmmem) >>
+2026-04-07 22:11:49:INFO:M: >>  acc: 0.6150  weight_F1: 0.6004 
+2026-04-07 22:13:19:INFO:TEST-(hmmem) >>
+2026-04-07 22:13:19:INFO:M: >>  acc: 0.6728  weight_F1: 0.6594 
+2026-04-07 22:13:20:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-chatglm3-meld-classification.csv...
+2026-04-07 22:13:20:INFO:Start running hmmem...
+2026-04-07 22:13:20:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [0], 'seeds': [1111, 2222, 3333], 'use_tgm': False, 'use_amm': True, 'use_msf': False, 'use_moe_fusion': False, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'timestamp': '20260407_202633', 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 6, 'H': 3.0, 'seed': 2222}>
+2026-04-07 22:13:20:INFO:Let's use the GPU 1 !
+2026-04-07 22:13:46:INFO:trainable params: 2661511 || all params: 6246245511 || trainable%: 0.04260977246752349
+2026-04-07 22:13:46:INFO:Init labels...
+2026-04-07 22:13:46:INFO:Start training...
+2026-04-07 22:20:02:INFO:TRAIN-(hmmem) (1/1/2)>> loss: 1.1401
+2026-04-07 22:20:41:INFO:VAL-(hmmem) >>
+2026-04-07 22:20:41:INFO:M: >>  acc: 0.4932  weight_F1: 0.4527 
+2026-04-07 22:20:48:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 22:27:07:INFO:TRAIN-(hmmem) (1/2/2)>> loss: 0.6020
+2026-04-07 22:27:45:INFO:VAL-(hmmem) >>
+2026-04-07 22:27:45:INFO:M: >>  acc: 0.6348  weight_F1: 0.6122 
+2026-04-07 22:27:52:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 22:34:11:INFO:TRAIN-(hmmem) (1/3/2)>> loss: 0.5353
+2026-04-07 22:34:49:INFO:VAL-(hmmem) >>
+2026-04-07 22:34:49:INFO:M: >>  acc: 0.6411  weight_F1: 0.6193 
+2026-04-07 22:34:56:INFO:Saving checkpoint at epoch 3 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 22:41:12:INFO:TRAIN-(hmmem) (1/4/2)>> loss: 0.5132
+2026-04-07 22:41:50:INFO:VAL-(hmmem) >>
+2026-04-07 22:41:50:INFO:M: >>  acc: 0.6402  weight_F1: 0.6350 
+2026-04-07 22:41:57:INFO:Saving checkpoint at epoch 4 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 22:48:17:INFO:TRAIN-(hmmem) (1/5/2)>> loss: 0.4993
+2026-04-07 22:48:55:INFO:VAL-(hmmem) >>
+2026-04-07 22:48:55:INFO:M: >>  acc: 0.6393  weight_F1: 0.6389 
+2026-04-07 22:49:02:INFO:Saving checkpoint at epoch 5 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 22:55:19:INFO:TRAIN-(hmmem) (1/6/2)>> loss: 0.4916
+2026-04-07 22:55:58:INFO:VAL-(hmmem) >>
+2026-04-07 22:55:58:INFO:M: >>  acc: 0.6637  weight_F1: 0.6392 
+2026-04-07 22:56:05:INFO:Saving checkpoint at epoch 6 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 23:02:27:INFO:TRAIN-(hmmem) (1/7/2)>> loss: 0.4773
+2026-04-07 23:03:05:INFO:VAL-(hmmem) >>
+2026-04-07 23:03:05:INFO:M: >>  acc: 0.6573  weight_F1: 0.6473 
+2026-04-07 23:03:12:INFO:Saving checkpoint at epoch 7 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 23:09:32:INFO:TRAIN-(hmmem) (1/8/2)>> loss: 0.4633
+2026-04-07 23:10:11:INFO:VAL-(hmmem) >>
+2026-04-07 23:10:11:INFO:M: >>  acc: 0.6592  weight_F1: 0.6450 
+2026-04-07 23:16:28:INFO:TRAIN-(hmmem) (2/9/2)>> loss: 0.4501
+2026-04-07 23:17:06:INFO:VAL-(hmmem) >>
+2026-04-07 23:17:06:INFO:M: >>  acc: 0.6501  weight_F1: 0.6414 
+2026-04-07 23:23:23:INFO:TRAIN-(hmmem) (3/10/2)>> loss: 0.4302
+2026-04-07 23:24:01:INFO:VAL-(hmmem) >>
+2026-04-07 23:24:01:INFO:M: >>  acc: 0.6429  weight_F1: 0.6379 
+2026-04-07 23:30:15:INFO:TRAIN-(hmmem) (4/11/2)>> loss: 0.4030
+2026-04-07 23:30:53:INFO:VAL-(hmmem) >>
+2026-04-07 23:30:53:INFO:M: >>  acc: 0.6465  weight_F1: 0.6294 
+2026-04-07 23:37:07:INFO:TRAIN-(hmmem) (5/12/2)>> loss: 0.3743
+2026-04-07 23:37:45:INFO:VAL-(hmmem) >>
+2026-04-07 23:37:45:INFO:M: >>  acc: 0.6339  weight_F1: 0.6289 
+2026-04-07 23:43:58:INFO:TRAIN-(hmmem) (6/13/2)>> loss: 0.3381
+2026-04-07 23:44:36:INFO:VAL-(hmmem) >>
+2026-04-07 23:44:36:INFO:M: >>  acc: 0.6474  weight_F1: 0.6383 
+2026-04-07 23:46:05:INFO:TEST-(hmmem) >>
+2026-04-07 23:46:05:INFO:M: >>  acc: 0.6475  weight_F1: 0.6391 
+2026-04-07 23:46:06:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-chatglm3-meld-classification.csv...
+2026-04-07 23:46:06:INFO:Start running hmmem...
+2026-04-07 23:46:06:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [0], 'seeds': [1111, 2222, 3333], 'use_tgm': False, 'use_amm': True, 'use_msf': False, 'use_moe_fusion': False, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'timestamp': '20260407_202633', 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 6, 'H': 3.0, 'seed': 3333}>
+2026-04-07 23:46:06:INFO:Let's use the GPU 1 !
+2026-04-07 23:46:31:INFO:trainable params: 2661511 || all params: 6246245511 || trainable%: 0.04260977246752349
+2026-04-07 23:46:31:INFO:Init labels...
+2026-04-07 23:46:31:INFO:Start training...
+2026-04-07 23:52:45:INFO:TRAIN-(hmmem) (1/1/3)>> loss: 1.0534
+2026-04-07 23:53:24:INFO:VAL-(hmmem) >>
+2026-04-07 23:53:24:INFO:M: >>  acc: 0.5987  weight_F1: 0.5800 
+2026-04-07 23:53:31:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-07 23:59:47:INFO:TRAIN-(hmmem) (1/2/3)>> loss: 0.5469
+2026-04-08 00:00:26:INFO:VAL-(hmmem) >>
+2026-04-08 00:00:26:INFO:M: >>  acc: 0.6375  weight_F1: 0.6309 
+2026-04-08 00:00:33:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-08 00:06:51:INFO:TRAIN-(hmmem) (1/3/3)>> loss: 0.5162
+2026-04-08 00:07:29:INFO:VAL-(hmmem) >>
+2026-04-08 00:07:29:INFO:M: >>  acc: 0.6411  weight_F1: 0.6177 
+2026-04-08 00:13:44:INFO:TRAIN-(hmmem) (2/4/3)>> loss: 0.4970
+2026-04-08 00:14:23:INFO:VAL-(hmmem) >>
+2026-04-08 00:14:23:INFO:M: >>  acc: 0.6537  weight_F1: 0.6313 
+2026-04-08 00:14:30:INFO:Saving checkpoint at epoch 4 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-08 00:20:49:INFO:TRAIN-(hmmem) (1/5/3)>> loss: 0.4854
+2026-04-08 00:21:28:INFO:VAL-(hmmem) >>
+2026-04-08 00:21:28:INFO:M: >>  acc: 0.6519  weight_F1: 0.6491 
+2026-04-08 00:21:35:INFO:Saving checkpoint at epoch 5 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-08 00:27:53:INFO:TRAIN-(hmmem) (1/6/3)>> loss: 0.4754
+2026-04-08 00:28:31:INFO:VAL-(hmmem) >>
+2026-04-08 00:28:31:INFO:M: >>  acc: 0.6709  weight_F1: 0.6664 
+2026-04-08 00:28:37:INFO:Saving checkpoint at epoch 6 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260407_202633.pth.
+2026-04-08 00:34:55:INFO:TRAIN-(hmmem) (1/7/3)>> loss: 0.4614
+2026-04-08 00:35:34:INFO:VAL-(hmmem) >>
+2026-04-08 00:35:34:INFO:M: >>  acc: 0.6682  weight_F1: 0.6512 
+2026-04-08 00:41:50:INFO:TRAIN-(hmmem) (2/8/3)>> loss: 0.4466
+2026-04-08 00:42:28:INFO:VAL-(hmmem) >>
+2026-04-08 00:42:28:INFO:M: >>  acc: 0.6619  weight_F1: 0.6522 
+2026-04-08 00:48:43:INFO:TRAIN-(hmmem) (3/9/3)>> loss: 0.4250
+2026-04-08 00:49:21:INFO:VAL-(hmmem) >>
+2026-04-08 00:49:21:INFO:M: >>  acc: 0.6691  weight_F1: 0.6564 
+2026-04-08 00:55:36:INFO:TRAIN-(hmmem) (4/10/3)>> loss: 0.4003
+2026-04-08 00:56:14:INFO:VAL-(hmmem) >>
+2026-04-08 00:56:14:INFO:M: >>  acc: 0.6528  weight_F1: 0.6404 
+2026-04-08 01:02:29:INFO:TRAIN-(hmmem) (5/11/3)>> loss: 0.3663
+2026-04-08 01:03:07:INFO:VAL-(hmmem) >>
+2026-04-08 01:03:07:INFO:M: >>  acc: 0.6447  weight_F1: 0.6396 
+2026-04-08 01:09:22:INFO:TRAIN-(hmmem) (6/12/3)>> loss: 0.3320
+2026-04-08 01:10:00:INFO:VAL-(hmmem) >>
+2026-04-08 01:10:00:INFO:M: >>  acc: 0.6357  weight_F1: 0.6343 
+2026-04-08 01:11:30:INFO:TEST-(hmmem) >>
+2026-04-08 01:11:30:INFO:M: >>  acc: 0.6605  weight_F1: 0.6532 
+2026-04-08 01:11:30:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-chatglm3-meld-classification.csv...
+2026-04-08 09:44:54:INFO:========= 准备训练数据集: meld (classification) =========
+2026-04-08 09:44:54:INFO:Start running hmmem...
+2026-04-08 09:44:54:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [], 'seeds': [1111, 2222, 3333], 'use_tgm': False, 'use_amm': False, 'use_msf': False, 'use_moe_fusion': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'timestamp': '20260408_094454', 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 6, 'H': 3.0, 'seed': 1111}>
+2026-04-08 09:44:54:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-04-08 09:44:54:INFO:Let's use the GPU 1 !
+2026-04-08 09:45:15:INFO:trainable params: 1432012 || all params: 6245016012 || trainable%: 0.02293047763605958
+2026-04-08 09:45:15:INFO:Init labels...
+2026-04-08 09:45:15:INFO:Start training...
+2026-04-08 09:51:32:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 2.1470
+2026-04-08 09:52:10:INFO:VAL-(hmmem) >>
+2026-04-08 09:52:10:INFO:M: >>  acc: 0.5311  weight_F1: 0.5192 
+2026-04-08 09:52:17:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 09:58:36:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 0.5741
+2026-04-08 09:59:14:INFO:VAL-(hmmem) >>
+2026-04-08 09:59:14:INFO:M: >>  acc: 0.6204  weight_F1: 0.6087 
+2026-04-08 09:59:21:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 10:05:40:INFO:TRAIN-(hmmem) (1/3/1)>> loss: 0.5309
+2026-04-08 10:06:18:INFO:VAL-(hmmem) >>
+2026-04-08 10:06:18:INFO:M: >>  acc: 0.6483  weight_F1: 0.6276 
+2026-04-08 10:06:25:INFO:Saving checkpoint at epoch 3 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 10:12:46:INFO:TRAIN-(hmmem) (1/4/1)>> loss: 0.5116
+2026-04-08 10:13:25:INFO:VAL-(hmmem) >>
+2026-04-08 10:13:25:INFO:M: >>  acc: 0.6546  weight_F1: 0.6317 
+2026-04-08 10:13:31:INFO:Saving checkpoint at epoch 4 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 10:19:52:INFO:TRAIN-(hmmem) (1/5/1)>> loss: 0.5001
+2026-04-08 10:20:31:INFO:VAL-(hmmem) >>
+2026-04-08 10:20:31:INFO:M: >>  acc: 0.6537  weight_F1: 0.6453 
+2026-04-08 10:20:38:INFO:Saving checkpoint at epoch 5 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 10:26:57:INFO:TRAIN-(hmmem) (1/6/1)>> loss: 0.4877
+2026-04-08 10:27:36:INFO:VAL-(hmmem) >>
+2026-04-08 10:27:36:INFO:M: >>  acc: 0.6339  weight_F1: 0.6364 
+2026-04-08 10:33:52:INFO:TRAIN-(hmmem) (2/7/1)>> loss: 0.4795
+2026-04-08 10:34:30:INFO:VAL-(hmmem) >>
+2026-04-08 10:34:30:INFO:M: >>  acc: 0.6384  weight_F1: 0.6326 
+2026-04-08 10:40:46:INFO:TRAIN-(hmmem) (3/8/1)>> loss: 0.4691
+2026-04-08 10:41:25:INFO:VAL-(hmmem) >>
+2026-04-08 10:41:25:INFO:M: >>  acc: 0.6673  weight_F1: 0.6509 
+2026-04-08 10:41:32:INFO:Saving checkpoint at epoch 8 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 10:47:50:INFO:TRAIN-(hmmem) (1/9/1)>> loss: 0.4590
+2026-04-08 10:48:28:INFO:VAL-(hmmem) >>
+2026-04-08 10:48:28:INFO:M: >>  acc: 0.6745  weight_F1: 0.6634 
+2026-04-08 10:48:35:INFO:Saving checkpoint at epoch 9 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 10:54:53:INFO:TRAIN-(hmmem) (1/10/1)>> loss: 0.4482
+2026-04-08 10:55:32:INFO:VAL-(hmmem) >>
+2026-04-08 10:55:32:INFO:M: >>  acc: 0.6546  weight_F1: 0.6500 
+2026-04-08 11:01:49:INFO:TRAIN-(hmmem) (2/11/1)>> loss: 0.4364
+2026-04-08 11:02:28:INFO:VAL-(hmmem) >>
+2026-04-08 11:02:28:INFO:M: >>  acc: 0.6646  weight_F1: 0.6479 
+2026-04-08 11:08:46:INFO:TRAIN-(hmmem) (3/12/1)>> loss: 0.4224
+2026-04-08 11:09:24:INFO:VAL-(hmmem) >>
+2026-04-08 11:09:24:INFO:M: >>  acc: 0.6492  weight_F1: 0.6445 
+2026-04-08 11:15:41:INFO:TRAIN-(hmmem) (4/13/1)>> loss: 0.4057
+2026-04-08 11:16:20:INFO:VAL-(hmmem) >>
+2026-04-08 11:16:20:INFO:M: >>  acc: 0.6537  weight_F1: 0.6392 
+2026-04-08 11:22:38:INFO:TRAIN-(hmmem) (5/14/1)>> loss: 0.3841
+2026-04-08 11:23:16:INFO:VAL-(hmmem) >>
+2026-04-08 11:23:16:INFO:M: >>  acc: 0.6537  weight_F1: 0.6452 
+2026-04-08 11:29:31:INFO:TRAIN-(hmmem) (6/15/1)>> loss: 0.3601
+2026-04-08 11:30:09:INFO:VAL-(hmmem) >>
+2026-04-08 11:30:09:INFO:M: >>  acc: 0.6483  weight_F1: 0.6389 
+2026-04-08 11:31:39:INFO:TEST-(hmmem) >>
+2026-04-08 11:31:39:INFO:M: >>  acc: 0.6674  weight_F1: 0.6543 
+2026-04-08 11:31:39:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-chatglm3-meld-classification.csv...
+2026-04-08 11:31:39:INFO:Start running hmmem...
+2026-04-08 11:31:39:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [0], 'seeds': [1111, 2222, 3333], 'use_tgm': False, 'use_amm': False, 'use_msf': False, 'use_moe_fusion': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'timestamp': '20260408_094454', 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 6, 'H': 3.0, 'seed': 2222}>
+2026-04-08 11:31:39:INFO:Let's use the GPU 1 !
+2026-04-08 11:31:56:INFO:trainable params: 1432012 || all params: 6245016012 || trainable%: 0.02293047763605958
+2026-04-08 11:31:56:INFO:Init labels...
+2026-04-08 11:31:56:INFO:Start training...
+2026-04-08 11:38:11:INFO:TRAIN-(hmmem) (1/1/2)>> loss: 1.9879
+2026-04-08 11:38:49:INFO:VAL-(hmmem) >>
+2026-04-08 11:38:49:INFO:M: >>  acc: 0.4824  weight_F1: 0.3952 
+2026-04-08 11:38:56:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 11:45:13:INFO:TRAIN-(hmmem) (1/2/2)>> loss: 0.5745
+2026-04-08 11:45:52:INFO:VAL-(hmmem) >>
+2026-04-08 11:45:52:INFO:M: >>  acc: 0.6041  weight_F1: 0.6028 
+2026-04-08 11:45:58:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 11:52:17:INFO:TRAIN-(hmmem) (1/3/2)>> loss: 0.5138
+2026-04-08 11:52:55:INFO:VAL-(hmmem) >>
+2026-04-08 11:52:55:INFO:M: >>  acc: 0.6492  weight_F1: 0.6427 
+2026-04-08 11:53:02:INFO:Saving checkpoint at epoch 3 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 11:59:21:INFO:TRAIN-(hmmem) (1/4/2)>> loss: 0.4958
+2026-04-08 11:59:59:INFO:VAL-(hmmem) >>
+2026-04-08 11:59:59:INFO:M: >>  acc: 0.6339  weight_F1: 0.6208 
+2026-04-08 12:06:17:INFO:TRAIN-(hmmem) (2/5/2)>> loss: 0.4859
+2026-04-08 12:06:56:INFO:VAL-(hmmem) >>
+2026-04-08 12:06:56:INFO:M: >>  acc: 0.6573  weight_F1: 0.6405 
+2026-04-08 12:13:12:INFO:TRAIN-(hmmem) (3/6/2)>> loss: 0.4761
+2026-04-08 12:13:50:INFO:VAL-(hmmem) >>
+2026-04-08 12:13:50:INFO:M: >>  acc: 0.6727  weight_F1: 0.6626 
+2026-04-08 12:13:58:INFO:Saving checkpoint at epoch 6 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 12:20:16:INFO:TRAIN-(hmmem) (1/7/2)>> loss: 0.4643
+2026-04-08 12:20:54:INFO:VAL-(hmmem) >>
+2026-04-08 12:20:54:INFO:M: >>  acc: 0.6628  weight_F1: 0.6516 
+2026-04-08 12:27:11:INFO:TRAIN-(hmmem) (2/8/2)>> loss: 0.4551
+2026-04-08 12:27:50:INFO:VAL-(hmmem) >>
+2026-04-08 12:27:50:INFO:M: >>  acc: 0.6808  weight_F1: 0.6694 
+2026-04-08 12:27:58:INFO:Saving checkpoint at epoch 8 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 12:34:17:INFO:TRAIN-(hmmem) (1/9/2)>> loss: 0.4458
+2026-04-08 12:34:55:INFO:VAL-(hmmem) >>
+2026-04-08 12:34:55:INFO:M: >>  acc: 0.6673  weight_F1: 0.6562 
+2026-04-08 12:41:10:INFO:TRAIN-(hmmem) (2/10/2)>> loss: 0.4347
+2026-04-08 12:41:48:INFO:VAL-(hmmem) >>
+2026-04-08 12:41:48:INFO:M: >>  acc: 0.6655  weight_F1: 0.6558 
+2026-04-08 12:48:03:INFO:TRAIN-(hmmem) (3/11/2)>> loss: 0.4221
+2026-04-08 12:48:41:INFO:VAL-(hmmem) >>
+2026-04-08 12:48:41:INFO:M: >>  acc: 0.6321  weight_F1: 0.6277 
+2026-04-08 12:54:56:INFO:TRAIN-(hmmem) (4/12/2)>> loss: 0.4017
+2026-04-08 12:55:34:INFO:VAL-(hmmem) >>
+2026-04-08 12:55:34:INFO:M: >>  acc: 0.6375  weight_F1: 0.6326 
+2026-04-08 13:01:49:INFO:TRAIN-(hmmem) (5/13/2)>> loss: 0.3815
+2026-04-08 13:02:27:INFO:VAL-(hmmem) >>
+2026-04-08 13:02:27:INFO:M: >>  acc: 0.6564  weight_F1: 0.6506 
+2026-04-08 13:08:42:INFO:TRAIN-(hmmem) (6/14/2)>> loss: 0.3540
+2026-04-08 13:09:20:INFO:VAL-(hmmem) >>
+2026-04-08 13:09:20:INFO:M: >>  acc: 0.6601  weight_F1: 0.6569 
+2026-04-08 13:10:50:INFO:TEST-(hmmem) >>
+2026-04-08 13:10:50:INFO:M: >>  acc: 0.6736  weight_F1: 0.6591 
+2026-04-08 13:10:50:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-chatglm3-meld-classification.csv...
+2026-04-08 13:10:50:INFO:Start running hmmem...
+2026-04-08 13:10:50:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'num_workers': 0, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [0], 'seeds': [1111, 2222, 3333], 'use_tgm': False, 'use_amm': False, 'use_msf': False, 'use_moe_fusion': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'timestamp': '20260408_094454', 'dataPath': '/root/autodl-tmp/datasets/MELD', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9992, 'num_classes': 3, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'batch_size': 12, 'learning_rate': 0.0005, 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'warm_up_epochs': 50, 'gamma': 1, 'update_epochs': 1, 'early_stop': 6, 'H': 3.0, 'seed': 3333}>
+2026-04-08 13:10:50:INFO:Let's use the GPU 1 !
+2026-04-08 13:11:09:INFO:trainable params: 1432012 || all params: 6245016012 || trainable%: 0.02293047763605958
+2026-04-08 13:11:09:INFO:Init labels...
+2026-04-08 13:11:09:INFO:Start training...
+2026-04-08 13:17:22:INFO:TRAIN-(hmmem) (1/1/3)>> loss: 1.2997
+2026-04-08 13:18:00:INFO:VAL-(hmmem) >>
+2026-04-08 13:18:00:INFO:M: >>  acc: 0.4581  weight_F1: 0.4207 
+2026-04-08 13:18:07:INFO:Saving checkpoint at epoch 1 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 13:24:25:INFO:TRAIN-(hmmem) (1/2/3)>> loss: 0.6695
+2026-04-08 13:25:03:INFO:VAL-(hmmem) >>
+2026-04-08 13:25:03:INFO:M: >>  acc: 0.5302  weight_F1: 0.4956 
+2026-04-08 13:25:10:INFO:Saving checkpoint at epoch 2 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 13:31:29:INFO:TRAIN-(hmmem) (1/3/3)>> loss: 0.6240
+2026-04-08 13:32:07:INFO:VAL-(hmmem) >>
+2026-04-08 13:32:07:INFO:M: >>  acc: 0.5762  weight_F1: 0.5357 
+2026-04-08 13:32:13:INFO:Saving checkpoint at epoch 3 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 13:38:30:INFO:TRAIN-(hmmem) (1/4/3)>> loss: 0.5806
+2026-04-08 13:39:09:INFO:VAL-(hmmem) >>
+2026-04-08 13:39:09:INFO:M: >>  acc: 0.5924  weight_F1: 0.5515 
+2026-04-08 13:39:15:INFO:Saving checkpoint at epoch 4 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 13:45:34:INFO:TRAIN-(hmmem) (1/5/3)>> loss: 0.5620
+2026-04-08 13:46:12:INFO:VAL-(hmmem) >>
+2026-04-08 13:46:12:INFO:M: >>  acc: 0.5915  weight_F1: 0.5551 
+2026-04-08 13:46:19:INFO:Saving checkpoint at epoch 5 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 13:52:37:INFO:TRAIN-(hmmem) (1/6/3)>> loss: 0.5431
+2026-04-08 13:53:16:INFO:VAL-(hmmem) >>
+2026-04-08 13:53:16:INFO:M: >>  acc: 0.5726  weight_F1: 0.5745 
+2026-04-08 13:53:23:INFO:Saving checkpoint at epoch 6 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 13:59:40:INFO:TRAIN-(hmmem) (1/7/3)>> loss: 0.5280
+2026-04-08 14:00:18:INFO:VAL-(hmmem) >>
+2026-04-08 14:00:18:INFO:M: >>  acc: 0.5816  weight_F1: 0.5727 
+2026-04-08 14:06:32:INFO:TRAIN-(hmmem) (2/8/3)>> loss: 0.5158
+2026-04-08 14:07:11:INFO:VAL-(hmmem) >>
+2026-04-08 14:07:11:INFO:M: >>  acc: 0.6249  weight_F1: 0.6159 
+2026-04-08 14:07:17:INFO:Saving checkpoint at epoch 8 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 14:13:35:INFO:TRAIN-(hmmem) (1/9/3)>> loss: 0.5023
+2026-04-08 14:14:13:INFO:VAL-(hmmem) >>
+2026-04-08 14:14:13:INFO:M: >>  acc: 0.6330  weight_F1: 0.6036 
+2026-04-08 14:20:28:INFO:TRAIN-(hmmem) (2/10/3)>> loss: 0.4919
+2026-04-08 14:21:06:INFO:VAL-(hmmem) >>
+2026-04-08 14:21:06:INFO:M: >>  acc: 0.6357  weight_F1: 0.6250 
+2026-04-08 14:21:13:INFO:Saving checkpoint at epoch 10 to /root/autodl-tmp/results/models/hmmem-chatglm3-meld-classification-20260408_094454.pth.
+2026-04-08 14:27:33:INFO:TRAIN-(hmmem) (1/11/3)>> loss: 0.4784
+2026-04-08 14:28:11:INFO:VAL-(hmmem) >>
+2026-04-08 14:28:11:INFO:M: >>  acc: 0.6294  weight_F1: 0.6184 
+2026-04-08 14:34:26:INFO:TRAIN-(hmmem) (2/12/3)>> loss: 0.4625
+2026-04-08 14:35:04:INFO:VAL-(hmmem) >>
+2026-04-08 14:35:04:INFO:M: >>  acc: 0.6195  weight_F1: 0.6182 
+2026-04-08 14:41:19:INFO:TRAIN-(hmmem) (3/13/3)>> loss: 0.4459
+2026-04-08 14:41:57:INFO:VAL-(hmmem) >>
+2026-04-08 14:41:57:INFO:M: >>  acc: 0.6258  weight_F1: 0.6242 
+2026-04-08 14:48:13:INFO:TRAIN-(hmmem) (4/14/3)>> loss: 0.4267
+2026-04-08 14:48:52:INFO:VAL-(hmmem) >>
+2026-04-08 14:48:52:INFO:M: >>  acc: 0.6267  weight_F1: 0.6154 
+2026-04-08 14:55:09:INFO:TRAIN-(hmmem) (5/15/3)>> loss: 0.3994
+2026-04-08 14:55:48:INFO:VAL-(hmmem) >>
+2026-04-08 14:55:48:INFO:M: >>  acc: 0.6078  weight_F1: 0.6018 
+2026-04-08 15:02:19:INFO:TRAIN-(hmmem) (6/16/3)>> loss: 0.3752
+2026-04-08 15:02:58:INFO:VAL-(hmmem) >>
+2026-04-08 15:02:58:INFO:M: >>  acc: 0.6249  weight_F1: 0.6198 
+2026-04-08 15:04:29:INFO:TEST-(hmmem) >>
+2026-04-08 15:04:29:INFO:M: >>  acc: 0.6471  weight_F1: 0.6336 
+2026-04-08 15:04:29:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-chatglm3-meld-classification.csv...

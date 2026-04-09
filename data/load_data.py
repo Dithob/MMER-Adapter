@@ -381,20 +381,20 @@ class MMDataset(Dataset):
         if self.args.train_mode == 'regression':
             sample = {
                 'raw_text': self.rawText[index],
-                'text': torch.Tensor(self.text[index]),
-                'audio': torch.Tensor(self.audio[index]),
-                'vision': torch.Tensor(self.vision[index]),
+                'text': torch.as_tensor(self.text[index]),
+                'audio': torch.as_tensor(self.audio[index]),
+                'vision': torch.as_tensor(self.vision[index]),
                 'index': index,
                 'id': self.ids[index],
-                'labels': {k: torch.Tensor(v[index].reshape(-1)) for k, v in self.labels.items()},
+                'labels': {k: torch.as_tensor(v[index].reshape(-1)) for k, v in self.labels.items()},
                 'labels_prefix': self.labels_prefix[index]
             }
         else:
             sample = {
                 'raw_text': self.rawText[index],
-                'text': torch.Tensor(self.text[index]),
-                'audio': torch.Tensor(self.audio[index]),
-                'vision': torch.Tensor(self.vision[index]),
+                'text': torch.as_tensor(self.text[index]),
+                'audio': torch.as_tensor(self.audio[index]),
+                'vision': torch.as_tensor(self.vision[index]),
                 'index': index,
                 'labels': {k: v[index] for k, v in self.labels.items()}
                 # 'labels': {torch.Tensor(self.labels)},
@@ -420,12 +420,22 @@ def MMDataLoader(args):
     if 'seq_lens' in args:
         args.seq_lens = datasets['train'].get_seq_len() 
 
-    dataLoader = {
-        ds: DataLoader(datasets[ds],
-                       batch_size=args.batch_size,
-                       num_workers=args.num_workers,
-                       shuffle=True)
-        for ds in datasets.keys()
-    }
+    num_workers = int(getattr(args, 'num_workers', 0))
+    pin_memory = bool(getattr(args, 'pin_memory', torch.cuda.is_available()))
+    persistent_workers = bool(getattr(args, 'persistent_workers', num_workers > 0))
+    prefetch_factor = int(getattr(args, 'prefetch_factor', 4))
+
+    dataLoader = {}
+    for ds in datasets.keys():
+        loader_kwargs = {
+            'batch_size': args.batch_size,
+            'num_workers': num_workers,
+            'shuffle': (ds == 'train'),
+            'pin_memory': pin_memory,
+        }
+        if num_workers > 0:
+            loader_kwargs['persistent_workers'] = persistent_workers
+            loader_kwargs['prefetch_factor'] = prefetch_factor
+        dataLoader[ds] = DataLoader(datasets[ds], **loader_kwargs)
     
     return dataLoader

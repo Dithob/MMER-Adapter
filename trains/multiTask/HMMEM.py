@@ -67,9 +67,9 @@ class HMMEM():
     def do_train(self, model, dataloader):
 
         scaler = GradScaler()
-        optimizer = optim.AdamW(model.Model.parameters(), lr= self.args.learning_rate, eps=1e-4)
-        total_steps = len(dataloader['train'])*self.args.warm_up_epochs   #大致的一个训练step数
-        # scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, min_lr=1e-7, patience=5, verbose=True,
+        trainable_params = [p for p in model.Model.parameters() if p.requires_grad]
+        optimizer = optim.AdamW(trainable_params, lr=self.args.learning_rate, eps=1e-4)
+        total_steps = len(dataloader['train'])*self.args.warm_up_epochs   #大致的一个训练step�?        # scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, min_lr=1e-7, patience=5, verbose=True,
         #                               threshold=0.0001, eps=1e-08)
         scheduler = get_cosine_schedule_with_warmup(
             optimizer, num_warmup_steps=0.1*total_steps, num_training_steps=total_steps)
@@ -89,8 +89,7 @@ class HMMEM():
         # valid_F1 = []
         lr = []
         min_or_max = 'min' if self.args.KeyEval in ['MAE'] else 'max'
-        best_valid = 1e8 if min_or_max == 'min' else 0     #评价阈值的初始化
-        # loop util earlystop
+        best_valid = 1e8 if min_or_max == 'min' else 0     #评价阈值的初始�?        # loop util earlystop
         while True: 
             epochs += 1
             # train
@@ -106,14 +105,13 @@ class HMMEM():
             with tqdm(dataloader['train']) as td:
                 for batch_data in td:
                     if left_epochs == self.args.update_epochs:
-                        optimizer.zero_grad()      #在训练1个batch之后停止梯度清0，当新的epoch来临时才清0
-                    left_epochs -= 1                #这么做相当于把batch_size扩大为（N-1）*batch_size，其中N为一个epoch中的batch数
-
-                    vision = batch_data['vision'].to(self.args.device)
-                    audio = batch_data['audio'].to(self.args.device)
-                    text = batch_data['text'].to(self.args.device)
+                        optimizer.zero_grad(set_to_none=True)      #在训�?个batch之后停止梯度�?，当新的epoch来临时才�?
+                    left_epochs -= 1                #这么做相当于把batch_size扩大为（N-1�?batch_size，其中N为一个epoch中的batch�?
+                    vision = batch_data['vision'].to(self.args.device, non_blocking=True)
+                    audio = batch_data['audio'].to(self.args.device, non_blocking=True)
+                    text = batch_data['text'].to(self.args.device, non_blocking=True)
                     if self.args.train_mode == 'regression':
-                        labels_m = batch_data['labels']['M'].view(-1).to(self.args.device)
+                        labels_m = batch_data['labels']['M'].view(-1).to(self.args.device, non_blocking=True)
                         prefix_label = batch_data['labels_prefix']
                         cur_id = batch_data['id']
                         ids.extend(cur_id)
@@ -124,9 +122,9 @@ class HMMEM():
 
 
                     if not self.args.need_data_aligned:
-                        text_lengths = batch_data['text_lengths'].to(self.args.device)
-                        audio_lengths = batch_data['audio_lengths'].to(self.args.device)
-                        vision_lengths = batch_data['vision_lengths'].to(self.args.device)
+                        text_lengths = batch_data['text_lengths'].to(self.args.device, non_blocking=True)
+                        audio_lengths = batch_data['audio_lengths'].to(self.args.device, non_blocking=True)
+                        vision_lengths = batch_data['vision_lengths'].to(self.args.device, non_blocking=True)
 
                     # forward
                     with autocast('cuda'):
@@ -141,7 +139,7 @@ class HMMEM():
                     # backward
                     scaler.scale(loss).backward()
                     train_loss += loss.item()
-                    lr.append(optimizer.state_dict()['param_groups'][0]['lr'])
+                    lr.append(optimizer.param_groups[0]['lr'])
                     # update parameters
                     if not left_epochs:
                         # update
@@ -162,7 +160,7 @@ class HMMEM():
 
             # validation
 
-            if epochs >= 1:         #前3epochs不做eval
+            if epochs >= 1:         #�?epochs不做eval
                 val_results = self.do_test(model, dataloader['valid'], mode="VAL")
                 cur_valid = val_results[self.args.KeyEval]
                 # save best model
@@ -188,19 +186,19 @@ class HMMEM():
             with torch.no_grad():
                 with tqdm(dataloader) as td:
                     for batch_data in td:
-                        vision = batch_data['vision'].to(self.args.device)
-                        audio = batch_data['audio'].to(self.args.device)
-                        text = batch_data['text'].to(self.args.device)
+                        vision = batch_data['vision'].to(self.args.device, non_blocking=True)
+                        audio = batch_data['audio'].to(self.args.device, non_blocking=True)
+                        text = batch_data['text'].to(self.args.device, non_blocking=True)
                         if not self.args.need_data_aligned:
-                            text_lengths = batch_data['text_lengths'].to(self.args.device)
-                            audio_lengths = batch_data['audio_lengths'].to(self.args.device)
-                            vision_lengths = batch_data['vision_lengths'].to(self.args.device)
+                            text_lengths = batch_data['text_lengths'].to(self.args.device, non_blocking=True)
+                            audio_lengths = batch_data['audio_lengths'].to(self.args.device, non_blocking=True)
+                            vision_lengths = batch_data['vision_lengths'].to(self.args.device, non_blocking=True)
                         with autocast('cuda'):
                             outputs = model.generate((text,text_lengths), (audio, audio_lengths), (vision, vision_lengths))
 
-                        predict_label = torch.Tensor(outputs).to(self.args.device)
+                        predict_label = torch.tensor(outputs, device=self.args.device)
 
-                        labels_m = batch_data['labels']['M'].view(-1).to(self.args.device)
+                        labels_m = batch_data['labels']['M'].view(-1).to(self.args.device, non_blocking=True)
                         
                         y_pred['M'].append(predict_label.cpu())
                         y_true['M'].append(labels_m.cpu())
@@ -213,13 +211,13 @@ class HMMEM():
             with torch.no_grad():
                 with tqdm(dataloader) as td:
                     for batch_data in td:
-                        vision = batch_data['vision'].to(self.args.device)
-                        audio = batch_data['audio'].to(self.args.device)
-                        text = batch_data['text'].to(self.args.device)
+                        vision = batch_data['vision'].to(self.args.device, non_blocking=True)
+                        audio = batch_data['audio'].to(self.args.device, non_blocking=True)
+                        text = batch_data['text'].to(self.args.device, non_blocking=True)
                         if not self.args.need_data_aligned:
-                            text_lengths = batch_data['text_lengths'].to(self.args.device)
-                            audio_lengths = batch_data['audio_lengths'].to(self.args.device)
-                            vision_lengths = batch_data['vision_lengths'].to(self.args.device)
+                            text_lengths = batch_data['text_lengths'].to(self.args.device, non_blocking=True)
+                            audio_lengths = batch_data['audio_lengths'].to(self.args.device, non_blocking=True)
+                            vision_lengths = batch_data['vision_lengths'].to(self.args.device, non_blocking=True)
                         with autocast('cuda'):
                             outputs = model.generate((text, text_lengths), (audio, audio_lengths),
                                                      (vision, vision_lengths))
@@ -263,3 +261,4 @@ class HMMEM():
                 del state_dict[k]
         logging.info("Saving checkpoint at epoch {} to {}.".format(epoch, save_path))
         torch.save(state_dict, save_path)
+

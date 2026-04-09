@@ -420,11 +420,15 @@ def MMDataLoader(args):
     if 'seq_lens' in args:
         args.seq_lens = datasets['train'].get_seq_len() 
 
+    _nw = args.num_workers
     dataLoader = {
         ds: DataLoader(datasets[ds],
                        batch_size=args.batch_size,
-                       num_workers=args.num_workers,
-                       shuffle=True)
+                       num_workers=_nw,
+                       shuffle=True,
+                       pin_memory=True,
+                       persistent_workers=(_nw > 0),
+                       prefetch_factor=2 if _nw > 0 else None)
         for ds in datasets.keys()
     }
     

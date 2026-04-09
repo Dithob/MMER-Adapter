@@ -25,7 +25,7 @@ from config.config_regression import ConfigRegression
 from config.config_classification import ConfigClassification
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+# os.environ['CUDA_LAUNCH_BLOCKING'] = '1'  # 仅调试时启用，同步模式会严重降低GPU利用率
 
 def setup_seed(seed):
     torch.manual_seed(seed)
@@ -209,8 +209,8 @@ def parse_args():
                         help='support mosei/simsv2/meld/cherma')
     parser.add_argument('--root_dataset_dir', type=str, default='/root/autodl-tmp/datasets/',
                         help='Location of the root directory where the dataset is stored')
-    parser.add_argument('--num_workers', type=int, default=0,
-                        help='num workers of loading data')
+    parser.add_argument('--num_workers', type=int, default=4,
+                        help='num workers of loading data (0=main process only, 4+ recommended for GPU)')
     parser.add_argument('--model_save_dir', type=str, default='/root/autodl-tmp/results/models',
                         help='path to save results.')
     parser.add_argument('--res_save_dir', type=str, default='/root/autodl-tmp/results/results',

@@ -95,12 +95,15 @@ class Language_model(nn.Module):
         self.model = AutoModelForCausalLM.from_pretrained(
             pretrained_model,
             trust_remote_code=True,
-            dtype=torch.bfloat16
-        ).half()
+            torch_dtype=torch.bfloat16
+        )
+        # NOTE: 不再调用 .half()，保持原生 bf16 精度
+        # RTX 4090D 原生支持 bf16，比 fp16 更稳定且无需 GradScaler
         
-        # 设置token id
-        if self.model_type == 'qwen':
-            self.eos_token_id = self.tokenizer.convert_tokens_to_ids('<|endoftext|>')
+        # 启用 gradient checkpointing 节省显存，允许更大 batch size
+        if hasattr(self.model, 'gradient_checkpointing_enable'):
+            self.model.gradient_checkpointing_enable()
+        <|endoftext|>')
             self.tokenizer.pad_token_id = self.eos_token_id
             self.bos_token_id = self.tokenizer.convert_tokens_to_ids('<|im_start|>')
             self.tokenizer.bos_token_id = self.bos_token_id

@@ -26,7 +26,8 @@ from timm.models import hub as timm_hub
 from torchvision import transforms
 from tqdm import tqdm
 from transformers import AutoFeatureExtractor, WhisperModel
-
+import decord
+decord.bridge.set_bridge('torch')
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -193,23 +194,18 @@ def sample_frame_indices(clip_len: int, frame_sample_rate: int, seg_len: int) ->
 
 
 def read_video_cv2_abs(file_path: str, indices_abs: np.ndarray, clip_len: int = 16) -> List[np.ndarray]:
-    cap = cv2.VideoCapture(file_path)
-    if not cap.isOpened():
-        cap.release()
-        raise ValueError(f"Cannot open video: {file_path}")
-
-    frames: List[np.ndarray] = []
-    for idx in indices_abs:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
-        ret, frame = cap.read()
-        if not ret:
-            break
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frames.append(frame)
-    cap.release()
+    # 替换为基于 decord 的极速读取方案
+    try:
+        vr = decord.VideoReader(file_path, ctx=decord.cpu(0))
+        # decord 支持直接传入数组，一次性在底层解码所需的帧
+        frames_tensor = vr.get_batch(indices_abs).numpy() 
+        frames = [f for f in frames_tensor]
+    except Exception as e:
+        print(f"Decord failed to read {file_path}, fallback to empty frames. Error: {e}")
+        frames = []
 
     if len(frames) == 0:
-        raise ValueError("No frames read with cv2.")
+        raise ValueError("No frames read.")
     while len(frames) < clip_len:
         frames.append(frames[-1].copy())
     return frames
@@ -335,20 +331,16 @@ class EmotionLLaMAStyleExtractor:
         if sr != 16000:
             wave = torchaudio.functional.resample(wave, sr, 16000)
         wave_np = wave.detach().cpu().numpy()
-        inputs = self._whisper_fe(
-            wave_np,
-            sampling_rate=16000,
-            return_tensors="pt",
-            padding=False,
-        )
+        inputs = self._whisper_fe(wave_np, sampling_rate=16000, return_tensors="pt")
+        # input_features = inputs.input_features.to(self.device)
         input_features = inputs.input_features.to(
             device=self.device,
-            dtype=next(self._whisper.parameters()).dtype,
+            dtype=next(self._whisper.parameters()).dtype
         )
-        with torch.inference_mode():
-            with self._autocast_ctx():
-                out = self._whisper.encoder(input_features=input_features)
-        feat = out.last_hidden_state  # [1, T, 1280]
+        decoder_input_ids = torch.tensor([[self._whisper.config.decoder_start_token_id]], device=self.device)
+        with torch.no_grad():
+            out = self._whisper(input_features=input_features, decoder_input_ids=decoder_input_ids)
+        feat = out.encoder_last_hidden_state  # [1, T, 1280]
         feat = adaptive_downsample_with_padding(feat, target_len=64).squeeze(0)  # [64, 1280]
 
         if self.mode == "raw":
@@ -565,7 +557,8 @@ def main():
             try:
                 a_feat = extractor.extract_audio_from_wave_segment(wav_seg, sr)
                 v_feat = extractor.extract_video_from_segment(video_path, u.start, u.end)
-            except Exception:
+            except Exception as e:
+                print(f"[Skip] {u.utt_id}: {type(e).__name__}: {e}")
                 pbar.update(1)
                 continue
 

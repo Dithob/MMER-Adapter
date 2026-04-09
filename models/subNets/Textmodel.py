@@ -103,13 +103,11 @@ class Language_model(nn.Module):
         # 启用 gradient checkpointing 节省显存，允许更大 batch size
         if hasattr(self.model, 'gradient_checkpointing_enable'):
             self.model.gradient_checkpointing_enable()
-        <|endoftext|>')
-            self.tokenizer.pad_token_id = self.eos_token_id
-            self.bos_token_id = self.tokenizer.convert_tokens_to_ids('<|im_start|>')
-            self.tokenizer.bos_token_id = self.bos_token_id
-        elif self.model_type == 'qwen3.5':
-            # Qwen3.5使用与Qwen类似的token设置
+
+        if self.model_type in ['qwen', 'qwen3.5']:
+            # Qwen/Qwen3.5 使用相同的特殊 token 设置
             self.eos_token_id = self.tokenizer.convert_tokens_to_ids('<|endoftext|>')
+            self.tokenizer.eos_token_id = self.eos_token_id
             self.tokenizer.pad_token_id = self.eos_token_id
             self.bos_token_id = self.tokenizer.convert_tokens_to_ids('<|im_start|>')
             self.tokenizer.bos_token_id = self.bos_token_id

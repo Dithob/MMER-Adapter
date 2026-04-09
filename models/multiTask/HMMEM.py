@@ -98,7 +98,6 @@ class HMMEM(nn.Module):
 
         fusion_input_size = 256
         self.text_in = text_in
-        self.text_fallback_proj = nn.Linear(text_in, fusion_input_size)
 
         # ══════════════════════════════════════════════
         # Mixer Layer
@@ -171,6 +170,10 @@ class HMMEM(nn.Module):
                 text_dim=text_in, other_dim=args.v_lstm_hidden_size,
                 nce_hidden_dim=nce_hidden_dim, n_prediction_steps=nce_pred_steps
             )
+
+        # Keep this layer at the end to avoid changing initialization order
+        # of existing modules in default tav training.
+        self.text_fallback_proj = nn.Linear(text_in, fusion_input_size)
 
     # ──────────────────────────────────────────────
     # Helper methods

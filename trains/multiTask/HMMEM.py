@@ -23,6 +23,12 @@ from itertools import chain
 
 logger = logging.getLogger('MSA')
 
+def _has_non_finite_grad(parameters):
+    for param in parameters:
+        if param.grad is not None and not torch.isfinite(param.grad).all():
+            return True
+    return False
+
 class HMMEM():
     def __init__(self, args):
 
@@ -68,6 +74,7 @@ class HMMEM():
         scheduler = get_cosine_schedule_with_warmup(
             optimizer, num_warmup_steps=0.1*total_steps, num_training_steps=total_steps)
         # scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.98)
+        max_grad_norm = getattr(self.args, 'max_grad_norm', 0.3)
 
         saved_labels = {}
         # init labels
@@ -91,6 +98,8 @@ class HMMEM():
             y_true = {'M': []}
             model.train()
             train_loss = 0.0
+            valid_loss_steps = 0
+            skipped_steps = 0
             CPC_Loss_sum = 0.0
             left_epochs = self.args.update_epochs
             ids = []

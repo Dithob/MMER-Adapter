@@ -70,7 +70,7 @@ class Language_model(nn.Module):
         self.model = AutoModelForCausalLM.from_pretrained(
             pretrained_model,
             trust_remote_code=True,
-            dtype=torch.float16
+            torch_dtype=torch.float16
         )
         
         # 缓存 PLE 维度信息，用于构造 dummy per_layer_inputs
@@ -200,19 +200,31 @@ class Language_model(nn.Module):
                 )
                 hidden_states = base_outputs.last_hidden_state
                 logits = self.model.lm_head(hidden_states)
-                
-                if labels is not None:
+            
+            if labels is not None:
+                # Keep Gemma loss in fp32 for numerical stability.
+                with torch.amp.autocast(device_type='cuda', enabled=False):
+                    logits_fp32 = logits.float()
                     if hasattr(self.model, 'loss_function'):
                         base_cfg = self.model.config
                         text_cfg = getattr(base_cfg, 'text_config', base_cfg)
                         vocab_size = getattr(self.model, 'vocab_size', getattr(text_cfg, 'vocab_size', 262144))
-                        loss = self.model.loss_function(logits, labels, vocab_size)
+                        loss = self.model.loss_function(logits_fp32, labels, vocab_size)
                     else:
-                        shift_logits = logits[..., :-1, :].contiguous()
-                        shift_labels = labels[..., 1:].contiguous()
-                        loss = torch.nn.CrossEntropyLoss()(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
-                else:
-                    loss = None
+                        shift_logits = logits_fp32[..., :-1, :].contiguous()
+                        shift_labels = labels[..., 1:].contiguous().long()
+                        valid_targets = shift_labels.ne(-100)
+                        if valid_targets.any():
+                            loss = F.cross_entropy(
+                                shift_logits.view(-1, shift_logits.size(-1)),
+                                shift_labels.view(-1),
+                                ignore_index=-100
+                            )
+                        else:
+                            # Avoid NaN when a micro-batch has no valid supervision tokens.
+                            loss = shift_logits.new_zeros(())
+            else:
+                loss = None
             
             from transformers.modeling_outputs import CausalLMOutputWithPast
             output = CausalLMOutputWithPast(loss=loss, logits=logits)

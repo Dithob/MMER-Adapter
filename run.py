@@ -267,6 +267,10 @@ def parse_args():
                         help='adapter output dim; only activates when feature_dim > adapter_dim')
     parser.add_argument('--iemocap_feature_mode', type=str, default='raw', choices=['raw', 'compressed'],
                         help='IEMOCAP feature preset: raw(64x1280/64x1408) or compressed(157x64/32x64)')
+    parser.add_argument('--modalities', type=str, default='tav',
+                        help='enabled modalities subset, e.g. tav/ta/tv/av/t/a/v')
+    parser.add_argument('--text_only', action='store_true',
+                        help='ignore audio/video streams and use text embeddings only')
                         
     return parser.parse_args()
 
@@ -284,12 +288,52 @@ if __name__ == '__main__':
     if isinstance(args.seeds, str):
         clean_seeds = args.seeds.replace('[', '').replace(']', '')
         args.seeds = [int(x) for x in clean_seeds.split(',') if x.strip()]
+
+    # Normalize modality subset.
+    raw_modalities = str(getattr(args, 'modalities', 'tav')).lower()
+    dedup_modalities = []
+    for m in raw_modalities:
+        if m in ['t', 'a', 'v'] and m not in dedup_modalities:
+            dedup_modalities.append(m)
+    if args.text_only:
+        dedup_modalities = ['t']
+    if len(dedup_modalities) == 0:
+        raise ValueError("--modalities must contain at least one of: t, a, v")
+    args.modalities = ''.join(dedup_modalities)
     
     # Resolve mutually exclusive switches (so config log shows correct state)
     if args.use_amm:
         args.use_tgm = False
     if args.use_moe_fusion:
         args.use_msf = False
+
+    # Disable incompatible switches based on modality subset.
+    if 't' not in args.modalities:
+        args.use_tgm = False
+        args.use_amm = False
+        args.use_nce_loss = False
+    if 'a' not in args.modalities and 'v' not in args.modalities:
+        args.use_tgm = False
+        args.use_amm = False
+        args.use_msf = False
+        args.use_moe_fusion = False
+        args.use_gate = False
+        args.use_moe_lb_loss = False
+        args.use_diff_loss = False
+        args.use_expert_diff_loss = False
+        args.use_nce_loss = False
+    if not ('a' in args.modalities and 'v' in args.modalities):
+        args.use_gate = False
+    if args.text_only:
+        args.use_tgm = False
+        args.use_amm = False
+        args.use_msf = False
+        args.use_moe_fusion = False
+        args.use_gate = False
+        args.use_moe_lb_loss = False
+        args.use_diff_loss = False
+        args.use_expert_diff_loss = False
+        args.use_nce_loss = False
         
     logger = set_log(args)
     

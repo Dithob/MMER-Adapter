@@ -1,5 +1,4 @@
 import argparse
-from contextlib import nullcontext
 import csv
 import hashlib
 import json
@@ -17,12 +16,12 @@ except Exception:
 import cv2
 import numpy as np
 import pickle
+import timm.models.hub as timm_hub
 import torch
 import torch.nn.functional as F
 import torchaudio
 from PIL import Image
 from timm.models import create_model
-from timm.models import hub as timm_hub
 from torchvision import transforms
 from tqdm import tqdm
 from transformers import AutoFeatureExtractor, WhisperModel
@@ -244,40 +243,22 @@ class EmotionLLaMAStyleExtractor:
           video [64, 1408] -> dim-compress [64, 64] -> time-resample [32, 64]
     """
 
-    def __init__(
-        self,
-        whisper_model: str,
-        eva_ckpt: Optional[str],
-        device: str,
-        mode: str = "raw",
-        amp: bool = True,
-    ):
+    def __init__(self, whisper_model: str, eva_ckpt: Optional[str], device: str, mode: str = "raw"):
         self.device = torch.device(device if device else ("cuda" if torch.cuda.is_available() else "cpu"))
         self.whisper_model_name = whisper_model
         self.eva_ckpt = eva_ckpt
         self.mode = mode.lower()
         if self.mode not in {"raw", "compressed"}:
             raise ValueError(f"Unsupported mode: {mode}. Choose from raw/compressed.")
-        self.use_amp = bool(amp and self.device.type == "cuda")
-        self.amp_dtype = torch.bfloat16 if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else torch.float16
 
         self._whisper = None
         self._whisper_fe = None
         self._eva = None
         self._eva_tf = None
 
-    def _autocast_ctx(self):
-        if self.use_amp:
-            return torch.autocast(device_type="cuda", dtype=self.amp_dtype)
-        return nullcontext()
-
     def _load_whisper(self):
         if self._whisper is None:
-            whisper_dtype = torch.float16 if self.device.type == "cuda" else None
-            self._whisper = WhisperModel.from_pretrained(
-                self.whisper_model_name,
-                torch_dtype=whisper_dtype,
-            ).to(self.device)
+            self._whisper = WhisperModel.from_pretrained(self.whisper_model_name).to(self.device)
             self._whisper.eval()
             self._whisper_fe = AutoFeatureExtractor.from_pretrained(self.whisper_model_name)
 
@@ -291,10 +272,7 @@ class EmotionLLaMAStyleExtractor:
             if not os.path.exists(ckpt):
                 url = "https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/eva_vit_g.pth"
                 ckpt = timm_hub.download_cached_file(url, check_hash=False, progress=True)
-        try:
-            state = torch.load(ckpt, map_location="cpu", weights_only=True)
-        except TypeError:
-            state = torch.load(ckpt, map_location="cpu")
+        state = torch.load(ckpt, map_location="cpu")
         if isinstance(state, dict) and "model" in state:
             state = state["model"]
         self._eva.load_state_dict(state, strict=False)
@@ -372,12 +350,9 @@ class EmotionLLaMAStyleExtractor:
         except Exception:
             frames = read_video_pyav_abs(video_path, abs_idx, clip_len=16)
 
-        images_tensor = torch.stack([self._eva_tf(Image.fromarray(f)) for f in frames], dim=0).to(
-            self.device, non_blocking=True
-        )
-        with torch.inference_mode():
-            with self._autocast_ctx():
-                feat = self._eva.forward_features(images_tensor)  # [16, 257, 1408]
+        images_tensor = torch.stack([self._eva_tf(Image.fromarray(f)) for f in frames], dim=0).to(self.device)
+        with torch.no_grad():
+            feat = self._eva.forward_features(images_tensor)  # [16, 257, 1408]
         feat = feat[:, 1:, :].reshape(1, 16, 16, 16, -1)  # [1,16,16,16,1408]
         feat = spatiotemporal_downsample(feat, 2, 2, 16).squeeze(0)  # [64,1408]
 
@@ -464,12 +439,6 @@ def main():
     parser.add_argument("--valid_ratio", type=float, default=0.09, help="Validation ratio inside Session1-4.")
     parser.add_argument("--seed", type=int, default=42, help="Random seed.")
     parser.add_argument("--device", type=str, default=None, help="cuda / cpu. Default: auto.")
-    parser.add_argument(
-        "--amp",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Enable AMP on CUDA (use --no-amp to disable).",
-    )
     parser.add_argument("--max_utts", type=int, default=None, help="Debug limit for number of utterances.")
     parser.add_argument(
         "--mode",
@@ -486,10 +455,6 @@ def main():
 
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-    if torch.cuda.is_available():
-        torch.backends.cudnn.benchmark = True
-        torch.backends.cuda.matmul.allow_tf32 = True
-        torch.backends.cudnn.allow_tf32 = True
 
     iemocap_root = resolve_iemocap_root(args.iemocap_root)
     output_dir = os.path.abspath(args.output_dir)
@@ -529,7 +494,6 @@ def main():
         eva_ckpt=args.eva_ckpt,
         device=args.device,
         mode=args.mode,
-        amp=args.amp,
     )
 
     pbar = tqdm(total=len(utterances), desc="Extracting features", ncols=120)

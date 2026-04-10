@@ -113,8 +113,9 @@ def run(args):
     #                                   device_ids=args.gpu_ids,
     #                                   output_device=args.gpu_ids[0])
     atio = ATIO().getTrain(args)
-    # do train
-    atio.do_train(model, dataloader)
+    # do train (支持断点续训)
+    resume_ckpt = getattr(args, 'resume_checkpoint', None)
+    atio.do_train(model, dataloader, resume_checkpoint=resume_ckpt)
     # load pretrained model
     assert os.path.exists(args.model_save_path)
     # load finetune parameters
@@ -311,7 +312,13 @@ def parse_args():
     # ── Modality Ablation ──
     parser.add_argument('--modalities', type=str, default='tav',
                         help='enabled modalities for ablation: any subset of t(ext)/a(udio)/v(ideo), e.g. tav/ta/tv/av/t/a/v')
-                        
+
+    # ── Checkpoint / Resume ──
+    parser.add_argument('--resume_checkpoint', type=str, default=None,
+                        help='path to a .ckpt file to resume training from (e.g. /path/to/checkpoints/hmmem-qwen-meld-...-epoch10.ckpt)')
+    parser.add_argument('--ckpt_save_interval', type=int, default=5,
+                        help='save a checkpoint every N epochs (default: 5). Keeps only the 3 most recent checkpoints.')
+
     return parser.parse_args()
 
 if __name__ == '__main__':

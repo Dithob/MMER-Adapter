@@ -58,7 +58,47 @@ class HMMEM():
             'V': 'vision'
         }
 
-    def do_train(self, model, dataloader):
+    def save_checkpoint(self, model, optimizer, scheduler, scaler, epoch, best_valid, best_epoch, ckpt_path):
+        """保存完整训练状态（断点续训用）"""
+        param_grad_dic = {k: v.requires_grad for k, v in model.named_parameters()}
+        state_dict = model.cpu().state_dict()
+        # 只保留可训练参数，节省磁盘空间
+        trainable_state = {k: v for k, v in state_dict.items()
+                          if k in param_grad_dic and param_grad_dic[k]}
+        model.to(self.args.device)
+
+        checkpoint = {
+            'epoch': epoch,
+            'best_epoch': best_epoch,
+            'best_valid': best_valid,
+            'model_state_dict': trainable_state,
+            'optimizer_state_dict': optimizer.state_dict(),
+            'scheduler_state_dict': scheduler.state_dict(),
+            'scaler_state_dict': scaler.state_dict() if scaler is not None else None,
+            'args': vars(self.args),
+        }
+        torch.save(checkpoint, ckpt_path)
+        logger.info(f"Checkpoint saved at epoch {epoch} -> {ckpt_path}")
+
+    def load_checkpoint(self, model, optimizer, scheduler, scaler, ckpt_path):
+        """从断点文件恢复训练状态，返回 (start_epoch, best_valid, best_epoch)"""
+        if not os.path.exists(ckpt_path):
+            raise FileNotFoundError(f"Checkpoint not found: {ckpt_path}")
+        checkpoint = torch.load(ckpt_path, map_location=self.args.device)
+        # 恢复模型参数（只恢复可训练部分，strict=False 跳过冻结权重）
+        model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+        model.to(self.args.device)
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        if scaler is not None and checkpoint.get('scaler_state_dict') is not None:
+            scaler.load_state_dict(checkpoint['scaler_state_dict'])
+        start_epoch = checkpoint['epoch']
+        best_valid  = checkpoint['best_valid']
+        best_epoch  = checkpoint['best_epoch']
+        logger.info(f"Resumed from checkpoint: {ckpt_path} (epoch={start_epoch}, best_valid={best_valid:.4f})")
+        return start_epoch, best_valid, best_epoch
+
+    def do_train(self, model, dataloader, resume_checkpoint=None):
 
         # ── Precision strategy: prefer bf16 on supported hardware ──
         use_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
@@ -68,6 +108,8 @@ class HMMEM():
 
         # ── Gradient Accumulation ──
         grad_accum_steps = getattr(self.args, 'gradient_accumulation_steps', 1)
+        # ── Checkpoint save interval (every N epochs) ──
+        ckpt_save_interval = getattr(self.args, 'ckpt_save_interval', 5)
 
         # Only optimize parameters that require gradients.
         # Without LoRA: Adapter + LSTM + Mixer + Fusion (~2M params)
@@ -85,20 +127,35 @@ class HMMEM():
         # init labels
         logger.info("Init labels...")
 
+        # ── Checkpoint directory (同 model_save_dir，子目录 checkpoints） ──
+        ckpt_dir = os.path.join(os.path.dirname(self.args.model_save_path), 'checkpoints')
+        os.makedirs(ckpt_dir, exist_ok=True)
+        # Checkpoint 文件前缀与 model_save_path 保持一致（去掉 .pth 后缀）
+        ckpt_prefix = os.path.splitext(os.path.basename(self.args.model_save_path))[0]
+
+        # ── 断点恢复 ──
+        min_or_max = 'min' if self.args.KeyEval in ['MAE'] else 'max'
+        best_valid = 1e8 if min_or_max == 'min' else 0
+        epochs, best_epoch = 0, 0
+
+        if resume_checkpoint is not None:
+            logger.info(f"Resuming from checkpoint: {resume_checkpoint}")
+            epochs, best_valid, best_epoch = self.load_checkpoint(
+                model, optimizer, scheduler, scaler, resume_checkpoint)
+
         # initilize results
         logger.info("Start training...")
         logger.info(f"  Batch size = {self.args.batch_size}")
         logger.info(f"  Gradient Accumulation steps = {grad_accum_steps}")
         logger.info(f"  Effective batch size = {self.args.batch_size * grad_accum_steps}")
         logger.info(f"  AMP dtype = {amp_dtype}")
-        epochs, best_epoch = 0, 0
+        if resume_checkpoint is not None:
+            logger.info(f"  Resuming from epoch {epochs}, best_valid={best_valid:.4f} (best_epoch={best_epoch})")
         losses = []
 
         CPC_Losses = []
         # valid_F1 = []
         lr = []
-        min_or_max = 'min' if self.args.KeyEval in ['MAE'] else 'max'
-        best_valid = 1e8 if min_or_max == 'min' else 0     #评价阈值的初始化
         # loop util earlystop
         while True: 
             epochs += 1
@@ -186,9 +243,18 @@ class HMMEM():
                 isBetter = cur_valid <= (best_valid - 1e-6) if min_or_max == 'min' else cur_valid >= (best_valid + 1e-6)
                 if isBetter:
                     best_valid, best_epoch = cur_valid, epochs
-                    # save model
+                    # save best model weights (only trainable params)
                     self.save_model(model, epochs, self.args.model_save_path)
                     model.to(self.args.device)
+
+                # ── 定期保存断点 checkpoint（每 ckpt_save_interval 个 epoch）──
+                if epochs % ckpt_save_interval == 0:
+                    ckpt_path = os.path.join(ckpt_dir, f'{ckpt_prefix}-epoch{epochs}.ckpt')
+                    self.save_checkpoint(
+                        model, optimizer, scheduler, scaler,
+                        epochs, best_valid, best_epoch, ckpt_path)
+                    # 只保留最近 3 个 checkpoint，节省磁盘
+                    self._cleanup_old_checkpoints(ckpt_dir, ckpt_prefix, keep=3)
 
                 # early stop
                 if epochs - best_epoch >= self.args.early_stop:     #如果比best_epoch再过了early_stop轮之后还没有出现新的best_epoch，就停止训练
@@ -283,5 +349,18 @@ class HMMEM():
             if k in param_grad_dic.keys() and not param_grad_dic[k]:
                 # delete parameters that do not require gradient
                 del state_dict[k]
-        logging.info("Saving checkpoint at epoch {} to {}.".format(epoch, save_path))
+        logging.info("Saving best model at epoch {} to {}.".format(epoch, save_path))
         torch.save(state_dict, save_path)
+
+    def _cleanup_old_checkpoints(self, ckpt_dir, prefix, keep=3):
+        """保留最新的 keep 个断点文件，删除更旧的。"""
+        import glob as _glob
+        pattern = os.path.join(ckpt_dir, f'{prefix}-epoch*.ckpt')
+        ckpt_files = sorted(_glob.glob(pattern),
+                            key=lambda p: os.path.getmtime(p))
+        for old_ckpt in ckpt_files[:-keep]:
+            try:
+                os.remove(old_ckpt)
+                logger.info(f"Removed old checkpoint: {old_ckpt}")
+            except OSError as e:
+                logger.warning(f"Failed to remove checkpoint {old_ckpt}: {e}")

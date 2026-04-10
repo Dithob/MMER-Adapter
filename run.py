@@ -1,4 +1,8 @@
 import os
+# 修复 "libgomp: Invalid value for environment variable OMP_NUM_THREADS" 警告
+# 同时防止多 DataLoader worker 下 OpenMP 线程争抢 CPU
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['MKL_NUM_THREADS'] = '1'
 import gc
 import time
 import random

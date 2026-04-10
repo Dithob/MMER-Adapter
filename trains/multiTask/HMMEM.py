@@ -69,7 +69,12 @@ class HMMEM():
         # ── Gradient Accumulation ──
         grad_accum_steps = getattr(self.args, 'gradient_accumulation_steps', 1)
 
-        optimizer = optim.AdamW(model.Model.parameters(), lr= self.args.learning_rate, eps=1e-4)
+        # Only optimize parameters that require gradients.
+        # Without LoRA: Adapter + LSTM + Mixer + Fusion (~2M params)
+        # With LoRA: above + LoRA injected params (~2M + ~3-7M)
+        # This also avoids wasting optimizer state memory on frozen LLM params.
+        trainable_params = [p for p in model.Model.parameters() if p.requires_grad]
+        optimizer = optim.AdamW(trainable_params, lr=self.args.learning_rate, eps=1e-4)
         total_steps = len(dataloader['train'])*self.args.warm_up_epochs   #大致的一个训练step数
         # Adjust total_steps for gradient accumulation (optimizer steps, not forward steps)
         optimizer_steps = total_steps // grad_accum_steps

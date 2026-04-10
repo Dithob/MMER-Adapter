@@ -1,10 +1,13 @@
 import os
 import sys
+import logging
 import collections
 import re
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+logger = logging.getLogger('MSA')
 
 __all__ = ['Language_model']
 
@@ -22,13 +25,19 @@ class Language_model(nn.Module):
         self.datasetName = args.datasetName
         self.train_mode = args.train_mode
         self.task_specific_prompt = args.task_specific_prompt
+        self._args = args  # keep reference for LoRA config
+        self._lora_enabled = False
         
         if use_PLM:
             pretrained_model = args.pretrain_LM
             self._load_model(pretrained_model)
-            # freeze parameter
-            for param in self.model.parameters():
-                param.requires_grad = False
+            # ── LoRA or Freeze ──
+            if getattr(args, 'use_lora', False):
+                self._apply_lora(args)
+            else:
+                # freeze all LLM parameters
+                for param in self.model.parameters():
+                    param.requires_grad = False
         else:
             print('please use PLM')
     
@@ -95,7 +104,7 @@ class Language_model(nn.Module):
         self.model = AutoModelForCausalLM.from_pretrained(
             pretrained_model,
             trust_remote_code=True,
-            torch_dtype=torch.bfloat16
+            dtype=torch.bfloat16
         )
         # NOTE: 不再调用 .half()，保持原生 bf16 精度
         # RTX 4090D 原生支持 bf16，比 fp16 更稳定且无需 GradScaler
@@ -123,11 +132,55 @@ class Language_model(nn.Module):
                 self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
     
     def text_embedding(self, text_ids):
-        if self.model_type == 'gemma':
-            embeddings = self.model.get_input_embeddings()
+        # When LoRA is enabled, self.model is PeftModel; unwrap to reach original model
+        if self._lora_enabled:
+            # PeftModel.base_model (LoraModel) .model → original CausalLM
+            base_model = self.model.base_model.model
         else:
-            embeddings = self.model.base_model.get_input_embeddings()
+            base_model = self.model
+        
+        if self.model_type == 'gemma':
+            embeddings = base_model.get_input_embeddings()
+        else:
+            embeddings = base_model.base_model.get_input_embeddings()
         return embeddings(text_ids)
+    
+    def _apply_lora(self, args):
+        """Apply LoRA adapters to the LLM for fine-tuning.
+        
+        References Emotion-LLaMA-v2's base_model.py init_llm() implementation:
+        first freeze all params, then wrap with peft.get_peft_model() which
+        automatically unfreezes the injected LoRA parameters.
+        """
+        from peft import LoraConfig, get_peft_model, TaskType
+        
+        # Step 1: freeze all base model params
+        for param in self.model.parameters():
+            param.requires_grad = False
+        
+        # Step 2: configure LoRA
+        target_modules = [m.strip() for m in args.lora_target_modules.split(',')]
+        
+        lora_config = LoraConfig(
+            r=args.lora_r,
+            lora_alpha=args.lora_alpha,
+            lora_dropout=args.lora_dropout,
+            target_modules=target_modules,
+            bias="none",
+            task_type=TaskType.CAUSAL_LM,
+        )
+        
+        # Step 3: wrap model with LoRA
+        self.model = get_peft_model(self.model, lora_config)
+        self._lora_enabled = True
+        
+        # Log trainable parameters
+        trainable = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+        total = sum(p.numel() for p in self.model.parameters())
+        logger.info(f"LoRA enabled: r={args.lora_r}, alpha={args.lora_alpha}, "
+                    f"targets={target_modules}")
+        logger.info(f"LoRA trainable params: {trainable:,} / {total:,} "
+                    f"({100 * trainable / total:.2f}%)")
     
     def forward(self, fusion_embedding, labels):
         """

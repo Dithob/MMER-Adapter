@@ -76,9 +76,12 @@ def run(args):
     # ── torch.compile 加速可训练小模块（不编译冻结的 LLM）──
     if hasattr(torch, 'compile'):
         try:
-            model.Model.audio_LSTM = torch.compile(model.Model.audio_LSTM)
-            model.Model.video_LSTM = torch.compile(model.Model.video_LSTM)
-            model.Model.mixer = torch.compile(model.Model.mixer)
+            if hasattr(model.Model, 'audio_LSTM'):
+                model.Model.audio_LSTM = torch.compile(model.Model.audio_LSTM)
+            if hasattr(model.Model, 'video_LSTM'):
+                model.Model.video_LSTM = torch.compile(model.Model.video_LSTM)
+            if hasattr(model.Model, 'mixer'):
+                model.Model.mixer = torch.compile(model.Model.mixer)
             if hasattr(model.Model, 'fusion'):
                 model.Model.fusion = torch.compile(model.Model.fusion)
             if hasattr(model.Model, 'audio_adapter') and model.Model.audio_adapter is not None:
@@ -285,9 +288,29 @@ def parse_args():
     
     # ── Feature Adapter (for high-dim encoders: HuBERT/Whisper) ──
     parser.add_argument('--adapter_dim', type=int, default=128,
-                        help='adapter output dim; only activates when feature_dim > adapter_dim')
+                        help='adapter output dim (fallback); only activates when feature_dim > adapter_dim')
+    parser.add_argument('--audio_adapter_dim', type=int, default=None,
+                        help='audio adapter output dim (overrides adapter_dim for audio)')
+    parser.add_argument('--video_adapter_dim', type=int, default=None,
+                        help='video adapter output dim (overrides adapter_dim for video)')
     parser.add_argument('--iemocap_feature_mode', type=str, default='raw', choices=['raw', 'compressed'],
                         help='IEMOCAP feature preset: raw(64x1280/64x1408) or compressed(157x64/32x64)')
+    
+    # ── LoRA Fine-tuning for LLM ──
+    parser.add_argument('--use_lora', action='store_true', default=False,
+                        help='enable LoRA fine-tuning on LLM (default: frozen LLM)')
+    parser.add_argument('--lora_r', type=int, default=16,
+                        help='LoRA rank (default: 16)')
+    parser.add_argument('--lora_alpha', type=int, default=32,
+                        help='LoRA alpha scaling (default: 32, typically 2x lora_r)')
+    parser.add_argument('--lora_dropout', type=float, default=0.05,
+                        help='LoRA dropout (default: 0.05)')
+    parser.add_argument('--lora_target_modules', type=str, default='q_proj,v_proj',
+                        help='comma-separated LoRA target modules (Qwen/Llama: q_proj,v_proj; ChatGLM3: query_key_value)')
+    
+    # ── Modality Ablation ──
+    parser.add_argument('--modalities', type=str, default='tav',
+                        help='enabled modalities for ablation: any subset of t(ext)/a(udio)/v(ideo), e.g. tav/ta/tv/av/t/a/v')
                         
     return parser.parse_args()
 

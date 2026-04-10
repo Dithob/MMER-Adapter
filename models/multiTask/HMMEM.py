@@ -43,17 +43,21 @@ class HMMEM(nn.Module):
                 args.feature_dims = (text_in, audio_in, video_in)
 
         # ── Feature Adapter (for high-dim encoders like HuBERT/Whisper) ──
-        adapter_dim = getattr(args, 'adapter_dim', 128)
-        if audio_in > adapter_dim:
-            self.audio_adapter = FeatureAdapter(audio_in, adapter_dim)
-            lstm_audio_in = adapter_dim
+        # Each modality can have its own adapter dim; falls back to shared adapter_dim
+        _adapter_dim = getattr(args, 'adapter_dim', 128)
+        audio_adapter_dim = getattr(args, 'audio_adapter_dim', None) or _adapter_dim
+        video_adapter_dim = getattr(args, 'video_adapter_dim', None) or _adapter_dim
+
+        if audio_in > audio_adapter_dim:
+            self.audio_adapter = FeatureAdapter(audio_in, audio_adapter_dim)
+            lstm_audio_in = audio_adapter_dim
         else:
             self.audio_adapter = None
             lstm_audio_in = audio_in
 
-        if video_in > adapter_dim:
-            self.video_adapter = FeatureAdapter(video_in, adapter_dim)
-            lstm_video_in = adapter_dim
+        if video_in > video_adapter_dim:
+            self.video_adapter = FeatureAdapter(video_in, video_adapter_dim)
+            lstm_video_in = video_adapter_dim
         else:
             self.video_adapter = None
             lstm_video_in = video_in
@@ -61,25 +65,39 @@ class HMMEM(nn.Module):
         self.audio_LSTM = TVA_LSTM(lstm_audio_in, args.a_lstm_hidden_size, num_layers=args.a_lstm_layers, dropout=args.a_lstm_dropout)
         self.video_LSTM = TVA_LSTM(lstm_video_in, args.v_lstm_hidden_size, num_layers=args.v_lstm_layers, dropout=args.v_lstm_dropout)
 
+        # ══════════════════════════════════════════════
+        # Modality Ablation: parse --modalities flag
+        # ══════════════════════════════════════════════
+        modalities = str(getattr(args, 'modalities', 'tav')).lower()
+        self.use_text  = 't' in modalities
+        self.use_audio = 'a' in modalities
+        self.use_video = 'v' in modalities
+        self.text_only = self.use_text and not self.use_audio and not self.use_video
+        self.has_av    = self.use_audio or self.use_video  # any non-text modality active
+        if not (self.use_text or self.use_audio or self.use_video):
+            raise ValueError("--modalities must contain at least one of: t, a, v")
+
         # ── Feature flags ──
         # Mixer layer (mutually exclusive: use_amm overrides use_tgm)
-        self.use_tgm = getattr(args, 'use_tgm', True)
-        self.use_amm = getattr(args, 'use_amm', False)
+        # Mixers require text + at least one AV modality
+        self.use_tgm = getattr(args, 'use_tgm', True) and self.use_text and self.has_av
+        self.use_amm = getattr(args, 'use_amm', False) and self.use_text and self.has_av
         if self.use_amm:
             self.use_tgm = False  # AMM overrides TGM
 
         # Fusion layer (mutually exclusive: use_moe_fusion overrides use_msf)
-        self.use_msf = getattr(args, 'use_msf', True)
-        self.use_moe_fusion = getattr(args, 'use_moe_fusion', False)
+        # Fusion only makes sense when AV modalities are present
+        self.use_msf = getattr(args, 'use_msf', True) and self.has_av
+        self.use_moe_fusion = getattr(args, 'use_moe_fusion', False) and self.has_av
         if self.use_moe_fusion:
             self.use_msf = False  # MoE overrides MSF
 
-        # Auxiliary losses
-        self.use_gate = getattr(args, 'use_gate', False)
-        self.use_moe_lb_loss = getattr(args, 'use_moe_lb_loss', False)
-        self.use_diff_loss = getattr(args, 'use_diff_loss', False)
-        self.use_expert_diff_loss = getattr(args, 'use_expert_diff_loss', False)
-        self.use_nce_loss = getattr(args, 'use_nce_loss', False)
+        # Auxiliary losses (only meaningful with AV)
+        self.use_gate = getattr(args, 'use_gate', False) and self.has_av
+        self.use_moe_lb_loss = getattr(args, 'use_moe_lb_loss', False) and self.has_av
+        self.use_diff_loss = getattr(args, 'use_diff_loss', False) and self.has_av
+        self.use_expert_diff_loss = getattr(args, 'use_expert_diff_loss', False) and self.has_av
+        self.use_nce_loss = getattr(args, 'use_nce_loss', False) and self.use_text and self.has_av
         self.diff_loss_weight = getattr(args, 'diff_loss_weight', 0.01)
         self.nce_weight = getattr(args, 'nce_weight', 0.05)
 
@@ -87,18 +105,18 @@ class HMMEM(nn.Module):
         self.text_in = text_in
 
         # ══════════════════════════════════════════════
-        # Mixer Layer
+        # Mixer Layer (only built when needed)
         # ══════════════════════════════════════════════
         if self.use_amm:
             self.mixer = AdaptiveModalMixer(text_in=text_in, fusion_dim=fusion_input_size)
         elif self.use_tgm:
             self.mixer = Text_guide_mixer(text_in)
-        else:
+        elif self.has_av:
             # Fallback: simple audio + video (no text guidance)
             self.mixer = Lightweight_mixer()
 
         # ══════════════════════════════════════════════
-        # Fusion Layer
+        # Fusion Layer (only built when AV present)
         # ══════════════════════════════════════════════
         if self.use_moe_fusion:
             # ── Dual-Branch MoE ──
@@ -136,10 +154,19 @@ class HMMEM(nn.Module):
                 output_size=text_in,
                 pseudo_tokens=args.pseudo_tokens
             )
-        else:
+        elif self.has_av:
             # ── Direct projection fallback ──
             self.direct_proj = nn.Linear(fusion_input_size, text_in)
             self.direct_token_proj = nn.Linear(1, args.pseudo_tokens)
+
+        # ── text-only fallback: project pooled text → fusion_size → LLM ──
+        if not self.has_av:
+            self.text_fallback_proj = nn.Sequential(
+                nn.Linear(text_in, fusion_input_size),
+                nn.GELU(),
+                nn.Linear(fusion_input_size, text_in),
+            )
+            self.text_fallback_token_proj = nn.Linear(1, args.pseudo_tokens)
 
         # ── Optional: DiffLoss ──
         if self.use_diff_loss or self.use_expert_diff_loss:
@@ -222,6 +249,38 @@ class HMMEM(nn.Module):
             fusion_h = self.direct_token_proj(projected.unsqueeze(2))
             return fusion_h.permute(0, 2, 1)
 
+    def _mix_modalities(self, audio_h, video_h, text_embed):
+        """Fuse enabled modalities into a single [B, 256] feature vector.
+        
+        Handles all 7 ablation combinations cleanly:
+          tav: mixer(a, v, t)     ta: mixer(a, zero_v, t)   tv: mixer(zero_a, v, t)
+          av:  a + v              a:  a                      v:  v
+          t:   text_fallback_proj(pool(text))
+        """
+        if self.use_audio and self.use_video:
+            # Both AV present: full mixer
+            if self.use_text:
+                return self.mixer(audio_h, video_h, text_embed)
+            return audio_h + video_h
+        elif self.use_audio:
+            # Audio only (or ta)
+            zero_v = torch.zeros_like(audio_h)
+            if self.use_text:
+                return self.mixer(audio_h, zero_v, text_embed)
+            return audio_h
+        elif self.use_video:
+            # Video only (or tv)
+            zero_a = torch.zeros_like(video_h)
+            if self.use_text:
+                return self.mixer(zero_a, video_h, text_embed)
+            return video_h
+        else:
+            # Text only: pool text → project to fusion size
+            text_pooled = torch.mean(text_embed, dim=1)  # [B, text_in]
+            projected = self.text_fallback_proj(text_pooled)  # [B, text_in]
+            fusion_h = self.text_fallback_token_proj(projected.unsqueeze(2))  # [B, text_in, pseudo_tokens]
+            return fusion_h.permute(0, 2, 1)  # [B, pseudo_tokens, text_in]
+
     # ──────────────────────────────────────────────
     # Forward / Generate
     # ──────────────────────────────────────────────
@@ -230,6 +289,7 @@ class HMMEM(nn.Module):
         audio, audio_len = audio
         video, video_len = video
         text, text_len = text
+        batch_size = text.size(0)
 
         # Feature Adapter (if present)
         if self.audio_adapter is not None:
@@ -237,24 +297,37 @@ class HMMEM(nn.Module):
         if self.video_adapter is not None:
             video = self.video_adapter(video)
 
-        # Text embedding
+        # ── Text embedding (always computed — needed for LLM input) ──
         text_embed = self.LLM.text_embedding(text[:, 0, :].long())
+        if not self.use_text:
+            text_embed = torch.zeros_like(text_embed)
 
-        # Audio & Video encoding
-        if self.use_nce_loss:
-            audio_h, audio_seq = self.audio_LSTM(audio, audio_len, return_sequence=True)
-            video_h, video_seq = self.video_LSTM(video, video_len, return_sequence=True)
-        else:
-            audio_h = self.audio_LSTM(audio, audio_len)
-            video_h = self.video_LSTM(video, video_len)
+        # ── Audio & Video encoding (conditional on enabled modalities) ──
+        audio_h = text_embed.new_zeros(batch_size, 256)
+        video_h = text_embed.new_zeros(batch_size, 256)
+        audio_seq, video_seq = None, None
 
-        # Mixer
-        feature_f = self.mixer(audio_h, video_h, text_embed)
+        if self.use_audio:
+            if self.use_nce_loss:
+                audio_h, audio_seq = self.audio_LSTM(audio, audio_len, return_sequence=True)
+            else:
+                audio_h = self.audio_LSTM(audio, audio_len)
+        if self.use_video:
+            if self.use_nce_loss:
+                video_h, video_seq = self.video_LSTM(video, video_len, return_sequence=True)
+            else:
+                video_h = self.video_LSTM(video, video_len)
 
-        # Fusion
-        if self.use_moe_fusion:
+        # ── Mixer → Fusion ──
+        if self.text_only:
+            # Text-only: skip mixer/fusion, use dedicated text path
+            fusion_h = self._mix_modalities(audio_h, video_h, text_embed)
+            feature_f = text_embed.new_zeros(batch_size, 256)
+        elif self.use_moe_fusion:
+            feature_f = self._mix_modalities(audio_h, video_h, text_embed)
             fusion_h, moe_aux = self._dual_moe_forward(audio_h, video_h, feature_f)
         else:
+            feature_f = self._mix_modalities(audio_h, video_h, text_embed)
             fusion_h = self._apply_fusion(feature_f)
 
         # LLM forward
@@ -285,9 +358,13 @@ class HMMEM(nn.Module):
                 res['ExpertDiffLoss'] = (diff_global + diff_local) * self.diff_loss_weight
 
         if self.use_nce_loss and self.training:
-            nce_ta = self.cpc_text_audio(text_embed, audio_seq)
-            nce_tv = self.cpc_text_video(text_embed, video_seq)
-            res['NCELoss'] = (nce_ta + nce_tv) * self.nce_weight
+            nce_terms = []
+            if self.use_audio and audio_seq is not None:
+                nce_terms.append(self.cpc_text_audio(text_embed, audio_seq))
+            if self.use_video and video_seq is not None:
+                nce_terms.append(self.cpc_text_video(text_embed, video_seq))
+            if nce_terms:
+                res['NCELoss'] = sum(nce_terms) * self.nce_weight
 
         return res
 
@@ -295,6 +372,7 @@ class HMMEM(nn.Module):
         audio, audio_len = audio
         video, video_len = video
         text, text_len = text
+        batch_size = text.size(0)
 
         # Feature Adapter
         if self.audio_adapter is not None:
@@ -303,17 +381,24 @@ class HMMEM(nn.Module):
             video = self.video_adapter(video)
 
         text_embed = self.LLM.text_embedding(text[:, 0, :].long())
+        if not self.use_text:
+            text_embed = torch.zeros_like(text_embed)
 
-        audio_h = self.audio_LSTM(audio, audio_len)
-        video_h = self.video_LSTM(video, video_len)
+        audio_h = text_embed.new_zeros(batch_size, 256)
+        video_h = text_embed.new_zeros(batch_size, 256)
+        if self.use_audio:
+            audio_h = self.audio_LSTM(audio, audio_len)
+        if self.use_video:
+            video_h = self.video_LSTM(video, video_len)
 
-        # Mixer
-        feature_f = self.mixer(audio_h, video_h, text_embed)
-
-        # Fusion
-        if self.use_moe_fusion:
+        # Mixer → Fusion
+        if self.text_only:
+            fusion_h = self._mix_modalities(audio_h, video_h, text_embed)
+        elif self.use_moe_fusion:
+            feature_f = self._mix_modalities(audio_h, video_h, text_embed)
             fusion_h, _ = self._dual_moe_forward(audio_h, video_h, feature_f)
         else:
+            feature_f = self._mix_modalities(audio_h, video_h, text_embed)
             fusion_h = self._apply_fusion(feature_f)
 
         LLM_input = torch.cat([fusion_h, text_embed], dim=1)

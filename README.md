@@ -97,59 +97,231 @@ python run.py --model_type llama2 --datasetName mosei --pretrain_LM /path/to/lla
 
 **基础参数：**
 
-| 参数 | 说明 | 默认值 |
-|---|---|---|
-| `--model_type` | 语言模型类型 | `chatglm3` |
-| `--datasetName` | 数据集名称 | `mosi` |
-| `--pretrain_LM` | 预训练语言模型路径 | 自动推断 |
-| `--seeds` | 随机种子列表 | `1111,2222,3333,4444,5555` |
+| 参数 | 类型 | 说明 | 默认值 |
+|---|---|---|---|
+| `--model_type` | str | 语言模型类型 | `chatglm3` |
+| `--modelName` | str | 模型名（仅 `hmmem`） | `hmmem` |
+| `--datasetName` | str | 数据集名称，支持逗号分隔或 `all` | `mosi` |
+| `--train_mode` | str | `regression` / `classification`（会自动推断） | `regression` |
+| `--pretrain_LM` | str | 预训练语言模型路径（留默认则自动推断） | 自动推断 |
+| `--root_dataset_dir` | str | 数据集根目录 | `/root/autodl-tmp/datasets/` |
+| `--model_save_dir` | str | 模型保存目录 | `/root/autodl-tmp/results/models` |
+| `--res_save_dir` | str | 结果 CSV 保存目录 | `/root/autodl-tmp/results/results` |
+| `--gpu_ids` | str | 指定 GPU ID（如 `0` 或 `0,1`） | 空（自动选择） |
+| `--seeds` | str | 随机种子列表 | `1111,2222,3333,4444,5555` |
+| `--num_workers` | int | DataLoader 进程数 | `4` |
 
 **Mixer 层消融（互斥）：**
 
-| 参数 | 说明 | 默认 |
-|---|---|---|
-| `--use_tgm` | 使用 Text-Guided Mixer（原版基线） | True |
-| `--use_amm` | 使用 Adaptive Modal Mixer（覆盖 TGM） | False |
+| 参数 | 类型 | 说明 | 默认 |
+|---|---|---|---|
+| `--use_tgm` | flag | 使用 Text-Guided Mixer（原版基线） | False |
+| `--use_amm` | flag | 使用 Adaptive Modal Mixer（覆盖 TGM） | False |
+
+> 两者均不指定时使用 Lightweight_mixer (audio + video 直接相加)
 
 **Fusion 层消融（互斥）：**
 
-| 参数 | 说明 | 默认 |
-|---|---|---|
-| `--use_msf` | 使用 Multi-Scale Fusion（原版基线） | True |
-| `--use_moe_fusion` | 使用 Dual-Branch MoE（覆盖 MSF） | False |
+| 参数 | 类型 | 说明 | 默认 |
+|---|---|---|---|
+| `--use_msf` | flag | 使用 Multi-Scale Fusion（原版基线） | False |
+| `--use_moe_fusion` | flag | 使用 Dual-Branch MoE（覆盖 MSF） | False |
+
+> 两者均不指定时使用 Direct Projection fallback
 
 **MoE 配置：**
 
-| 参数 | 说明 | 默认 |
-|---|---|---|
-| `--use_gate` | Meta-Gate 使用 cosine bias | False |
-| `--use_moe_lb_loss` | MoE 负载均衡损失 | False |
-| `--num_local_experts` | Local MoE 专家数量 | 3 |
-| `--expert_bottleneck` | Local Expert 瓶颈维度 | 64 |
+| 参数 | 类型 | 说明 | 默认 |
+|---|---|---|---|
+| `--use_gate` | flag | Meta-Gate 使用 cosine bias | False |
+| `--use_moe_lb_loss` | flag | MoE 负载均衡损失 | False |
+| `--num_local_experts` | int | Local MoE 专家数量 | `3` |
+| `--expert_bottleneck` | int | Local Expert 瓶颈维度 | `64` |
 
 **辅助损失：**
 
-| 参数 | 说明 | 默认 |
-|---|---|---|
-| `--use_diff_loss` | 分支间 DiffLoss | False |
-| `--use_expert_diff_loss` | Expert 间 DiffLoss | False |
-| `--use_nce_loss` | 跨模态 NCE 损失 | False |
-| `--nce_weight` | NCE 损失权重 | 0.05 |
+| 参数 | 类型 | 说明 | 默认 |
+|---|---|---|---|
+| `--use_diff_loss` | flag | 分支间 DiffLoss | False |
+| `--use_expert_diff_loss` | flag | Expert 间 DiffLoss | False |
+| `--diff_loss_weight` | float | DiffLoss 权重 | `0.01` |
+| `--use_nce_loss` | flag | 跨模态 NCE (CPC) 损失 | False |
+| `--nce_hidden_dim` | int | NCE CPC 隐藏维度 | `32` |
+| `--nce_pred_steps` | int | NCE CPC 预测步数 | `2` |
+| `--nce_weight` | float | NCE 损失权重 | `0.05` |
 
 **高维特征适配：**
 
-| 参数 | 说明 | 默认 |
-|---|---|---|
-| `--adapter_dim` | FeatureAdapter 输出维度（仅当特征维度 > adapter_dim 时激活） | 128 |
+| 参数 | 类型 | 说明 | 默认 |
+|---|---|---|---|
+| `--adapter_dim` | int | FeatureAdapter 输出维度（仅当 feature_dim > adapter_dim 时激活） | `128` |
+| `--iemocap_feature_mode` | str | IEMOCAP 特征模式：`raw`(1280/1408 维) 或 `compressed`(64 维) | `raw` |
 
-### 示例
+---
+
+## 训练脚本
+
+> 以下脚本基于 AutoDL 环境（RTX 4090D，路径 `/root/autodl-tmp/`），可根据实际环境修改路径。
+
+### Qwen3.5 训练脚本
 
 ```bash
-# 在MELD数据集上训练 (默认: TGM + MSF)
-python run.py --model_type chatglm3 --datasetName meld --seeds 1111,2222,3333
+# ============================================
+# Qwen3.5 + MELD (分类, 7类情感)
+# ============================================
+python run.py \
+    --model_type qwen3.5 \
+    --datasetName meld \
+    --pretrain_LM /root/autodl-tmp/models/Qwen/Qwen-3.5-25B/ \
+    --root_dataset_dir /root/autodl-tmp/datasets/ \
+    --gpu_ids 0 \
+    --seeds 1111,2222,3333 \
+    --num_workers 4
 
-# 在IEMOCAP数据集上训练（6分类）- 启用MoE
-python run.py --model_type chatglm3 --datasetName iemocap6 --use_moe_fusion
+# ============================================
+# Qwen3.5 + MOSEI (回归, 情感强度)
+# ============================================
+python run.py \
+    --model_type qwen3.5 \
+    --datasetName mosei \
+    --pretrain_LM /root/autodl-tmp/models/Qwen/Qwen-3.5-25B/ \
+    --root_dataset_dir /root/autodl-tmp/datasets/ \
+    --gpu_ids 0 \
+    --seeds 1111,2222,3333
+
+# ============================================
+# Qwen3.5 + SIMSv2 (回归, 中文情感强度)
+# ============================================
+python run.py \
+    --model_type qwen3.5 \
+    --datasetName simsv2 \
+    --pretrain_LM /root/autodl-tmp/models/Qwen/Qwen-3.5-25B/ \
+    --root_dataset_dir /root/autodl-tmp/datasets/ \
+    --gpu_ids 0 \
+    --seeds 1111,2222,3333
+
+# ============================================
+# Qwen3.5 + IEMOCAP4 (分类, 4类情感)
+# ============================================
+python run.py \
+    --model_type qwen3.5 \
+    --datasetName iemocap4 \
+    --pretrain_LM /root/autodl-tmp/models/Qwen/Qwen-3.5-25B/ \
+    --root_dataset_dir /root/autodl-tmp/datasets/ \
+    --gpu_ids 0 \
+    --seeds 1111,2222,3333
+
+# ============================================
+# Qwen3.5 + CHERMA (分类, 中文7类情感)
+# ============================================
+python run.py \
+    --model_type qwen3.5 \
+    --datasetName cherma \
+    --pretrain_LM /root/autodl-tmp/models/Qwen/Qwen-3.5-25B/ \
+    --root_dataset_dir /root/autodl-tmp/datasets/ \
+    --gpu_ids 0 \
+    --seeds 1111,2222,3333
+
+# ============================================
+# Qwen3.5 + 全部数据集（一次性跑完）
+# ============================================
+python run.py \
+    --model_type qwen3.5 \
+    --datasetName all \
+    --pretrain_LM /root/autodl-tmp/models/Qwen/Qwen-3.5-25B/ \
+    --root_dataset_dir /root/autodl-tmp/datasets/ \
+    --gpu_ids 0 \
+    --seeds 1111
+```
+
+### ChatGLM3 训练脚本
+
+```bash
+# ============================================
+# ChatGLM3 + MELD
+# ============================================
+python run.py \
+    --model_type chatglm3 \
+    --datasetName meld \
+    --pretrain_LM /root/autodl-tmp/models/chatglm3-6b-base/ \
+    --root_dataset_dir /root/autodl-tmp/datasets/ \
+    --gpu_ids 0 \
+    --seeds 1111,2222,3333
+
+# ============================================
+# ChatGLM3 + MOSEI
+# ============================================
+python run.py \
+    --model_type chatglm3 \
+    --datasetName mosei \
+    --pretrain_LM /root/autodl-tmp/models/chatglm3-6b-base/ \
+    --root_dataset_dir /root/autodl-tmp/datasets/ \
+    --gpu_ids 0 \
+    --seeds 1111,2222,3333
+```
+
+### 消融实验脚本（以 Qwen3.5 + MELD 为例）
+
+```bash
+BASE="python run.py --model_type qwen3.5 --datasetName meld --gpu_ids 0 --seeds 1111,2222,3333"
+
+# ── 第一阶段：Mixer × Fusion 组合 ──
+
+# A0: 基线 (Lightweight + Direct Projection)
+$BASE
+
+# A1: TGM + MSF
+$BASE --use_tgm --use_msf
+
+# A2: AMM + MSF — 验证 AMM 是否优于 TGM
+$BASE --use_amm --use_msf
+
+# A3: TGM + MoE — 验证 MoE 是否优于 MSF
+$BASE --use_tgm --use_moe_fusion
+
+# A4: AMM + MoE — 组合
+$BASE --use_amm --use_moe_fusion
+
+# ── 第二阶段：辅助机制消融（在最优组合基础上逐个加入）──
+
+# A5: + cosine bias 门控
+$BASE --use_amm --use_moe_fusion --use_gate
+
+# A6: + 分支间 DiffLoss
+$BASE --use_amm --use_moe_fusion --use_diff_loss
+
+# A7: + Expert 间 DiffLoss
+$BASE --use_amm --use_moe_fusion --use_expert_diff_loss
+
+# A8: + 跨模态 NCE
+$BASE --use_amm --use_moe_fusion --use_nce_loss
+
+# A9: + 负载均衡
+$BASE --use_amm --use_moe_fusion --use_moe_lb_loss
+
+# A10: 最优组合 (根据 A5-A9 结果选择)
+$BASE --use_amm --use_moe_fusion --use_gate --use_diff_loss --use_nce_loss
+```
+
+### 高维特征实验（IEMOCAP + HuBERT/Whisper）
+
+```bash
+# IEMOCAP raw 特征 (audio 1280维, video 1408维)
+python run.py \
+    --model_type qwen3.5 \
+    --datasetName iemocap4 \
+    --iemocap_feature_mode raw \
+    --adapter_dim 128 \
+    --gpu_ids 0 \
+    --seeds 1111,2222,3333
+
+# IEMOCAP compressed 特征 (audio 64维, video 64维)
+python run.py \
+    --model_type qwen3.5 \
+    --datasetName iemocap4 \
+    --iemocap_feature_mode compressed \
+    --gpu_ids 0 \
+    --seeds 1111,2222,3333
 ```
 
 ## 支持的数据集
@@ -278,16 +450,35 @@ $BASE --use_nce_loss
 
 训练结果将保存在以下位置：
 
-- **模型文件**: `results/models/{modelName}-{datasetName}-{train_mode}.pth`
-- **实验结果**: `results/results/{datasetName}-{train_mode}-{warm_up_epochs}.csv`
+- **模型文件**: `{model_save_dir}/{modelName}-{model_type}-{datasetName}-{train_mode}-{timestamp}.pth`
+- **实验结果**: `{res_save_dir}/{modelName}-{model_type}-{datasetName}-{train_mode}.csv`（追加模式，每次训练新增一行，包含 Timestamp 和 PTH Path）
 - **日志文件**: `logs/{modelName}-{datasetName}-{model_type}.log`
+
+## 训练性能优化
+
+框架内置了以下训练性能优化，无需额外配置即可生效：
+
+| 优化项 | 说明 | 影响 |
+|---|---|---|
+| **bf16 自动检测** | 支持 bf16 的 GPU 自动使用 bf16（无需 GradScaler），否则回退 fp16 | 训练稳定性 + 速度 |
+| **Gradient Checkpointing** | LLM forward 中用时间换空间，减少 ~60% 激活内存 | 允许更大 batch |
+| **cuDNN Benchmark** | 自动选择最快的卷积/RNN 算法 | LSTM 加速 5-15% |
+| **tf32 Tensor Core** | `float32_matmul_precision='medium'`，利用 RTX 30/40 Tensor Core | 矩阵乘法加速 3-8% |
+| **torch.compile** | 自动编译 LSTM/Mixer/Fusion 等小模块（失败自动 fallback） | 加速 10-20% |
+| **梯度累积** | 由 config 中 `gradient_accumulation_steps` 控制，含残余步处理 | 等效更大 batch |
+| **DataLoader 优化** | `pin_memory`, `persistent_workers`, `prefetch_factor=2`, train 专属 `drop_last` | 数据加载加速 |
+| **高效梯度清零** | `optimizer.zero_grad(set_to_none=True)` | 微小加速 |
+
+> 各数据集的 `batch_size` 和 `gradient_accumulation_steps` 在 `config/config_classification.py` 和 `config/config_regression.py` 中配置。如遇 OOM 可减小 `batch_size`。
 
 ## 注意事项
 
 1. 确保已安装所需的依赖项
 2. 根据使用的语言模型，正确设置 `--pretrain_LM` 路径
 3. 确保数据集路径正确配置
-4. 根据GPU内存情况调整 `batch_size` 参数
+4. 根据 GPU 内存情况调整 `batch_size` 参数（在 config 文件中）
+5. `--datasetName all` 可一次性训练所有数据集（train_mode 自动推断）
+6. `torch.compile` 首次运行有 1-2 分钟编译开销，之后每轮受益
 
 ## 迁移指南
 

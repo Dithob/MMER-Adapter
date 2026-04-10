@@ -60,14 +60,21 @@ class HMMEM():
 
     def do_train(self, model, dataloader):
 
-        scaler = GradScaler()
+        # ── Precision strategy: prefer bf16 on supported hardware ──
+        use_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+        amp_dtype = torch.bfloat16 if use_bf16 else torch.float16
+        # bf16 doesn't need GradScaler; fp16 does
+        scaler = None if use_bf16 else GradScaler()
+
+        # ── Gradient Accumulation ──
+        grad_accum_steps = getattr(self.args, 'gradient_accumulation_steps', 1)
+
         optimizer = optim.AdamW(model.Model.parameters(), lr= self.args.learning_rate, eps=1e-4)
         total_steps = len(dataloader['train'])*self.args.warm_up_epochs   #大致的一个训练step数
-        # scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, min_lr=1e-7, patience=5, verbose=True,
-        #                               threshold=0.0001, eps=1e-08)
+        # Adjust total_steps for gradient accumulation (optimizer steps, not forward steps)
+        optimizer_steps = total_steps // grad_accum_steps
         scheduler = get_cosine_schedule_with_warmup(
-            optimizer, num_warmup_steps=0.1*total_steps, num_training_steps=total_steps)
-        # scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=0.98)
+            optimizer, num_warmup_steps=int(0.1*optimizer_steps), num_training_steps=optimizer_steps)
 
         saved_labels = {}
         # init labels
@@ -75,6 +82,10 @@ class HMMEM():
 
         # initilize results
         logger.info("Start training...")
+        logger.info(f"  Batch size = {self.args.batch_size}")
+        logger.info(f"  Gradient Accumulation steps = {grad_accum_steps}")
+        logger.info(f"  Effective batch size = {self.args.batch_size * grad_accum_steps}")
+        logger.info(f"  AMP dtype = {amp_dtype}")
         epochs, best_epoch = 0, 0
         losses = []
 
@@ -92,13 +103,10 @@ class HMMEM():
             model.train()
             train_loss = 0.0
             CPC_Loss_sum = 0.0
-            left_epochs = self.args.update_epochs
             ids = []
+            optimizer.zero_grad(set_to_none=True)
             with tqdm(dataloader['train']) as td:
-                for batch_data in td:
-                    if left_epochs == self.args.update_epochs:
-                        optimizer.zero_grad()      #在训练1个batch之后停止梯度清0，当新的epoch来临时才清0
-                    left_epochs -= 1                #这么做相当于把batch_size扩大为（N-1）*batch_size，其中N为一个epoch中的batch数
+                for step, batch_data in enumerate(td):
 
                     vision = batch_data['vision'].to(self.args.device)
                     audio = batch_data['audio'].to(self.args.device)
@@ -120,30 +128,43 @@ class HMMEM():
                         vision_lengths = batch_data['vision_lengths'].to(self.args.device)
 
                     # forward
-                    with autocast('cuda'):
+                    with autocast('cuda', dtype=amp_dtype):
                         output= model(labels_m, (text,text_lengths), (audio, audio_lengths), (vision, vision_lengths))
                         loss = output['Loss']
                         # Add optional auxiliary losses
                         for aux_key in ['MoE_LB_Loss', 'DiffLoss', 'ExpertDiffLoss', 'NCELoss']:
                             if aux_key in output:
                                 loss = loss + output[aux_key]
-
+                        # Scale loss by gradient accumulation steps
+                        loss = loss / grad_accum_steps
 
                     # backward
-                    scaler.scale(loss).backward()
-                    train_loss += loss.item()
+                    if scaler is not None:
+                        scaler.scale(loss).backward()
+                    else:
+                        loss.backward()
+
+                    train_loss += loss.item() * grad_accum_steps  # unscale for logging
                     lr.append(optimizer.state_dict()['param_groups'][0]['lr'])
-                    # update parameters
-                    if not left_epochs:
-                        # update
-                        scaler.step(optimizer)
-                        scaler.update()
+
+                    # update parameters every grad_accum_steps
+                    if (step + 1) % grad_accum_steps == 0:
+                        if scaler is not None:
+                            scaler.step(optimizer)
+                            scaler.update()
+                        else:
+                            optimizer.step()
+                        optimizer.zero_grad(set_to_none=True)
                         scheduler.step()
-                        left_epochs = self.args.update_epochs
-                if not left_epochs:
-                    # update
+
+            # Handle remaining steps that didn't complete a full accumulation cycle
+            if (step + 1) % grad_accum_steps != 0:
+                if scaler is not None:
                     scaler.step(optimizer)
                     scaler.update()
+                else:
+                    optimizer.step()
+                optimizer.zero_grad(set_to_none=True)
             
             train_loss = train_loss / len(dataloader['train'])
 
@@ -175,6 +196,11 @@ class HMMEM():
         model.eval()
         y_pred = {'M': [], 'T': [], 'A': [], 'V': []}
         y_true = {'M': [], 'T': [], 'A': [], 'V': []}
+
+        # Use same amp_dtype as training for consistency
+        use_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+        amp_dtype = torch.bfloat16 if use_bf16 else torch.float16
+
         if self.args.train_mode == 'regression':
             with torch.no_grad():
                 with tqdm(dataloader) as td:
@@ -186,7 +212,7 @@ class HMMEM():
                             text_lengths = batch_data['text_lengths'].to(self.args.device)
                             audio_lengths = batch_data['audio_lengths'].to(self.args.device)
                             vision_lengths = batch_data['vision_lengths'].to(self.args.device)
-                        with autocast('cuda'):
+                        with autocast('cuda', dtype=amp_dtype):
                             outputs = model.generate((text,text_lengths), (audio, audio_lengths), (vision, vision_lengths))
 
                         predict_label = torch.Tensor(outputs).to(self.args.device)
@@ -211,7 +237,7 @@ class HMMEM():
                             text_lengths = batch_data['text_lengths'].to(self.args.device)
                             audio_lengths = batch_data['audio_lengths'].to(self.args.device)
                             vision_lengths = batch_data['vision_lengths'].to(self.args.device)
-                        with autocast('cuda'):
+                        with autocast('cuda', dtype=amp_dtype):
                             outputs = model.generate((text, text_lengths), (audio, audio_lengths),
                                                      (vision, vision_lengths))
 

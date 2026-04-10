@@ -95,18 +95,22 @@ class Language_model(nn.Module):
         self.model = AutoModelForCausalLM.from_pretrained(
             pretrained_model,
             trust_remote_code=True,
-            dtype=torch.bfloat16
-        ).half()
+            torch_dtype=torch.bfloat16
+        )
+        # NOTE: 不再调用 .half()，保持原生 bf16 精度
+        # RTX 4090D 原生支持 bf16，比 fp16 更稳定且无需 GradScaler
         
-        # 设置token id
-        if self.model_type == 'qwen':
+        # 启用 gradient checkpointing 节省显存（允许更大 batch）
+        # use_reentrant=False 兼容冻结权重场景（非重入模式正确处理无梯度的中间层）
+        if hasattr(self.model, 'gradient_checkpointing_enable'):
+            self.model.gradient_checkpointing_enable(
+                gradient_checkpointing_kwargs={"use_reentrant": False}
+            )
+
+        if self.model_type in ['qwen', 'qwen3.5']:
+            # Qwen/Qwen3.5 使用相同的特殊 token 设置
             self.eos_token_id = self.tokenizer.convert_tokens_to_ids('<|endoftext|>')
-            self.tokenizer.pad_token_id = self.eos_token_id
-            self.bos_token_id = self.tokenizer.convert_tokens_to_ids('<|im_start|>')
-            self.tokenizer.bos_token_id = self.bos_token_id
-        elif self.model_type == 'qwen3.5':
-            # Qwen3.5使用与Qwen类似的token设置
-            self.eos_token_id = self.tokenizer.convert_tokens_to_ids('<|endoftext|>')
+            self.tokenizer.eos_token_id = self.eos_token_id
             self.tokenizer.pad_token_id = self.eos_token_id
             self.bos_token_id = self.tokenizer.convert_tokens_to_ids('<|im_start|>')
             self.tokenizer.bos_token_id = self.bos_token_id

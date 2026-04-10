@@ -85,7 +85,8 @@ class ConfigRegression():
                     'task_specific_prompt': 'Please predict sentiment intensity of the above multimodal content in range [-3.0, 3.0]. response: The sentiment is',
                     'max_new_tokens': 4,
                     'pseudo_tokens': 4,
-                    'batch_size': 8,
+                    'batch_size': 16,
+                    'gradient_accumulation_steps': 1,
                     'learning_rate': 5e-5,
                     # feature subNets
                     'a_lstm_hidden_size': 64,
@@ -108,7 +109,8 @@ class ConfigRegression():
                     'max_new_tokens': 4,
                     'pseudo_tokens': 4,
                     'task_specific_prompt': '请对上述多模态内容的情感强度进行预测，范围在[-1.0, 1.0]之间。响应: 情感为',
-                    'batch_size': 8,
+                    'batch_size': 16,
+                    'gradient_accumulation_steps': 1,
                     'learning_rate': 5e-5,
                     # feature subNets
                     'a_lstm_hidden_size': 64,

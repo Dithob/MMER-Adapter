@@ -104,7 +104,7 @@ class HMMEM():
             train_loss = 0.0
             CPC_Loss_sum = 0.0
             ids = []
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
             with tqdm(dataloader['train']) as td:
                 for step, batch_data in enumerate(td):
 
@@ -154,7 +154,7 @@ class HMMEM():
                             scaler.update()
                         else:
                             optimizer.step()
-                        optimizer.zero_grad()
+                        optimizer.zero_grad(set_to_none=True)
                         scheduler.step()
 
             # Handle remaining steps that didn't complete a full accumulation cycle
@@ -164,7 +164,7 @@ class HMMEM():
                     scaler.update()
                 else:
                     optimizer.step()
-                optimizer.zero_grad()
+                optimizer.zero_grad(set_to_none=True)
             
             train_loss = train_loss / len(dataloader['train'])
 

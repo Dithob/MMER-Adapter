@@ -32,7 +32,8 @@ def setup_seed(seed):
     torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
     random.seed(seed)
-    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.deterministic = False  # 允许非确定性算法，提升性能
+    torch.backends.cudnn.benchmark = True       # cuDNN 自动选择最快卷积/RNN 算法
 
 def run(args):
     if not os.path.exists(args.model_save_dir):
@@ -67,6 +68,22 @@ def run(args):
     # data
     dataloader = MMDataLoader(args)
     model = AMIO(args).to(device)
+
+    # ── torch.compile 加速可训练小模块（不编译冻结的 LLM）──
+    if hasattr(torch, 'compile'):
+        try:
+            model.Model.audio_LSTM = torch.compile(model.Model.audio_LSTM)
+            model.Model.video_LSTM = torch.compile(model.Model.video_LSTM)
+            model.Model.mixer = torch.compile(model.Model.mixer)
+            if hasattr(model.Model, 'fusion'):
+                model.Model.fusion = torch.compile(model.Model.fusion)
+            if hasattr(model.Model, 'audio_adapter') and model.Model.audio_adapter is not None:
+                model.Model.audio_adapter = torch.compile(model.Model.audio_adapter)
+            if hasattr(model.Model, 'video_adapter') and model.Model.video_adapter is not None:
+                model.Model.video_adapter = torch.compile(model.Model.video_adapter)
+            logger.info("torch.compile enabled for trainable sub-modules")
+        except Exception as e:
+            logger.warning(f"torch.compile failed, falling back to eager mode: {e}")
 
     def print_trainable_parameters(model):
         """
@@ -273,6 +290,9 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     args.timestamp = time.strftime("%Y%m%d_%H%M%S")
+
+    # Tensor Core 优化：允许 tf32 矩阵乘法（RTX 30/40 系列）
+    torch.set_float32_matmul_precision('medium')
     
     # Parse list arguments
     if args.gpu_ids:

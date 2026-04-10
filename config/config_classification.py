@@ -151,8 +151,8 @@ class ConfigClassification():
                     'pseudo_tokens': 2,
                     'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5,
                                            'anger': 6},
-                    'batch_size': 32,
-                    'gradient_accumulation_steps': 2,
+                    'batch_size': 24,
+                    'gradient_accumulation_steps': 1,
                     'learning_rate': 5e-4,
                     # feature subNets
                     'a_lstm_hidden_size': 32,

@@ -425,10 +425,11 @@ def MMDataLoader(args):
         ds: DataLoader(datasets[ds],
                        batch_size=args.batch_size,
                        num_workers=_nw,
-                       shuffle=True,
+                       shuffle=(ds == 'train'),
                        pin_memory=True,
                        persistent_workers=(_nw > 0),
-                       prefetch_factor=2 if _nw > 0 else None)
+                       prefetch_factor=2 if _nw > 0 else None,
+                       drop_last=(ds == 'train'))
         for ds in datasets.keys()
     }
     

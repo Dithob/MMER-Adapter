@@ -25,6 +25,7 @@ class Language_model(nn.Module):
         self.datasetName = args.datasetName
         self.train_mode = args.train_mode
         self.task_specific_prompt = args.task_specific_prompt
+        self.prompt_style = getattr(args, 'prompt_style', 'default')
         self._args = args  # keep reference for LoRA config
         self._lora_enabled = False
         
@@ -182,18 +183,19 @@ class Language_model(nn.Module):
         logger.info(f"LoRA trainable params: {trainable:,} / {total:,} "
                     f"({100 * trainable / total:.2f}%)")
     
-    def forward(self, fusion_embedding, labels):
+    def forward(self, fusion_embedding, labels, input_attn_mask=None):
         """
         Args:
             fusion_embedding: the "concatenate" result of multimodal low rank fusion and text embedding
             label: ground_truth
+            input_attn_mask: optional [B, seq_len] mask for dynamic modal attention (0 = masked)
         """
         fusion_embedding = self.multimodal_prompt_wrap(fusion_embedding)
         
         if self.model_type == 'chatglm3':
             return self._forward_chatglm3(fusion_embedding, labels)
         elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek', 'gemma']:
-            return self._forward_modelscope(fusion_embedding, labels)
+            return self._forward_modelscope(fusion_embedding, labels, input_attn_mask=input_attn_mask)
         else:
             raise ValueError(f"Unsupported model type in forward: {self.model_type}")
     
@@ -210,10 +212,10 @@ class Language_model(nn.Module):
         
         return output
     
-    def _forward_modelscope(self, fusion_embedding, labels):
+    def _forward_modelscope(self, fusion_embedding, labels, input_attn_mask=None):
         """ModelScope/Gemma模型的前向传播"""
         opt_tokens, atts_bos, atts_fusion, labels, labels_atts, opt_input_ids = self.input_processing(
-            fusion_embedding, labels, mode='train'
+            fusion_embedding, labels, mode='train', input_attn_mask=input_attn_mask
         )
         
         # 构建 attention_mask：有 bos 的拼接 bos，否则只用 fusion + labels
@@ -285,14 +287,14 @@ class Language_model(nn.Module):
 
         return output
     
-    def generate(self, fusion_embedding):
+    def generate(self, fusion_embedding, input_attn_mask=None):
         """生成预测结果"""
         fusion_embedding = self.multimodal_prompt_wrap(fusion_embedding)
         
         if self.model_type == 'chatglm3':
             return self._generate_chatglm3(fusion_embedding)
         elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek', 'gemma']:
-            return self._generate_modelscope(fusion_embedding)
+            return self._generate_modelscope(fusion_embedding, input_attn_mask=input_attn_mask)
         else:
             raise ValueError(f"Unsupported model type in generate: {self.model_type}")
     
@@ -346,9 +348,11 @@ class Language_model(nn.Module):
         
         return all_responses
     
-    def _generate_modelscope(self, fusion_embedding):
+    def _generate_modelscope(self, fusion_embedding, input_attn_mask=None):
         """ModelScope模型的生成"""
-        opt_tokens, atts_bos, atts_fusion, _, _, opt_input_ids = self.input_processing(fusion_embedding, mode='generate')
+        opt_tokens, atts_bos, atts_fusion, _, _, opt_input_ids = self.input_processing(
+            fusion_embedding, mode='generate', input_attn_mask=input_attn_mask
+        )
         
         if self.model_type in ['qwen', 'qwen3.5']:
             attention_mask = torch.cat([atts_bos, atts_fusion], dim=1)
@@ -465,17 +469,18 @@ class Language_model(nn.Module):
         
         return all_responses
     
-    def input_processing(self, fusion_embedding, labels=None, mode=None):
+    def input_processing(self, fusion_embedding, labels=None, mode=None, input_attn_mask=None):
         """
         Args:
             fusion_embedding: the "concatenate" result of multimodal low rank fusion and text embedding
             labels: ground_truth
             mode: 'train' or 'generate'
+            input_attn_mask: optional [B, seq_len] mask for dynamic modal attention (0 = masked)
         """
         if self.model_type == 'chatglm3':
             return self._input_processing_chatglm3(fusion_embedding, labels, mode)
         elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek', 'gemma']:
-            return self._input_processing_modelscope(fusion_embedding, labels, mode)
+            return self._input_processing_modelscope(fusion_embedding, labels, mode, input_attn_mask=input_attn_mask)
         else:
             raise ValueError(f"Unsupported model type in input_processing: {self.model_type}")
     
@@ -492,7 +497,7 @@ class Language_model(nn.Module):
         
         return opt_tokens, labels
     
-    def _input_processing_modelscope(self, fusion_embedding, labels=None, mode=None):
+    def _input_processing_modelscope(self, fusion_embedding, labels=None, mode=None, input_attn_mask=None):
         """ModelScope模型的输入处理"""
         batch_size = fusion_embedding.shape[0]
         
@@ -503,6 +508,12 @@ class Language_model(nn.Module):
         opt_tokens = torch.cat([fusion_embedding, task_prompt_embedding], dim=1)
         atts_fusion = torch.ones(opt_tokens.size()[:-1], dtype=torch.long).to(self.device)
         
+        # ── Dynamic modal attention mask (for raw AV token bypass) ──
+        # Zeros out attention for AV tokens of samples with missing (all-zero) modality
+        if input_attn_mask is not None:
+            prefix_len = getattr(self, '_wrap_prefix_len', 0)
+            mask_len = input_attn_mask.shape[1]
+            atts_fusion[:, prefix_len:prefix_len + mask_len] *= input_attn_mask.to(self.device)
         # 针对 Gemma 4 等模型构建真实的 input_ids，fusion位由 pad_token_id 填充
         pad_id = getattr(self.tokenizer, 'pad_token_id', 0)
         fusion_ids = torch.full(fusion_embedding.shape[:-1], pad_id, dtype=torch.long, device=self.device)
@@ -607,16 +618,26 @@ class Language_model(nn.Module):
             p_before_embeds = self.text_embedding(p_before_tokens.input_ids).expand(batch_size, -1, -1)
             p_after_embeds = self.text_embedding(p_after_tokens.input_ids).expand(batch_size, -1, -1)
         else:
-            if self.language == "en":
-                prompt = '<Multimodal><MultimodalHere></Multimodal>'
+            if self.prompt_style == 'enhanced':
+                if self.language == "en":
+                    prompt = 'Based on the following multimodal signals: <Multimodal><MultimodalHere></Multimodal>'
+                else:
+                    prompt = '基于以下多模态信号：<多模态><MultimodalHere></多模态>'
             else:
-                prompt = '<多模态><MultimodalHere></多模态>'
+                if self.language == "en":
+                    prompt = '<Multimodal><MultimodalHere></Multimodal>'
+                else:
+                    prompt = '<多模态><MultimodalHere></多模态>'
             
             p_before, p_after = prompt.split(special_token)
             p_before_tokens = self.tokenizer(p_before, return_tensors="pt", add_special_tokens=True).to(self.device)
             p_after_tokens = self.tokenizer(p_after, return_tensors="pt", add_special_tokens=False).to(self.device)
             p_before_embeds = self.text_embedding(p_before_tokens.input_ids.expand(batch_size, -1))
             p_after_embeds = self.text_embedding(p_after_tokens.input_ids.expand(batch_size, -1))
+        
+        # Track prefix/suffix lengths for dynamic attention mask alignment
+        self._wrap_prefix_len = p_before_embeds.shape[1]
+        self._wrap_suffix_len = p_after_embeds.shape[1]
         
         wrapped_fusion_embeddings = torch.cat([p_before_embeds, fusion_embeddings, p_after_embeds], dim=1)
         return wrapped_fusion_embeddings

@@ -168,6 +168,18 @@ class HMMEM(nn.Module):
             )
             self.text_fallback_token_proj = nn.Linear(1, args.pseudo_tokens)
 
+        # ── Raw AV Token Bypass (EmotionLLaMA-v2 style) ──
+        raw_av_mode = getattr(args, 'raw_av_mode', 'none').lower()
+        self.inject_audio_tokens = raw_av_mode in ('audio', 'both') and self.use_audio
+        self.inject_video_tokens = raw_av_mode in ('video', 'both') and self.use_video
+        av_pseudo_tokens = getattr(args, 'av_pseudo_tokens', 4)
+        if self.inject_audio_tokens:
+            self.audio_proj = nn.Linear(256, text_in)
+            self.audio_token_proj = nn.Linear(1, av_pseudo_tokens)
+        if self.inject_video_tokens:
+            self.video_proj = nn.Linear(256, text_in)
+            self.video_token_proj = nn.Linear(1, av_pseudo_tokens)
+
         # ── Optional: DiffLoss ──
         if self.use_diff_loss or self.use_expert_diff_loss:
             self.diff_loss_fn = DiffLoss()
@@ -249,6 +261,55 @@ class HMMEM(nn.Module):
             fusion_h = self.direct_token_proj(projected.unsqueeze(2))
             return fusion_h.permute(0, 2, 1)
 
+    def _build_llm_input(self, fusion_h, text_embed, audio_h, video_h, audio_raw, video_raw):
+        """Build LLM input sequence with optional raw AV token bypass and dynamic mask.
+
+        When raw_av_mode != 'none', injects separately projected audio/video tokens
+        alongside the fused pseudo-tokens. Dynamic attention mask zeros out tokens
+        for samples whose raw features are all-zero (missing modality).
+
+        Returns:
+            llm_input: [B, total_seq_len, hidden_size]
+            input_attn_mask: [B, total_seq_len] or None
+        """
+        batch_size = fusion_h.shape[0]
+        device = fusion_h.device
+
+        components = [fusion_h]
+        mask_parts = [torch.ones(batch_size, fusion_h.shape[1], dtype=torch.long, device=device)]
+
+        if self.inject_audio_tokens:
+            audio_tokens = self.audio_proj(audio_h)                          # [B, text_in]
+            audio_tokens = self.audio_token_proj(audio_tokens.unsqueeze(2))  # [B, text_in, av_pt]
+            audio_tokens = audio_tokens.permute(0, 2, 1)                    # [B, av_pt, text_in]
+            # Dynamic mask: detect zero raw audio
+            audio_zero = (audio_raw.abs().sum(dim=list(range(1, audio_raw.dim()))) == 0)  # [B]
+            audio_mask = (~audio_zero).long().unsqueeze(1).expand(-1, audio_tokens.shape[1])
+            components.append(audio_tokens)
+            mask_parts.append(audio_mask)
+
+        if self.inject_video_tokens:
+            video_tokens = self.video_proj(video_h)                          # [B, text_in]
+            video_tokens = self.video_token_proj(video_tokens.unsqueeze(2))  # [B, text_in, av_pt]
+            video_tokens = video_tokens.permute(0, 2, 1)                    # [B, av_pt, text_in]
+            # Dynamic mask: detect zero raw video
+            video_zero = (video_raw.abs().sum(dim=list(range(1, video_raw.dim()))) == 0)  # [B]
+            video_mask = (~video_zero).long().unsqueeze(1).expand(-1, video_tokens.shape[1])
+            components.append(video_tokens)
+            mask_parts.append(video_mask)
+
+        components.append(text_embed)
+        mask_parts.append(torch.ones(batch_size, text_embed.shape[1], dtype=torch.long, device=device))
+
+        llm_input = torch.cat(components, dim=1)
+
+        if self.inject_audio_tokens or self.inject_video_tokens:
+            input_attn_mask = torch.cat(mask_parts, dim=1)
+        else:
+            input_attn_mask = None
+
+        return llm_input, input_attn_mask
+
     def _mix_modalities(self, audio_h, video_h, text_embed):
         """Fuse enabled modalities into a single [B, 256] feature vector.
         
@@ -291,6 +352,9 @@ class HMMEM(nn.Module):
         text, text_len = text
         batch_size = text.size(0)
 
+        # Save raw features for dynamic zero-detection (before adapter)
+        audio_raw, video_raw = audio, video
+
         # Feature Adapter (if present)
         if self.audio_adapter is not None:
             audio = self.audio_adapter(audio)
@@ -330,9 +394,10 @@ class HMMEM(nn.Module):
             feature_f = self._mix_modalities(audio_h, video_h, text_embed)
             fusion_h = self._apply_fusion(feature_f)
 
-        # LLM forward
-        LLM_input = torch.cat([fusion_h, text_embed], dim=1)
-        LLM_output = self.LLM(LLM_input, labels)
+        # ── Build LLM input with optional AV token bypass ──
+        LLM_input, input_attn_mask = self._build_llm_input(
+            fusion_h, text_embed, audio_h, video_h, audio_raw, video_raw)
+        LLM_output = self.LLM(LLM_input, labels, input_attn_mask=input_attn_mask)
 
         res = {
             'Loss': LLM_output.loss,
@@ -374,6 +439,9 @@ class HMMEM(nn.Module):
         text, text_len = text
         batch_size = text.size(0)
 
+        # Save raw features for dynamic zero-detection (before adapter)
+        audio_raw, video_raw = audio, video
+
         # Feature Adapter
         if self.audio_adapter is not None:
             audio = self.audio_adapter(audio)
@@ -401,7 +469,9 @@ class HMMEM(nn.Module):
             feature_f = self._mix_modalities(audio_h, video_h, text_embed)
             fusion_h = self._apply_fusion(feature_f)
 
-        LLM_input = torch.cat([fusion_h, text_embed], dim=1)
-        LLM_output = self.LLM.generate(LLM_input)
+        # ── Build LLM input with optional AV token bypass ──
+        LLM_input, input_attn_mask = self._build_llm_input(
+            fusion_h, text_embed, audio_h, video_h, audio_raw, video_raw)
+        LLM_output = self.LLM.generate(LLM_input, input_attn_mask=input_attn_mask)
 
         return LLM_output

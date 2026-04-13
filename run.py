@@ -205,7 +205,7 @@ def run_normal(args):
         param_columns = [
             "LR", "BatchSize", "EffBatch", "WarmupEpochs", "EarlyStop",
             "Mixer", "Fusion", "Gate", "LoRA", "LoRA_r",
-            "AdapterDim", "Modalities", "PretrainLM",
+            "AdapterDim", "Modalities", "RawAV", "PromptStyle", "PretrainLM",
         ]
         columns = ["Model", "ModelType", "Dataset", "Seed", "Timestamp", "PTH Path"] \
                   + param_columns + criterions
@@ -234,6 +234,8 @@ def run_normal(args):
             getattr(args, 'lora_r', '') if getattr(args, 'use_lora', False) else '',
             getattr(args, 'adapter_dim', ''),
             getattr(args, 'modalities', 'tav'),
+            getattr(args, 'raw_av_mode', 'none'),
+            getattr(args, 'prompt_style', 'default'),
             os.path.basename(getattr(args, 'pretrain_LM', '')),
         ]
 
@@ -369,6 +371,16 @@ def parse_args():
     # ── Modality Ablation ──
     parser.add_argument('--modalities', type=str, default='tav',
                         help='enabled modalities for ablation: any subset of t(ext)/a(udio)/v(ideo), e.g. tav/ta/tv/av/t/a/v')
+
+    # ── Raw AV Token Bypass (EmotionLLaMA-v2 style) ──
+    parser.add_argument('--raw_av_mode', type=str, default='none',
+                        choices=['none', 'audio', 'video', 'both'],
+                        help='inject raw AV tokens into LLM input alongside fusion pseudo-tokens: none/audio/video/both')
+    parser.add_argument('--av_pseudo_tokens', type=int, default=4,
+                        help='number of pseudo tokens per AV modality when raw_av_mode != none (default: 4)')
+    parser.add_argument('--prompt_style', type=str, default='default',
+                        choices=['default', 'enhanced'],
+                        help='multimodal prompt template style: default or enhanced (default: default)')
 
     # ── Checkpoint / Resume ──
     parser.add_argument('--resume_checkpoint', type=str, default=None,

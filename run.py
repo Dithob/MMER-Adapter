@@ -200,18 +200,46 @@ def run_normal(args):
         save_path = os.path.join(args.res_save_dir, f'{args.modelName}-{args.model_type}-{args.datasetName}-{args.train_mode}.csv')
         if not os.path.exists(args.res_save_dir):
             os.makedirs(args.res_save_dir)
-            
-        columns = ["Model", "ModelType", "Dataset", "Seed", "Timestamp", "PTH Path"] + criterions
+
+        # ── 关键训练参数列（方便实验对比） ──
+        param_columns = [
+            "LR", "BatchSize", "EffBatch", "WarmupEpochs", "EarlyStop",
+            "Mixer", "Fusion", "Gate", "LoRA", "LoRA_r",
+            "AdapterDim", "Modalities", "PretrainLM",
+        ]
+        columns = ["Model", "ModelType", "Dataset", "Seed", "Timestamp", "PTH Path"] \
+                  + param_columns + criterions
         if os.path.exists(save_path):
             df = pd.read_csv(save_path)
-            # 兼容旧表，如果列数不对齐可以重建列头
-            if "Timestamp" not in df.columns or "PTH Path" not in df.columns:
-                df = df.reindex(columns=columns)
+            # 兼容旧表：自动扩展缺失列
+            for col in columns:
+                if col not in df.columns:
+                    df[col] = ""
+            df = df.reindex(columns=columns)
         else:
             df = pd.DataFrame(columns=columns)
 
+        # 提取关键参数值
+        grad_accum = getattr(args, 'gradient_accumulation_steps', 1)
+        param_values = [
+            getattr(args, 'learning_rate', ''),
+            getattr(args, 'batch_size', ''),
+            getattr(args, 'batch_size', 1) * grad_accum,  # effective batch
+            getattr(args, 'warm_up_epochs', ''),
+            getattr(args, 'early_stop', ''),
+            'AMM' if getattr(args, 'use_amm', False) else ('TGM' if getattr(args, 'use_tgm', False) else 'None'),
+            'MoE' if getattr(args, 'use_moe_fusion', False) else ('MSF' if getattr(args, 'use_msf', False) else 'None'),
+            getattr(args, 'use_gate', False),
+            getattr(args, 'use_lora', False),
+            getattr(args, 'lora_r', '') if getattr(args, 'use_lora', False) else '',
+            getattr(args, 'adapter_dim', ''),
+            getattr(args, 'modalities', 'tav'),
+            os.path.basename(getattr(args, 'pretrain_LM', '')),
+        ]
+
         for k, test_results in enumerate(model_results):
-            res = [args.modelName, args.model_type, args.datasetName, f'{seed}', args.timestamp, args.model_save_path]
+            res = [args.modelName, args.model_type, args.datasetName, f'{seed}', args.timestamp, args.model_save_path] \
+                  + param_values
             for c in criterions:
                 res.append(round(test_results[c] * 100, 2))
             

@@ -157,11 +157,11 @@ def read_video_cv2_abs(file_path: str, indices_abs: np.ndarray, clip_len: int = 
     return frames
 
 class EmotionLLaMAStyleExtractor:
-    def __init__(self, whisper_model: str, eva_ckpt: Optional[str], device: str, mode: str = "raw"):
+    """Always extracts raw features; compression is applied as post-processing."""
+    def __init__(self, whisper_model: str, eva_ckpt: Optional[str], device: str):
         self.device = torch.device(device if device else ("cuda" if torch.cuda.is_available() else "cpu"))
         self.whisper_model_name = whisper_model
         self.eva_ckpt = eva_ckpt
-        self.mode = mode.lower()
         self._whisper, self._whisper_fe = None, None
         self._eva, self._eva_tf = None, None
 
@@ -186,11 +186,40 @@ class EmotionLLaMAStyleExtractor:
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
 
+    # NOTE: static compression methods below are kept for reference.
+    # Actual compression is done by module-level compress_features() after extraction.
+
     @staticmethod
     def _compress_dim_block_mean(x: torch.Tensor, out_dim: int) -> torch.Tensor:
+        """Legacy: block-mean compression (not recommended, see analysis)."""
         t, d = x.shape
         blk = d // out_dim
         return x.view(t, out_dim, blk).mean(dim=-1)
+
+    @staticmethod
+    def _compress_dim_head_aware(x: torch.Tensor, out_dim: int, num_heads: int) -> torch.Tensor:
+        """Head-aware compression: pool within each attention head independently.
+
+        Avoids mixing information across different attention heads, preserving
+        the multi-head structure of Whisper/EVA-ViT encoder outputs.
+
+        When out_dim is not evenly divisible by num_heads (e.g. 64/20),
+        the first `remainder` heads get one extra output dim.
+        """
+        t, d = x.shape
+        head_dim = d // num_heads
+        base_out = out_dim // num_heads
+        remainder = out_dim % num_heads
+
+        x_heads = x.view(t, num_heads, head_dim)  # (T, H, head_dim)
+        compressed = []
+        for h in range(num_heads):
+            target = base_out + (1 if h < remainder else 0)
+            pooled = F.adaptive_avg_pool1d(
+                x_heads[:, h, :].unsqueeze(1), target  # (T, 1, head_dim) -> (T, 1, target)
+            ).squeeze(1)  # (T, target)
+            compressed.append(pooled)
+        return torch.cat(compressed, dim=-1)  # (T, out_dim)
 
     @staticmethod
     def _resample_time(x: torch.Tensor, target_t: int) -> torch.Tensor:
@@ -228,12 +257,7 @@ class EmotionLLaMAStyleExtractor:
             for j in range(actual_b):
                 f = feat[j:j+1]
                 f = adaptive_downsample_with_padding(f, target_len=64).squeeze(0)
-                if self.mode == "raw":
-                    results.append(f.float().cpu().numpy().astype(np.float32))
-                else:
-                    f = self._compress_dim_block_mean(f, out_dim=64)
-                    f = self._resample_time(f, target_t=157)
-                    results.append(f.float().cpu().numpy().astype(np.float32))
+                results.append(f.float().cpu().numpy().astype(np.float32))  # always raw: (64, 1280)
         return results
 
     def extract_video_batch(self, video_path: str, time_segments: List[Tuple[float, float]], batch_size: int = 8) -> List[np.ndarray]:
@@ -289,13 +313,131 @@ class EmotionLLaMAStyleExtractor:
             
             for j in range(actual_b):
                 f = feat[j]
-                if self.mode == "raw":
-                    results.append(f.float().cpu().numpy().astype(np.float32))
-                else:
-                    f = self._compress_dim_block_mean(f, out_dim=64)
-                    f = self._resample_time(f, target_t=32)
-                    results.append(f.float().cpu().numpy().astype(np.float32))
+                results.append(f.float().cpu().numpy().astype(np.float32))  # always raw: (64, 1408)
         return results
+
+# ══════════════════════════════════════════════════════════════
+# Post-extraction Compression (applied when --mode compressed)
+# ══════════════════════════════════════════════════════════════
+WHISPER_NUM_HEADS = 20   # whisper-large-v3: 1280 / 20 = 64 per head
+EVA_VIT_NUM_HEADS = 16   # EVA-ViT-G:       1408 / 16 = 88 per head
+
+def _resample_time_np(x: np.ndarray, target_t: int) -> np.ndarray:
+    """Resample time dimension via linear interpolation. (T, D) -> (target_t, D)."""
+    xt = torch.from_numpy(x).float().transpose(0, 1).unsqueeze(0)
+    xt = F.interpolate(xt, size=target_t, mode="linear", align_corners=False)
+    return xt.squeeze(0).transpose(0, 1).contiguous().numpy().astype(np.float32)
+
+def _compress_block_mean_np(x: np.ndarray, out_dim: int) -> np.ndarray:
+    """Legacy block-mean: split feature dim into blocks and average."""
+    t, d = x.shape
+    blk = d // out_dim
+    return x.reshape(t, out_dim, blk).mean(axis=-1).astype(np.float32)
+
+def _compress_head_aware_np(x: np.ndarray, out_dim: int, num_heads: int) -> np.ndarray:
+    """Head-aware compression: pool within each attention head independently.
+    
+    Distributes output dims across heads. If out_dim is not evenly divisible
+    by num_heads, the first `remainder` heads get one extra dim.
+    E.g. Whisper: 64 / 20 heads -> first 4 heads get 4 dims, rest get 3.
+    """
+    t, d = x.shape
+    head_dim = d // num_heads
+    base_out = out_dim // num_heads
+    remainder = out_dim % num_heads
+
+    xt = torch.from_numpy(x).float().view(t, num_heads, head_dim)
+    compressed = []
+    for h in range(num_heads):
+        target = base_out + (1 if h < remainder else 0)
+        pooled = F.adaptive_avg_pool1d(
+            xt[:, h, :].unsqueeze(1), target
+        ).squeeze(1)
+        compressed.append(pooled)
+    return torch.cat(compressed, dim=-1).numpy().astype(np.float32)
+
+def _apply_per_sample(splits, compress_fn, target_t):
+    """Apply a per-sample compress function + time resampling to all splits."""
+    for split_dict in splits:
+        for uid in split_dict:
+            f = compress_fn(split_dict[uid])
+            split_dict[uid] = _resample_time_np(f, target_t)
+
+def compress_features(audio_splits, video_splits, method, out_dim=64,
+                      audio_target_t=157, video_target_t=32):
+    """Compress raw features to low-dim format for backward compatibility.
+
+    Methods:
+        pca:        PCA fitted on entire dataset (best information retention)
+        head_aware: Pool within each attention head (preserves multi-head structure)
+        block_mean: Legacy block-mean (not recommended)
+    """
+    print(f"\n[Compress] method={method}, out_dim={out_dim}, "
+          f"audio_T={audio_target_t}, video_T={video_target_t}")
+
+    if method == "pca":
+        try:
+            from sklearn.decomposition import PCA
+        except ImportError:
+            raise ImportError(
+                "PCA compression requires scikit-learn: pip install scikit-learn")
+
+        # ── Audio PCA: fit on all frames across all splits ──
+        all_audio = np.vstack([f for d in audio_splits for f in d.values()])
+        pca_a = PCA(n_components=out_dim)
+        pca_a.fit(all_audio)
+        var_a = pca_a.explained_variance_ratio_.sum()
+        print(f"[PCA Audio] {all_audio.shape[1]}d -> {out_dim}d, "
+              f"explained variance: {var_a:.4f} ({var_a*100:.1f}%)")
+        for split_dict in audio_splits:
+            for uid in split_dict:
+                f = pca_a.transform(split_dict[uid]).astype(np.float32)
+                split_dict[uid] = _resample_time_np(f, audio_target_t)
+        del all_audio
+
+        # ── Video PCA ──
+        all_video = np.vstack([f for d in video_splits for f in d.values()])
+        pca_v = PCA(n_components=out_dim)
+        pca_v.fit(all_video)
+        var_v = pca_v.explained_variance_ratio_.sum()
+        print(f"[PCA Video] {all_video.shape[1]}d -> {out_dim}d, "
+              f"explained variance: {var_v:.4f} ({var_v*100:.1f}%)")
+        for split_dict in video_splits:
+            for uid in split_dict:
+                f = pca_v.transform(split_dict[uid]).astype(np.float32)
+                split_dict[uid] = _resample_time_np(f, video_target_t)
+        del all_video
+
+    elif method == "head_aware":
+        print(f"[Head-Aware] Audio heads={WHISPER_NUM_HEADS}, "
+              f"Video heads={EVA_VIT_NUM_HEADS}")
+        _apply_per_sample(
+            audio_splits,
+            lambda f: _compress_head_aware_np(f, out_dim, WHISPER_NUM_HEADS),
+            audio_target_t,
+        )
+        _apply_per_sample(
+            video_splits,
+            lambda f: _compress_head_aware_np(f, out_dim, EVA_VIT_NUM_HEADS),
+            video_target_t,
+        )
+
+    elif method == "block_mean":
+        print("[Block-Mean] WARNING: legacy method, not recommended")
+        _apply_per_sample(
+            audio_splits,
+            lambda f: _compress_block_mean_np(f, out_dim),
+            audio_target_t,
+        )
+        _apply_per_sample(
+            video_splits,
+            lambda f: _compress_block_mean_np(f, out_dim),
+            video_target_t,
+        )
+
+    print("[Compress] Done.\n")
+    return audio_splits, video_splits
+
 
 def stable_valid_split(utt_id: str, valid_ratio: float, seed: int) -> bool:
     key = f"{utt_id}-{seed}".encode("utf-8")
@@ -341,6 +483,9 @@ def main():
     parser.add_argument("--device", type=str, default=None)
     parser.add_argument("--max_utts", type=int, default=None)
     parser.add_argument("--mode", type=str, default="raw", choices=["raw", "compressed"])
+    parser.add_argument("--compress_method", type=str, default="pca",
+                        choices=["pca", "head_aware", "block_mean"],
+                        help="Dimension compression method for compressed mode (default: pca)")
     args = parser.parse_args()
 
     np.random.seed(args.seed)
@@ -369,7 +514,7 @@ def main():
     train_rows, valid_rows, test_rows = [], [], []
     audio_splits, video_splits = [dict(), dict(), dict()], [dict(), dict(), dict()]
 
-    extractor = EmotionLLaMAStyleExtractor(args.whisper_model, args.eva_ckpt, args.device, args.mode)
+    extractor = EmotionLLaMAStyleExtractor(args.whisper_model, args.eva_ckpt, args.device)
 
     # 修改后的进度条与批量处理逻辑
     pbar = tqdm(total=len(utterances), desc="Extracting features", ncols=120)
@@ -415,6 +560,16 @@ def main():
 
     pbar.close()
 
+    # ── Post-extraction compression (if mode=="compressed") ──
+    if args.mode == "compressed":
+        audio_splits, video_splits = compress_features(
+            audio_splits, video_splits,
+            method=args.compress_method,
+            out_dim=64,
+            audio_target_t=157,  # Legacy config compat (ideally 64, see analysis)
+            video_target_t=32,
+        )
+
     out_pkl = os.path.join(output_dir, "iemocap_data_0610.pkl")
     with open(out_pkl, "wb") as f:
         pickle.dump({"audio": audio_splits, "video": video_splits}, f, protocol=4)
@@ -424,8 +579,13 @@ def main():
     write_split_csv(os.path.join(text_dir, "iemocap_data_test.csv"), test_rows)
 
     stats = {
-        "mode": args.mode, "classes": args.classes, "num_train": len(train_rows),
-        "num_valid": len(valid_rows), "num_test": len(test_rows), "pkl_path": out_pkl,
+        "mode": args.mode,
+        "compress_method": args.compress_method if args.mode == "compressed" else "n/a",
+        "classes": args.classes,
+        "num_train": len(train_rows),
+        "num_valid": len(valid_rows),
+        "num_test": len(test_rows),
+        "pkl_path": out_pkl,
         "csv_dir": text_dir,
         "audio_shape": [64, 1280] if args.mode == "raw" else [157, 64],
         "video_shape": [64, 1408] if args.mode == "raw" else [32, 64],
@@ -437,3 +597,15 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # # Raw 模式（默认，与之前完全一致）
+    # python preprocess_iemocap_emotionllama_v2.py --mode raw
+
+    # # Compressed + PCA（推荐）
+    # pip install scikit-learn
+    # python preprocess_iemocap_emotionllama_v2.py --mode compressed --compress_method pca
+
+    # # Compressed + 注意力头感知
+    # python preprocess_iemocap_emotionllama_v2.py --mode compressed --compress_method head_aware
+
+    # # Compressed + 旧方法（不推荐）
+    # python preprocess_iemocap_emotionllama_v2.py --mode compressed --compress_method block_mean

@@ -113,6 +113,35 @@ def run(args):
     #                                   device_ids=args.gpu_ids,
     #                                   output_device=args.gpu_ids[0])
     atio = ATIO().getTrain(args)
+
+    # ── eval_only 模式：跳过训练，直接加载 pth 测试 ──
+    eval_only = getattr(args, 'eval_only', False)
+    eval_model_path = getattr(args, 'eval_model_path', None)
+
+    if eval_only:
+        # 确定要加载的模型路径
+        load_path = eval_model_path
+        if load_path is None:
+            raise ValueError("--eval_only requires --eval_model_path to specify the .pth file to evaluate.")
+        if not os.path.exists(load_path):
+            raise FileNotFoundError(f"Model file not found: {load_path}")
+        logger.info(f"[Eval-Only] Loading model from: {load_path}")
+        checkpoint = torch.load(load_path, map_location=device)
+        model.load_state_dict(checkpoint, strict=False)
+        model.to(device)
+
+        # 在 valid 和 test 上都跑一遍，方便对比
+        logger.info("[Eval-Only] Running evaluation on VALID set...")
+        valid_results = atio.do_test(model, dataloader['valid'], mode="VALID")
+        logger.info("[Eval-Only] Running evaluation on TEST set...")
+        test_results = atio.do_test(model, dataloader['test'], mode="TEST")
+
+        del model
+        torch.cuda.empty_cache()
+        gc.collect()
+        return test_results
+
+    # ── 正常训练流程 ──
     # do train (支持断点续训)
     resume_ckpt = getattr(args, 'resume_checkpoint', None)
     atio.do_train(model, dataloader, resume_checkpoint=resume_ckpt)
@@ -318,6 +347,12 @@ def parse_args():
                         help='path to a .ckpt file to resume training from (e.g. /path/to/checkpoints/hmmem-qwen-meld-...-epoch10.ckpt)')
     parser.add_argument('--ckpt_save_interval', type=int, default=5,
                         help='save a checkpoint every N epochs (default: 5). Keeps only the 3 most recent checkpoints.')
+
+    # ── Eval-Only Mode ──
+    parser.add_argument('--eval_only', action='store_true', default=False,
+                        help='skip training, load a saved .pth and evaluate on valid+test sets')
+    parser.add_argument('--eval_model_path', type=str, default=None,
+                        help='path to the .pth model file to evaluate (required when --eval_only is set)')
 
     return parser.parse_args()
 

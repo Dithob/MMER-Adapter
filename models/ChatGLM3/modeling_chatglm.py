@@ -864,7 +864,10 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
     def __init__(self, config: ChatGLMConfig, empty_init=True, device=None):
         super().__init__(config)
 
-        self.max_sequence_length = config.max_length
+        # 兼容新旧版 transformers：ChatGLMConfig 定义的是 seq_length (2048)，
+        # 旧版中 config.max_length 会 fallback 到 PretrainedConfig 默认值 20（不正确），
+        # 新版直接 AttributeError。因此优先使用 seq_length。
+        self.max_sequence_length = getattr(config, 'seq_length', None) or getattr(config, 'max_length', 8192)
         self.transformer = ChatGLMModel(config, empty_init=empty_init, device=device)
         self.config = config
         self.quantized = False

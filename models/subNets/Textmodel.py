@@ -67,6 +67,13 @@ class Language_model(nn.Module):
             pretrained_model, 
             trust_remote_code=True
         )
+        
+        # 启用 gradient checkpointing 节省显存（与 Qwen/Llama 保持一致）
+        # ChatGLM3-6B fp16 模型本身 ~12GB，无 GC 时 28 层激活值累积将占满 24GB 显存
+        if hasattr(self.model, 'gradient_checkpointing_enable'):
+            self.model.gradient_checkpointing_enable(
+                gradient_checkpointing_kwargs={"use_reentrant": False}
+            )
     
     def _load_gemma(self, pretrained_model):
         """加载Gemma模型（使用HuggingFace transformers）"""

@@ -634,7 +634,8 @@ class GLMTransformer(torch.nn.Module):
                     attention_mask,
                     rotary_pos_emb,
                     kv_caches[index],
-                    use_cache
+                    use_cache,
+                    use_reentrant=False
                 )
             else:
                 layer_ret = layer(

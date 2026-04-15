@@ -167,15 +167,25 @@ class EmotionLLaMAStyleExtractor:
 
     def _load_whisper(self):
         if self._whisper is None:
+            print("[Model] Loading Whisper...")
             self._whisper = WhisperModel.from_pretrained(self.whisper_model_name).to(self.device)
             self._whisper.eval()
             self._whisper_fe = AutoFeatureExtractor.from_pretrained(self.whisper_model_name)
 
+    def _unload_whisper(self):
+        """Free Whisper from VRAM to make room for EVA-ViT."""
+        if self._whisper is not None:
+            del self._whisper
+            self._whisper = None
+            torch.cuda.empty_cache()
+            print("[Model] Whisper unloaded, VRAM freed.")
+
     def _load_eva(self):
         if self._eva is not None: return
+        print("[Model] Loading EVA-ViT-G...")
         self._eva = create_model("eva_giant_patch14_224", pretrained=False, num_classes=0, global_pool="")
         ckpt = self.eva_ckpt or os.path.expanduser("~/.cache/torch/hub/checkpoints/eva_vit_g.pth")
-        state = torch.load(ckpt, map_location="cpu")
+        state = torch.load(ckpt, map_location="cpu", weights_only=True)
         if isinstance(state, dict) and "model" in state: state = state["model"]
         self._eva.load_state_dict(state, strict=False)
         self._eva = self._eva.to(self.device)
@@ -185,6 +195,14 @@ class EmotionLLaMAStyleExtractor:
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
+
+    def _unload_eva(self):
+        """Free EVA-ViT from VRAM."""
+        if self._eva is not None:
+            del self._eva
+            self._eva = None
+            torch.cuda.empty_cache()
+            print("[Model] EVA-ViT unloaded, VRAM freed.")
 
     # NOTE: static compression methods below are kept for reference.
     # Actual compression is done by module-level compress_features() after extraction.
@@ -516,33 +534,65 @@ def main():
 
     extractor = EmotionLLaMAStyleExtractor(args.whisper_model, args.eva_ckpt, args.device)
 
-    # 修改后的进度条与批量处理逻辑
-    pbar = tqdm(total=len(utterances), desc="Extracting features", ncols=120)
+    # ══════════════════════════════════════════════════════
+    # Two-pass extraction: load only ONE large model at a time
+    # to avoid CUDA OOM on 24GB GPUs (Whisper ~3GB + EVA ~4.5GB)
+    # ══════════════════════════════════════════════════════
+
+    # Pre-build dialog metadata (wav/video paths, time segments, split indices)
+    dialog_meta = []  # list of (key, group, wav_path, video_path, time_segments)
     for (session, dialog_id), group in dialog_groups.items():
         wav_path = find_dialog_wav(iemocap_root, session, dialog_id)
         video_path = find_dialog_video(iemocap_root, session, dialog_id)
         if not wav_path or not video_path:
-            pbar.update(len(group))
             continue
+        time_segments = [(u.start, u.end) for u in group]
+        dialog_meta.append(((session, dialog_id), group, wav_path, video_path, time_segments))
 
+    # ── Pass 1: Audio (Whisper only in VRAM) ──
+    print(f"\n{'='*60}")
+    print(f"Pass 1/2: Extracting audio features (Whisper)")
+    print(f"{'='*60}")
+    audio_map: Dict[str, np.ndarray] = {}  # utt_id -> features
+    pbar = tqdm(total=sum(len(m[1]) for m in dialog_meta), desc="[Audio] Whisper", ncols=120)
+    for (session, dialog_id), group, wav_path, video_path, time_segments in dialog_meta:
         try:
             wav, sr = torchaudio.load(wav_path)
         except Exception:
             pbar.update(len(group))
             continue
-
-        time_segments = [(u.start, u.end) for u in group]
-
         try:
-            # 使用针对 4090D 调教的 batch size
             a_feats = extractor.extract_audio_batch(wav, sr, time_segments, batch_size=16)
-            v_feats = extractor.extract_video_batch(video_path, time_segments, batch_size=8)
+            for i, u in enumerate(group):
+                audio_map[u.utt_id] = a_feats[i]
         except Exception as e:
-            print(f"\n[Skip Group] {session} {dialog_id} failed: {e}")
-            pbar.update(len(group))
-            continue
+            print(f"\n[Skip Audio] {session} {dialog_id}: {e}")
+        pbar.update(len(group))
+    pbar.close()
+    extractor._unload_whisper()  # Free ~3GB VRAM
 
-        for i, u in enumerate(group):
+    # ── Pass 2: Video (EVA-ViT only in VRAM) ──
+    print(f"\n{'='*60}")
+    print(f"Pass 2/2: Extracting video features (EVA-ViT-G)")
+    print(f"{'='*60}")
+    video_map: Dict[str, np.ndarray] = {}  # utt_id -> features
+    pbar = tqdm(total=sum(len(m[1]) for m in dialog_meta), desc="[Video] EVA-ViT", ncols=120)
+    for (session, dialog_id), group, wav_path, video_path, time_segments in dialog_meta:
+        try:
+            v_feats = extractor.extract_video_batch(video_path, time_segments, batch_size=8)
+            for i, u in enumerate(group):
+                video_map[u.utt_id] = v_feats[i]
+        except Exception as e:
+            print(f"\n[Skip Video] {session} {dialog_id}: {e}")
+        pbar.update(len(group))
+    pbar.close()
+    extractor._unload_eva()  # Free ~4.5GB VRAM
+
+    # ── Assemble splits (only keep utterances that have BOTH modalities) ──
+    for (session, dialog_id), group, wav_path, video_path, time_segments in dialog_meta:
+        for u in group:
+            if u.utt_id not in audio_map or u.utt_id not in video_map:
+                continue
             if u.session == "Session5":
                 split_idx, row_list = 2, test_rows
             else:
@@ -550,15 +600,14 @@ def main():
                 split_idx = 1 if is_valid else 0
                 row_list = valid_rows if is_valid else train_rows
 
-            audio_splits[split_idx][u.utt_id] = a_feats[i]
-            video_splits[split_idx][u.utt_id] = v_feats[i]
+            audio_splits[split_idx][u.utt_id] = audio_map[u.utt_id]
+            video_splits[split_idx][u.utt_id] = video_map[u.utt_id]
             row_list.append({
                 "text": u.text, "context": context_map.get(u.utt_id, "[]"),
                 "speaker": u.speaker, "label": u.label, "vid_cid": u.utt_id,
             })
-            pbar.update(1)
 
-    pbar.close()
+    del audio_map, video_map  # free memory
 
     # ── Post-extraction compression (if mode=="compressed") ──
     if args.mode == "compressed":

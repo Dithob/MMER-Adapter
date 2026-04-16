@@ -87,6 +87,36 @@ class MMDataset(Dataset):
             if os.path.exists(p):
                 iemocap_dir = p
                 break
+
+        def build_multimodal_text(meta):
+            text = str(meta.get('text', '')).strip()
+            speaker = str(meta.get('speaker', '')).strip()
+            context_raw = meta.get('context', '')
+            context_text = ''
+
+            if isinstance(context_raw, str):
+                context_raw = context_raw.strip()
+                if context_raw:
+                    if context_raw.startswith('['):
+                        try:
+                            parsed_context = json.loads(context_raw)
+                            if isinstance(parsed_context, list):
+                                cleaned_turns = [str(turn).strip() for turn in parsed_context if str(turn).strip()]
+                                context_text = ' '.join(cleaned_turns)
+                            else:
+                                context_text = str(parsed_context).strip()
+                        except json.JSONDecodeError:
+                            context_text = context_raw
+                    else:
+                        context_text = context_raw
+
+            text_parts = []
+            if context_text:
+                text_parts.append(f"Context: {context_text}")
+            if speaker:
+                text_parts.append(f"Speaker: {speaker}")
+            text_parts.append(f"Utterance: {text}" if text else "Utterance:")
+            return '\n'.join(text_parts)
         
         # 1. Detect iemocap_text CSV directory
         iemocap_text_dir = None
@@ -126,7 +156,12 @@ class MMDataset(Dataset):
                             reader = csv.DictReader(f)
                             for row in reader:
                                 if 'vid_cid' in row and 'label' in row and 'text' in row:
-                                    info[row['vid_cid']] = {'emo': row['label'], 'text': row['text'].strip()}
+                                    info[row['vid_cid']] = {
+                                        'emo': row['label'].strip().lower(),
+                                        'text': row['text'].strip(),
+                                        'context': row.get('context', '').strip(),
+                                        'speaker': row.get('speaker', '').strip(),
+                                    }
                 if info:
                     return info
             
@@ -143,7 +178,12 @@ class MMDataset(Dataset):
                                         t_match = re.match(r'\[(.*?) - (.*?)\]', line.split('\t')[0])
                                         parts = line.strip().split('\t')
                                         if t_match and len(parts) >= 3:
-                                            info[parts[1]] = {'emo': parts[2], 'text': ''}
+                                            info[parts[1]] = {
+                                                'emo': parts[2].strip().lower(),
+                                                'text': '',
+                                                'context': '',
+                                                'speaker': '',
+                                            }
                     d_trans = os.path.join(iemocap_dir, f'Session{s}', 'dialog', 'transcriptions')
                     if os.path.exists(d_trans):
                         for txt in glob.glob(os.path.join(d_trans, '*.txt')):
@@ -162,7 +202,12 @@ class MMDataset(Dataset):
             # Get keys from audio_dict
             keys = list(audio_dict.keys())[:100]  # Use first 100 keys for testing
             for key in keys:
-                info[key] = {'emo': 'neu', 'text': 'This is a dummy text for testing.'}
+                info[key] = {
+                    'emo': 'neu',
+                    'text': 'This is a dummy text for testing.',
+                    'context': '[]',
+                    'speaker': '',
+                }
             return info
             
         data_path = self.args.dataPath # 期望路径类似于 datasets/iemocap_data_0610.pkl
@@ -198,32 +243,59 @@ class MMDataset(Dataset):
         emo_map = emo_map4 if self.args.num_classes == 4 else emo_map6
         
         label_index_mapping = self.args.label_index_mapping
+        drop_stats = {
+            'missing_meta': 0,
+            'unknown_emo': 0,
+            'mapping_missing': 0,
+            'missing_modal': 0,
+        }
         
         keys = list(audio_dict.keys())
         for k in keys:
-            if k not in iemocap_meta:
+            meta = iemocap_meta.get(k)
+            if meta is None:
+                drop_stats['missing_meta'] += 1
                 continue
-            raw_emo = iemocap_meta[k]['emo']
+            raw_emo = str(meta.get('emo', '')).strip().lower()
             if raw_emo not in emo_map:
+                drop_stats['unknown_emo'] += 1
                 continue 
                 
             mapped_emo = emo_map[raw_emo]
             if mapped_emo not in label_index_mapping:
+                drop_stats['mapping_missing'] += 1
+                continue
+
+            aud_feat = audio_dict.get(k)
+            vid_feat = video_dict.get(k)
+            if aud_feat is None or vid_feat is None:
+                drop_stats['missing_modal'] += 1
                 continue
                 
             labels_m.append(label_index_mapping[mapped_emo])
-            raw_text.append(iemocap_meta[k]['text'])
-            
-            aud_feat = audio_dict[k]
-            vid_feat = video_dict[k]
+            raw_text.append(build_multimodal_text(meta))
             
             raw_audio.append(aud_feat)
             raw_video.append(vid_feat)
             audio_lengths.append(max(1, min(aud_feat.shape[0], self.args.seq_lens[1])))
             video_lengths.append(max(1, min(vid_feat.shape[0], self.args.seq_lens[2])))
+
+        logger.info(
+            "IEMOCAP %s split loaded %d/%d samples (drop: missing_meta=%d, unknown_emo=%d, mapping_missing=%d, missing_modal=%d)",
+            self.mode,
+            len(raw_text),
+            len(keys),
+            drop_stats['missing_meta'],
+            drop_stats['unknown_emo'],
+            drop_stats['mapping_missing'],
+            drop_stats['missing_modal'],
+        )
             
         if len(raw_text) == 0:
-            raise ValueError(f"CRITICAL ERROR: No samples were loaded! This means the parsed text/labels failed to match the keys in {data_path}.")
+            raise ValueError(
+                f"CRITICAL ERROR: No samples were loaded from {data_path}. "
+                f"drop_stats={drop_stats}"
+            )
             
         self.rawText = np.array(raw_text)
         self.labels = {'M': labels_m}
@@ -347,6 +419,16 @@ class MMDataset(Dataset):
 
     def PLM_tokenizer (self, rawtexts):
         self.tokenizer = AutoTokenizer.from_pretrained(self.args.pretrain_LM, trust_remote_code=True)
+
+        # Decoder-only models (e.g., LLaMA) may not define pad_token by default.
+        if self.tokenizer.pad_token is None:
+            if self.tokenizer.eos_token is not None:
+                self.tokenizer.pad_token = self.tokenizer.eos_token
+            else:
+                self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        if self.tokenizer.pad_token_id is None and self.tokenizer.pad_token is not None:
+            self.tokenizer.pad_token_id = self.tokenizer.convert_tokens_to_ids(self.tokenizer.pad_token)
+
         token_list = []
         for text in rawtexts:
             text_tokenizer = self.tokenizer(text,

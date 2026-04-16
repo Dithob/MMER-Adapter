@@ -124,6 +124,22 @@ class Language_model(nn.Module):
                 gradient_checkpointing_kwargs={"use_reentrant": False}
             )
 
+        # We always drive generation length with max_new_tokens in this project.
+        # Clearing max_length avoids repetitive HF warning:
+        # "Both max_new_tokens and max_length seem to have been set..."
+        if hasattr(self.model, 'generation_config') and self.model.generation_config is not None:
+            if getattr(self.model.generation_config, 'max_length', None) is not None:
+                self.model.generation_config.max_length = None
+            # Align default generation config with project-wide greedy decoding.
+            # This suppresses repeated warnings like:
+            # "The following generation flags are not valid and may be ignored: ['temperature']"
+            if getattr(self.model.generation_config, 'do_sample', None) is not None:
+                self.model.generation_config.do_sample = False
+            if getattr(self.model.generation_config, 'temperature', None) is not None:
+                self.model.generation_config.temperature = 1.0
+            if getattr(self.model.generation_config, 'top_p', None) is not None:
+                self.model.generation_config.top_p = 1.0
+
         if self.model_type in ['qwen', 'qwen3.5']:
             # Qwen/Qwen3.5 使用相同的特殊 token 设置
             self.eos_token_id = self.tokenizer.convert_tokens_to_ids('<|endoftext|>')
@@ -132,8 +148,30 @@ class Language_model(nn.Module):
             self.bos_token_id = self.tokenizer.convert_tokens_to_ids('<|im_start|>')
             self.tokenizer.bos_token_id = self.bos_token_id
         elif self.model_type == 'llama2':
-            self.tokenizer.pad_token_id = 0
             self.eos_token_id = self.tokenizer.convert_tokens_to_ids('</s>')
+            if self.eos_token_id is None:
+                self.eos_token_id = getattr(self.tokenizer, 'eos_token_id', None)
+            if getattr(self.tokenizer, 'eos_token_id', None) is None and self.eos_token_id is not None:
+                self.tokenizer.eos_token_id = self.eos_token_id
+
+            if self.tokenizer.pad_token is None:
+                if getattr(self.tokenizer, 'eos_token', None) is not None:
+                    self.tokenizer.pad_token = self.tokenizer.eos_token
+                elif self.eos_token_id is not None:
+                    self.tokenizer.pad_token_id = self.eos_token_id
+                else:
+                    self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+            if self.tokenizer.pad_token_id is None:
+                if getattr(self.tokenizer, 'eos_token_id', None) is not None:
+                    self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
+                else:
+                    self.tokenizer.pad_token_id = 0
+
+            try:
+                if getattr(self.model.config, 'pad_token_id', None) is None:
+                    self.model.config.pad_token_id = self.tokenizer.pad_token_id
+            except AttributeError:
+                pass
         elif self.model_type == 'deepseek':
             # DeepSeek模型使用默认的token设置
             if self.tokenizer.pad_token_id is None:
@@ -371,7 +409,9 @@ class Language_model(nn.Module):
                 "max_new_tokens": self.max_new_tokens
             }
         elif self.model_type == 'llama2':
-            attention_mask = torch.cat([atts_bos, atts_fusion], dim=1)
+            # LLaMA2 path does not prepend BOS embeds in input_processing,
+            # so atts_bos is None and attention should use fusion mask directly.
+            attention_mask = atts_fusion if atts_bos is None else torch.cat([atts_bos, atts_fusion], dim=1)
             gen_kwargs = {
                 "num_beams": 1,
                 "do_sample": False,

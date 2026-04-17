@@ -17,15 +17,20 @@ MMER-Adapter/
 │   └── load_data.py               # 数据加载器
 ├── models/                        # 模型定义
 │   ├── AMIO.py                    # 模型包装器
-│   ├── ChatGLM3/                  # ChatGLM3模型文件
+│   ├── llm_backends/              # LLM后端适配层
+│   │   ├── chatglm3/             # ChatGLM3后端与原始实现
+│   │   ├── gemma/                # Gemma后端
+│   │   ├── modelscope/           # Qwen/Llama2/DeepSeek通用后端
+│   │   ├── base.py               # 后端基类
+│   │   └── factory.py            # 后端工厂
 │   ├── multiTask/                 # HMMEM 核心模块
 │   │   ├── HMMEM.py               # 主模型 (forward/generate)
 │   │   ├── HMMEM_mixer.py         # Mixer 层: AMM (Adaptive Modal Mixer)
 │   │   ├── HMMEM_moe.py           # Fusion 层: GlobalMoE / LocalMoE
 │   │   ├── HMMEM_loss.py          # 辅助损失: DiffLoss / NCE (CPC)
 │   │   └── HMMEM_modules.py       # 基础组件: LSTM / TGM / MSF / FeatureAdapter
-│   └── subNets/
-│       └── Textmodel.py           # 统一的语言模型加载器
+│   └── text_modules/
+│       └── model_text.py          # 统一的文本入口模块
 ├── trains/                        # 训练器
 │   ├── ATIO.py                    # 训练器路由
 │   └── multiTask/
@@ -39,24 +44,31 @@ MMER-Adapter/
 
 ## 重构亮点
 
-### 1. 统一的语言模型加载器
+### 1. 双层文本/后端架构
 
-在 `models/subNets/Textmodel.py` 中，我们创建了一个统一的语言模型加载器，支持：
+当前项目已经从“单一大文件”演进为两层结构：
 
-- **ChatGLM3-6B**: 使用原生ChatGLM3实现
-- **Qwen-1.8B**: 使用ModelScope加载
-- **Qwen3.5系列**: 使用ModelScope加载
-- **Llama2-7B**: 使用ModelScope加载
-- **DeepSeek模型**: 使用ModelScope加载
+- `models/text_modules/model_text.py`：文本入口模块，负责统一编排
+- `models/llm_backends/`：LLM 后端适配层，负责模型加载与特殊 token 处理
+
+支持的后端包括：
+
+- **ChatGLM3**：使用原生 ChatGLM3 实现
+- **Qwen / Qwen3.5**：使用 ModelScope 通用后端
+- **Llama2**：使用 ModelScope 通用后端
+- **DeepSeek**：使用 ModelScope 通用后端
+- **Gemma**：使用 HuggingFace Transformers 后端
 
 ### 2. 模型类型参数
 
 通过 `--model_type` 参数指定使用的语言模型：
 
 ```bash
-python run.py --model_type chatglm3  # 使用ChatGLM3-6B
-python run.py --model_type qwen      # 使用Qwen-1.8B
-python run.py --model_type llama2    # 使用Llama2-7B
+python run.py --model_type chatglm3  # 使用 ChatGLM3
+python run.py --model_type qwen      # 使用 Qwen
+python run.py --model_type llama2    # 使用 Llama2
+python run.py --model_type deepseek  # 使用 DeepSeek
+python run.py --model_type gemma     # 使用 Gemma
 ```
 
 ### 3. 自动路径配置
@@ -74,8 +86,8 @@ python run.py --model_type llama2    # 使用Llama2-7B
 
 通过重构，我们：
 
-- 将三个独立的项目合并为一个统一框架
-- 提取公共代码，减少重复
+- 将 LLM 适配逻辑从文本入口中拆出
+- 隔离了 LLaMA2 等模型的特殊处理，减少对其他模型训练路径的影响
 - 统一接口，便于维护和扩展
 
 ## 使用方法
@@ -83,14 +95,20 @@ python run.py --model_type llama2    # 使用Llama2-7B
 ### 基本用法
 
 ```bash
-# 使用ChatGLM3-6B模型
+# 使用 ChatGLM3
 python run.py --model_type chatglm3 --datasetName mosei --pretrain_LM /path/to/chatglm3-6b-base/
 
-# 使用Qwen-1.8B模型
+# 使用 Qwen
 python run.py --model_type qwen --datasetName mosei --pretrain_LM /path/to/qwen-1.8b/
 
-# 使用Llama2-7B模型
+# 使用 Llama2
 python run.py --model_type llama2 --datasetName mosei --pretrain_LM /path/to/llama2-7b/
+
+# 使用 DeepSeek
+python run.py --model_type deepseek --datasetName mosei --pretrain_LM /path/to/deepseek-llm-7b-base/
+
+# 使用 Gemma
+python run.py --model_type gemma --datasetName mosei --pretrain_LM /path/to/gemma-4-e4b/
 ```
 
 ### 参数说明

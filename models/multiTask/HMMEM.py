@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.subNets.Textmodel import Language_model
+from models.text_modules import Language_model
 from .HMMEM_loss import DiffLoss, LightweightCrossCPC
 from .HMMEM_moe import GlobalMoE, LocalMoE
 from .HMMEM_modules import TVA_LSTM, Text_guide_mixer, Lightweight_mixer, mutli_scale_fusion, FeatureAdapter

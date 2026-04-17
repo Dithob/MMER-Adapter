@@ -1,0 +1,379 @@
+import logging
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+from models.llm_backends.factory import build_llm_backend
+
+logger = logging.getLogger('MSA')
+
+__all__ = ['Language_model']
+
+
+class Language_model(nn.Module):
+    def __init__(self, args, use_PLM=True):
+        """
+        language: en / cn
+        """
+        super(Language_model, self).__init__()
+
+        self.model_type = args.model_type
+        self.device = args.device
+        self.language = args.language
+        self.max_new_tokens = args.max_new_tokens
+        self.datasetName = args.datasetName
+        self.train_mode = args.train_mode
+        self.task_specific_prompt = args.task_specific_prompt
+        self.prompt_style = getattr(args, 'prompt_style', 'default')
+        self._args = args
+        self._lora_enabled = False
+        self._wrap_prefix_len = 0
+        self._wrap_suffix_len = 0
+
+        self.backend = build_llm_backend(args)
+        self._gemma_ple_dim = getattr(self.backend, '_gemma_ple_dim', 0)
+        self._gemma_num_layers = getattr(self.backend, '_gemma_num_layers', 0)
+
+        if use_PLM:
+            pretrained_model = args.pretrain_LM
+            self.model, self.tokenizer = self.backend.load(pretrained_model)
+
+            if getattr(args, 'use_lora', False):
+                self._apply_lora(args)
+            else:
+                for param in self.model.parameters():
+                    param.requires_grad = False
+        else:
+            print('please use PLM')
+
+    def text_embedding(self, text_ids):
+        if self._lora_enabled:
+            base_model = self.model.base_model.model
+        else:
+            base_model = self.model
+
+        return self.backend.text_embedding(base_model, self.tokenizer, text_ids)
+
+    def _apply_lora(self, args):
+        """Apply LoRA adapters to the LLM for fine-tuning."""
+        from peft import LoraConfig, get_peft_model, TaskType
+
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        target_modules = [m.strip() for m in args.lora_target_modules.split(',')]
+
+        lora_config = LoraConfig(
+            r=args.lora_r,
+            lora_alpha=args.lora_alpha,
+            lora_dropout=args.lora_dropout,
+            target_modules=target_modules,
+            bias="none",
+            task_type=TaskType.CAUSAL_LM,
+        )
+
+        self.model = get_peft_model(self.model, lora_config)
+        self._lora_enabled = True
+
+        trainable = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+        total = sum(p.numel() for p in self.model.parameters())
+        logger.info(f"LoRA enabled: r={args.lora_r}, alpha={args.lora_alpha}, targets={target_modules}")
+        logger.info(f"LoRA trainable params: {trainable:,} / {total:,} ({100 * trainable / total:.2f}%)")
+
+    def forward(self, fusion_embedding, labels, input_attn_mask=None):
+        fusion_embedding = self.multimodal_prompt_wrap(fusion_embedding)
+        if self.model_type == 'chatglm3':
+            return self._forward_chatglm3(fusion_embedding, labels)
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek', 'gemma']:
+            return self._forward_modelscope(fusion_embedding, labels, input_attn_mask=input_attn_mask)
+        raise ValueError(f"Unsupported model type in forward: {self.model_type}")
+
+    def _forward_chatglm3(self, fusion_embedding, labels):
+        opt_tokens, labels = self.input_processing(fusion_embedding, labels, mode='train')
+        with torch.amp.autocast(device_type='cuda'):
+            return self.model(input_ids=opt_tokens, input_fusion=fusion_embedding, labels=labels)
+
+    def _forward_modelscope(self, fusion_embedding, labels, input_attn_mask=None):
+        opt_tokens, atts_bos, atts_fusion, labels, labels_atts, opt_input_ids = self.input_processing(
+            fusion_embedding, labels, mode='train', input_attn_mask=input_attn_mask
+        )
+
+        if atts_bos is not None:
+            attention_mask = torch.cat([atts_bos, atts_fusion, labels_atts], dim=1)
+        else:
+            attention_mask = torch.cat([atts_fusion, labels_atts], dim=1)
+
+        if getattr(self.model.config, 'pad_token_id', None) is None and hasattr(self.tokenizer, 'pad_token_id'):
+            try:
+                self.model.config.pad_token_id = self.tokenizer.pad_token_id
+            except AttributeError:
+                pass
+
+        if self.model_type == 'gemma' and self._gemma_ple_dim > 0:
+            inner_text_model = getattr(self.model.model, 'language_model', self.model.model)
+            if opt_input_ids is not None and hasattr(inner_text_model, 'get_per_layer_inputs'):
+                per_layer_inputs = inner_text_model.get_per_layer_inputs(input_ids=opt_input_ids.to(self.device), inputs_embeds=None)
+            else:
+                per_layer_inputs = torch.zeros(
+                    opt_tokens.shape[0], opt_tokens.shape[1], self._gemma_num_layers, self._gemma_ple_dim,
+                    dtype=opt_tokens.dtype, device=opt_tokens.device
+                )
+
+            with torch.amp.autocast(device_type='cuda'):
+                base_outputs = inner_text_model(
+                    inputs_embeds=opt_tokens,
+                    attention_mask=attention_mask,
+                    per_layer_inputs=per_layer_inputs,
+                    return_dict=True
+                )
+                hidden_states = base_outputs.last_hidden_state
+                logits = self.model.lm_head(hidden_states)
+                if labels is not None:
+                    if hasattr(self.model, 'loss_function'):
+                        base_cfg = self.model.config
+                        text_cfg = getattr(base_cfg, 'text_config', base_cfg)
+                        vocab_size = getattr(self.model, 'vocab_size', getattr(text_cfg, 'vocab_size', 262144))
+                        loss = self.model.loss_function(logits, labels, vocab_size)
+                    else:
+                        shift_logits = logits[..., :-1, :].contiguous()
+                        shift_labels = labels[..., 1:].contiguous()
+                        loss = torch.nn.CrossEntropyLoss()(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+                else:
+                    loss = None
+
+            from transformers.modeling_outputs import CausalLMOutputWithPast
+            return CausalLMOutputWithPast(loss=loss, logits=logits)
+
+        model_kwargs = dict(inputs_embeds=opt_tokens, attention_mask=attention_mask, return_dict=True, labels=labels)
+        with torch.amp.autocast(device_type='cuda'):
+            return self.model(**model_kwargs)
+
+    def generate(self, fusion_embedding, input_attn_mask=None):
+        fusion_embedding = self.multimodal_prompt_wrap(fusion_embedding)
+        if self.model_type == 'chatglm3':
+            return self._generate_chatglm3(fusion_embedding)
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek', 'gemma']:
+            return self._generate_modelscope(fusion_embedding, input_attn_mask=input_attn_mask)
+        raise ValueError(f"Unsupported model type in generate: {self.model_type}")
+
+    def _generate_chatglm3(self, fusion_embedding):
+        effective_max_tokens = self.max_new_tokens + 1
+        gen_kwargs = {"max_new_tokens": effective_max_tokens, "num_beams": 1, "do_sample": False, "top_k": 10}
+        opt_tokens, _ = self.input_processing(fusion_embedding, mode='generate')
+        context_length = opt_tokens.size(1)
+        all_responses = []
+        for outputs in self.model.stream_generate(opt_tokens, **gen_kwargs, input_fusion=fusion_embedding):
+            outputs = outputs[:, context_length:].tolist()
+            response = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
+        for x in response:
+            x = x.strip()
+            if self.train_mode == 'regression':
+                try:
+                    value = float(x.replace('–', '-').replace('一', '-').replace('：', '').replace('/', '').replace('(', '').replace(':', ''))
+                except ValueError:
+                    value = 0.0
+            else:
+                try:
+                    value = float(x)
+                except ValueError:
+                    value = 0.0
+            all_responses.append(value)
+        return all_responses
+
+    def _generate_modelscope(self, fusion_embedding, input_attn_mask=None):
+        opt_tokens, atts_bos, atts_fusion, _, _, opt_input_ids = self.input_processing(
+            fusion_embedding, mode='generate', input_attn_mask=input_attn_mask
+        )
+        if self.model_type in ['qwen', 'qwen3.5']:
+            attention_mask = torch.cat([atts_bos, atts_fusion], dim=1)
+            gen_kwargs = {"num_beams": 1, "do_sample": False, "bos_token_id": self.tokenizer.bos_token_id, "eos_token_id": self.tokenizer.eos_token_id, "max_new_tokens": self.max_new_tokens}
+        elif self.model_type == 'llama2':
+            attention_mask = atts_fusion if atts_bos is None else torch.cat([atts_bos, atts_fusion], dim=1)
+            gen_kwargs = {"num_beams": 1, "do_sample": False, "top_p": None, "max_new_tokens": self.max_new_tokens}
+        else:
+            attention_mask = atts_fusion
+            gen_kwargs = {"num_beams": 1, "do_sample": False, "max_new_tokens": self.max_new_tokens}
+
+        pad_id = getattr(self.model.config, 'pad_token_id', None) or getattr(self.tokenizer, 'pad_token_id', None)
+
+        if self.model_type == 'gemma' and self._gemma_ple_dim > 0:
+            with torch.no_grad(), torch.amp.autocast(device_type='cuda'):
+                current_embeds = opt_tokens
+                current_input_ids = opt_input_ids
+                generated_ids = []
+                inner_text_model = getattr(self.model.model, 'language_model', self.model.model)
+                for _ in range(self.max_new_tokens):
+                    batch_size = current_embeds.shape[0]
+                    if current_input_ids is not None and hasattr(inner_text_model, 'get_per_layer_inputs'):
+                        per_layer_inputs = inner_text_model.get_per_layer_inputs(input_ids=current_input_ids.to(self.device), inputs_embeds=None)
+                    else:
+                        per_layer_inputs = torch.zeros(
+                            current_embeds.shape[0], current_embeds.shape[1], self._gemma_num_layers, self._gemma_ple_dim,
+                            dtype=current_embeds.dtype, device=current_embeds.device
+                        )
+                    base_out = inner_text_model(inputs_embeds=current_embeds, attention_mask=attention_mask, per_layer_inputs=per_layer_inputs, return_dict=True)
+                    last_hidden = base_out.last_hidden_state[:, -1:, :]
+                    next_logits = self.model.lm_head(last_hidden)
+                    next_token_id = next_logits.argmax(dim=-1)
+                    generated_ids.append(next_token_id)
+                    next_embed = self.text_embedding(next_token_id)
+                    current_embeds = torch.cat([current_embeds, next_embed], dim=1)
+                    if current_input_ids is not None:
+                        current_input_ids = torch.cat([current_input_ids, next_token_id], dim=1)
+                    attention_mask = torch.cat([attention_mask, torch.ones(batch_size, 1, dtype=attention_mask.dtype, device=attention_mask.device)], dim=1)
+                outputs = torch.cat(generated_ids, dim=1)
+        else:
+            outputs = self.model.generate(inputs_embeds=opt_tokens, attention_mask=attention_mask, pad_token_id=pad_id, **gen_kwargs)
+
+        new_tokens = outputs[:, -self.max_new_tokens:]
+        responses = self.tokenizer.batch_decode(new_tokens, add_special_tokens=False, skip_special_tokens=True, clean_up_tokenization_spaces=False)
+
+        all_responses = []
+        for response in responses:
+            if self.train_mode == 'regression':
+                try:
+                    value = float(response.replace('–', '-').replace('一', '-').replace('：', '').replace('/', '').replace('(', '').replace(':', ''))
+                except ValueError:
+                    value = 0.0
+            else:
+                try:
+                    value = float(response)
+                except ValueError:
+                    value = 0.0
+            all_responses.append(value)
+        return all_responses
+
+    def input_processing(self, fusion_embedding, labels=None, mode=None, input_attn_mask=None):
+        if self.model_type == 'chatglm3':
+            return self._input_processing_chatglm3(fusion_embedding, labels, mode)
+        elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek', 'gemma']:
+            return self._input_processing_modelscope(fusion_embedding, labels, mode, input_attn_mask=input_attn_mask)
+        raise ValueError(f"Unsupported model type in input_processing: {self.model_type}")
+
+    def _input_processing_chatglm3(self, fusion_embedding, labels=None, mode=None):
+        input_lengths = fusion_embedding[:, :, 0]
+        fusion_empty = torch.ones(input_lengths.size(), dtype=torch.long).to(self.device).fill_(0)
+        task_prompt = self.get_task_prompt()
+        prompt_broadcasted = task_prompt.expand(fusion_empty.size(0), -1)
+        opt_tokens = torch.cat([fusion_empty, prompt_broadcasted], dim=1)
+        opt_tokens, labels = self.input_labels_construct(opt_tokens, labels, mode)
+        return opt_tokens, labels
+
+    def _input_processing_modelscope(self, fusion_embedding, labels=None, mode=None, input_attn_mask=None):
+        batch_size = fusion_embedding.shape[0]
+        task_prompt = self.get_task_prompt()
+        prompt_ids = task_prompt.expand(batch_size, -1)
+        task_prompt_embedding = self.text_embedding(prompt_ids)
+        opt_tokens = torch.cat([fusion_embedding, task_prompt_embedding], dim=1)
+        atts_fusion = torch.ones(opt_tokens.size()[:-1], dtype=torch.long).to(self.device)
+
+        if input_attn_mask is not None:
+            prefix_len = getattr(self, '_wrap_prefix_len', 0)
+            mask_len = input_attn_mask.shape[1]
+            atts_fusion[:, prefix_len:prefix_len + mask_len] *= input_attn_mask.to(self.device)
+
+        pad_id = getattr(self.tokenizer, 'pad_token_id', 0)
+        fusion_ids = torch.full(fusion_embedding.shape[:-1], pad_id, dtype=torch.long, device=self.device)
+        opt_input_ids = torch.cat([fusion_ids, prompt_ids], dim=1)
+
+        if self.model_type in ['qwen', 'qwen3.5']:
+            bos_ids = torch.ones([batch_size, 1], dtype=atts_fusion.dtype, device=self.device) * self.tokenizer.bos_token_id
+            bos_embeds = self.text_embedding(bos_ids)
+            atts_bos = atts_fusion[:, :1]
+            opt_tokens = torch.cat([bos_embeds, opt_tokens], dim=1)
+            opt_input_ids = torch.cat([bos_ids, opt_input_ids], dim=1)
+        else:
+            atts_bos = None
+
+        opt_tokens, labels, labels_atts, opt_input_ids = self.input_labels_construct(opt_tokens, labels, mode, opt_input_ids)
+
+        if self.model_type in ['qwen', 'qwen3.5']:
+            return opt_tokens, atts_bos, atts_fusion, labels, labels_atts, opt_input_ids
+        return opt_tokens, None, atts_fusion, labels, labels_atts, opt_input_ids
+
+    def input_labels_construct(self, opt_tokens, labels=None, mode=None, opt_input_ids=None):
+        batch_size = opt_tokens.shape[0]
+        if mode == "train":
+            if self.train_mode == "regression":
+                if self.model_type in ['qwen', 'qwen3.5']:
+                    label_template = [f"+{label.item():.{1}f}" if label >= 0 else f"{label.item():.{1}f}" for label in labels]
+                else:
+                    label_template = [f"{label.item():.{1}f}" for label in labels]
+            else:
+                eos_suffix = ''
+                if self.model_type in ['qwen', 'qwen3.5'] and hasattr(self.tokenizer, 'eos_token') and self.tokenizer.eos_token:
+                    eos_suffix = self.tokenizer.eos_token
+                label_template = [f"{label.item()}{eos_suffix}" for label in labels]
+
+            if self.model_type == 'chatglm3':
+                labels_id = self.tokenizer(label_template, padding=True, return_tensors="pt", add_special_tokens=False)["input_ids"].to(self.device)
+                labels_matrix = torch.empty_like(opt_tokens).fill_(-100).long().to(self.device)
+                opt_tokens = torch.cat([opt_tokens, labels_id], dim=1)
+                labels = torch.cat([labels_matrix, labels_id], dim=1)
+                if opt_input_ids is not None:
+                    opt_input_ids = torch.cat([opt_input_ids, labels_id], dim=1)
+                    return opt_tokens, labels, opt_input_ids
+                return opt_tokens, labels
+            else:
+                labels_dict = self.tokenizer(label_template, padding=True, return_tensors="pt", add_special_tokens=False).to(self.device)
+                labels_id = labels_dict["input_ids"]
+                labels_atts = labels_dict["attention_mask"]
+                labels_embedding = self.text_embedding(labels_id)
+                labels_matrix = torch.empty(opt_tokens.size(0), opt_tokens.size(1)).fill_(-100).long().to(self.device)
+                opt_tokens = torch.cat([opt_tokens, labels_embedding], dim=1)
+                labels = torch.cat([labels_matrix, labels_id], dim=1)
+                if opt_input_ids is not None:
+                    opt_input_ids = torch.cat([opt_input_ids, labels_id], dim=1)
+                    return opt_tokens, labels, labels_atts, opt_input_ids
+                return opt_tokens, labels, labels_atts
+        else:
+            if self.model_type == 'chatglm3':
+                if opt_input_ids is not None:
+                    return opt_tokens, None, opt_input_ids
+                return opt_tokens, None
+            else:
+                if opt_input_ids is not None:
+                    return opt_tokens, None, None, opt_input_ids
+                return opt_tokens, None, None
+
+    def get_task_prompt(self):
+        prompt_text = self.task_specific_prompt
+        return self.tokenizer(prompt_text, padding=True, return_tensors="pt", add_special_tokens=False)["input_ids"].to(self.device)
+
+    def multimodal_prompt_wrap(self, fusion_embeddings):
+        if self.language == "en":
+            prompt = '{question}\n\n <Multimodal><MultimodalHere></Multimodal>'
+            special_token = '<MultimodalHere>'
+        else:
+            prompt = '{问题}\n\n <多模态><MultimodalHere></多模态>'
+            special_token = '<MultimodalHere>'
+
+        batch_size = fusion_embeddings.shape[0]
+        if self.model_type == 'chatglm3':
+            p_before, p_after = prompt.split(special_token)
+            p_before_tokens = self.tokenizer(p_before, return_tensors="pt", add_special_tokens=True).to(self.device)
+            p_after_tokens = self.tokenizer(p_after, return_tensors="pt", add_special_tokens=False).to(self.device)
+            p_before_embeds = self.text_embedding(p_before_tokens.input_ids).expand(batch_size, -1, -1)
+            p_after_embeds = self.text_embedding(p_after_tokens.input_ids).expand(batch_size, -1, -1)
+        else:
+            if self.prompt_style == 'enhanced':
+                if self.language == "en":
+                    prompt = 'Based on the following multimodal signals: <Multimodal><MultimodalHere></Multimodal>'
+                else:
+                    prompt = '基于以下多模态信号：<多模态><MultimodalHere></多模态>'
+            else:
+                if self.language == "en":
+                    prompt = '<Multimodal><MultimodalHere></Multimodal>'
+                else:
+                    prompt = '<多模态><MultimodalHere></多模态>'
+
+            p_before, p_after = prompt.split(special_token)
+            p_before_tokens = self.tokenizer(p_before, return_tensors="pt", add_special_tokens=True).to(self.device)
+            p_after_tokens = self.tokenizer(p_after, return_tensors="pt", add_special_tokens=False).to(self.device)
+            p_before_embeds = self.text_embedding(p_before_tokens.input_ids.expand(batch_size, -1))
+            p_after_embeds = self.text_embedding(p_after_tokens.input_ids.expand(batch_size, -1))
+
+        self._wrap_prefix_len = p_before_embeds.shape[1]
+        self._wrap_suffix_len = p_after_embeds.shape[1]
+        return torch.cat([p_before_embeds, fusion_embeddings, p_after_embeds], dim=1)

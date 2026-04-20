@@ -27,4 +27,5 @@ class AMIO(nn.Module):
         return self.Model(labels_m, text_x, audio_x, video_x)
 
     def generate(self, text_x, audio_x, video_x):
+        # Returns (predictions, feature_f) tuple
         return self.Model.generate(text_x, audio_x, video_x)

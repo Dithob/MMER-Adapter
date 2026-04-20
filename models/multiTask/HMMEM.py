@@ -462,6 +462,7 @@ class HMMEM(nn.Module):
         # Mixer → Fusion
         if self.text_only:
             fusion_h = self._mix_modalities(audio_h, video_h, text_embed)
+            feature_f = text_embed.new_zeros(batch_size, 256)
         elif self.use_moe_fusion:
             feature_f = self._mix_modalities(audio_h, video_h, text_embed)
             fusion_h, _ = self._dual_moe_forward(audio_h, video_h, feature_f)
@@ -474,4 +475,4 @@ class HMMEM(nn.Module):
             fusion_h, text_embed, audio_h, video_h, audio_raw, video_raw)
         LLM_output = self.LLM.generate(LLM_input, input_attn_mask=input_attn_mask)
 
-        return LLM_output
+        return LLM_output, feature_f.detach()

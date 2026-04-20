@@ -16,6 +16,7 @@ from torch.amp import autocast, GradScaler
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from utils.functions import dict_to_str
 from utils.metricsTop import MetricsTop
+from utils.analysis import detailed_classification_analysis
 from transformers import get_cosine_schedule_with_warmup
 import matplotlib.pyplot as plt
 import matplotlib
@@ -267,6 +268,7 @@ class HMMEM():
         model.eval()
         y_pred = {'M': [], 'T': [], 'A': [], 'V': []}
         y_true = {'M': [], 'T': [], 'A': [], 'V': []}
+        all_features = []  # Collect fusion features for t-SNE
 
         # Use same amp_dtype as training for consistency
         use_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
@@ -284,7 +286,7 @@ class HMMEM():
                             audio_lengths = batch_data['audio_lengths'].to(self.args.device)
                             vision_lengths = batch_data['vision_lengths'].to(self.args.device)
                         with autocast('cuda', dtype=amp_dtype):
-                            outputs = model.generate((text,text_lengths), (audio, audio_lengths), (vision, vision_lengths))
+                            outputs, _ = model.generate((text,text_lengths), (audio, audio_lengths), (vision, vision_lengths))
 
                         predict_label = torch.Tensor(outputs).to(self.args.device)
 
@@ -309,7 +311,7 @@ class HMMEM():
                             audio_lengths = batch_data['audio_lengths'].to(self.args.device)
                             vision_lengths = batch_data['vision_lengths'].to(self.args.device)
                         with autocast('cuda', dtype=amp_dtype):
-                            outputs = model.generate((text, text_lengths), (audio, audio_lengths),
+                            outputs, feature_f = model.generate((text, text_lengths), (audio, audio_lengths),
                                                      (vision, vision_lengths))
 
                         predict_label = outputs
@@ -317,12 +319,44 @@ class HMMEM():
                         
                         y_pred['M'].append(predict_label)
                         y_true['M'].append(labels_m)
+                        # Collect fusion features for t-SNE visualization
+                        all_features.append(feature_f.cpu().numpy())
             
             pred, true = list(chain(*y_pred['M'])), list(chain(*y_true['M']))
             
             eval_results = self.metrics(pred, true)
             logger.info(mode + "-(%s)" % self.args.modelName + " >>")
             logger.info('M: >> ' + dict_to_str(eval_results))
+
+            # ── Detailed classification analysis (on TEST / VALID-eval_only) ──
+            if mode in ("TEST", "VALID"):
+                try:
+                    # Build label name list from label_index_mapping
+                    label_mapping = self.args.label_index_mapping
+                    label_names = [None] * len(label_mapping)
+                    for name, idx in label_mapping.items():
+                        label_names[idx] = name
+
+                    # Concatenate features
+                    features_np = np.concatenate(all_features, axis=0) if all_features else None
+
+                    # Save analysis outputs
+                    analysis_dir = os.path.join(
+                        getattr(self.args, 'res_save_dir', 'results'), 'analysis'
+                    )
+                    tag = f"{self.args.modelName}-{self.args.model_type}-{self.args.datasetName}-{mode}"
+
+                    detailed_classification_analysis(
+                        y_true=true,
+                        y_pred=pred,
+                        features=features_np,
+                        label_names=label_names,
+                        save_dir=analysis_dir,
+                        tag=tag,
+                        log=logger,
+                    )
+                except Exception as e:
+                    logger.warning(f"Detailed analysis failed (non-fatal): {e}")
 
         return eval_results
     

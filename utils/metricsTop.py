@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_recall_fscore_support
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, recall_score
 from sklearn.metrics import r2_score
 from itertools import chain
 __all__ = ['MetricsTop']
@@ -28,37 +28,41 @@ class MetricsTop():
             self.label_index_mapping = args.label_index_mapping
 
     def __eval_iemocap_classification(self, results, truths):
-        # label_index_mapping = self.label_index_mapping
-        # # 主要通过混淆矩阵来计算
-        # results_indices = [label_index_mapping.get(label, label_index_mapping.get('neu')) for label in results]
-        # truths_indices = [label_index_mapping.get(label, -1) for label in truths]
-        # acc = accuracy_score(truths_indices, results_indices)
-        # weight_F1 = f1_score(truths_indices, results_indices, average='weighted')
         acc = accuracy_score(truths, results)
-        weight_F1 = f1_score(truths, results, average='weighted')
+        ua = recall_score(truths, results, average='macro', zero_division=0)
+        weight_F1 = f1_score(truths, results, average='weighted', zero_division=0)
+        macro_F1 = f1_score(truths, results, average='macro', zero_division=0)
         eval_result = {
             'acc': acc,
-            'weight_F1': weight_F1
+            'UA': ua,
+            'weight_F1': weight_F1,
+            'Macro_F1': macro_F1
         }
         return eval_result
 
     def __eval_cherma_classification(self, results, truths):
         acc = accuracy_score(truths, results)
-        weight_F1 = f1_score(truths, results, average='weighted')
+        ua = recall_score(truths, results, average='macro', zero_division=0)
+        weight_F1 = f1_score(truths, results, average='weighted', zero_division=0)
+        macro_F1 = f1_score(truths, results, average='macro', zero_division=0)
         eval_result = {
             'acc': acc,
-            'weight_F1': weight_F1
+            'UA': ua,
+            'weight_F1': weight_F1,
+            'Macro_F1': macro_F1
         }
         return eval_result
 
     def __eval_meld_classification(self, results, truths):
         acc = accuracy_score(truths, results)
-        weight_F1 = f1_score(truths, results, average='weighted')
-
-
+        ua = recall_score(truths, results, average='macro', zero_division=0)
+        weight_F1 = f1_score(truths, results, average='weighted', zero_division=0)
+        macro_F1 = f1_score(truths, results, average='macro', zero_division=0)
         eval_result = {
             'acc': acc,
-            'weight_F1': weight_F1
+            'UA': ua,
+            'weight_F1': weight_F1,
+            'Macro_F1': macro_F1
         }
         return eval_result
 

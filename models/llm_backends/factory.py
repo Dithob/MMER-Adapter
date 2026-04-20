@@ -11,3 +11,4 @@ def build_llm_backend(args):
     if args.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']:
         return ModelScopeBackend(args)
     raise ValueError(f'Unsupported model type: {args.model_type}')
+

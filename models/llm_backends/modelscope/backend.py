@@ -15,7 +15,7 @@ class ModelScopeBackend(BaseLLMBackend):
         model = AutoModelForCausalLM.from_pretrained(
             pretrained_model,
             trust_remote_code=True,
-            dtype=torch.bfloat16,
+            torch_dtype=torch.bfloat16,
         )
 
         if hasattr(model, 'gradient_checkpointing_enable'):
@@ -57,6 +57,10 @@ class ModelScopeBackend(BaseLLMBackend):
                 except AttributeError:
                     pass
         elif self.model_type == 'deepseek':
+            if tokenizer.pad_token_id is None:
+                tokenizer.pad_token_id = tokenizer.eos_token_id
+        elif self.model_type == 'chatglm3':
+            # chatglm3 通过 ModelScope 加载时的特殊处理
             if tokenizer.pad_token_id is None:
                 tokenizer.pad_token_id = tokenizer.eos_token_id
 

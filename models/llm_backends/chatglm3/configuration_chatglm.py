@@ -58,4 +58,8 @@ class ChatGLMConfig(PretrainedConfig):
         self.quantization_bit = quantization_bit
         self.pre_seq_len = pre_seq_len
         self.prefix_projection = prefix_projection
+        # 兼容新旧版 transformers：显式设置 max_length = seq_length，
+        # 防止新版 PretrainedConfig.__getattribute__ 拦截 max_length 时报 AttributeError
+        if 'max_length' not in kwargs:
+            kwargs['max_length'] = seq_length
         super().__init__(**kwargs)

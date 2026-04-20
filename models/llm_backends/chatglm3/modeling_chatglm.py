@@ -732,7 +732,7 @@ class Embedding(torch.nn.Module):
 
 
 class ChatGLMModel(ChatGLMPreTrainedModel):
-    def __init__(self, config: ChatGLMConfig, device=None, empty_init=True):
+    def __init__(self, config: ChatGLMConfig, device=None, empty_init=True, **kwargs):
         super().__init__(config)
         if empty_init:
             init_method = skip_init
@@ -862,7 +862,7 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
 
 
 class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
-    def __init__(self, config: ChatGLMConfig, empty_init=True, device=None):
+    def __init__(self, config: ChatGLMConfig, empty_init=True, device=None, **kwargs):
         super().__init__(config)
 
         # 兼容新旧版 transformers：ChatGLMConfig 定义的是 seq_length (2048)，
@@ -884,9 +884,15 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
             standardize_cache_format: bool = False,
     ) -> Dict[str, Any]:
         # update past_key_values
-        model_kwargs["past_key_values"] = self._extract_past_from_model_output(
-            outputs, standardize_cache_format=standardize_cache_format
-        )
+        # 兼容新旧版 transformers：新版移除了 standardize_cache_format 参数
+        import inspect
+        _extract_sig = inspect.signature(self._extract_past_from_model_output)
+        if 'standardize_cache_format' in _extract_sig.parameters:
+            model_kwargs["past_key_values"] = self._extract_past_from_model_output(
+                outputs, standardize_cache_format=standardize_cache_format
+            )
+        else:
+            model_kwargs["past_key_values"] = self._extract_past_from_model_output(outputs)
 
         # update attention mask
         if "attention_mask" in model_kwargs:
@@ -1135,7 +1141,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
         elif generation_config.max_new_tokens is not None:
             generation_config.max_length = generation_config.max_new_tokens + input_ids_seq_length
             if not has_default_max_length:
-                logger.warn(
+                logger.warning(
                     f"Both `max_new_tokens` (={generation_config.max_new_tokens}) and `max_length`(="
                     f"{generation_config.max_length}) seem to have been set. `max_new_tokens` will take precedence. "
                     "Please refer to the documentation for more information. "
@@ -1155,18 +1161,44 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
         logits_processor = logits_processor if logits_processor is not None else LogitsProcessorList()
         stopping_criteria = stopping_criteria if stopping_criteria is not None else StoppingCriteriaList()
 
-        logits_processor = self._get_logits_processor(
-            generation_config=generation_config,
-            input_ids_seq_length=input_ids_seq_length,
-            encoder_input_ids=input_ids,
-            prefix_allowed_tokens_fn=prefix_allowed_tokens_fn,
-            logits_processor=logits_processor,
-        )
+        # 兼容新旧版 transformers：内部 API 签名在不同版本间有差异
+        try:
+            logits_processor = self._get_logits_processor(
+                generation_config=generation_config,
+                input_ids_seq_length=input_ids_seq_length,
+                encoder_input_ids=input_ids,
+                prefix_allowed_tokens_fn=prefix_allowed_tokens_fn,
+                logits_processor=logits_processor,
+            )
+        except TypeError:
+            # 新版 transformers 可能需要额外参数或移除了旧参数
+            try:
+                logits_processor = self._get_logits_processor(
+                    generation_config=generation_config,
+                    input_ids_seq_length=input_ids_seq_length,
+                    encoder_input_ids=input_ids,
+                    prefix_allowed_tokens_fn=prefix_allowed_tokens_fn,
+                    logits_processor=logits_processor,
+                    device=input_ids.device,
+                )
+            except TypeError:
+                logits_processor = logits_processor
 
-        stopping_criteria = self._get_stopping_criteria(
-            generation_config=generation_config, stopping_criteria=stopping_criteria
-        )
-        logits_warper = self._get_logits_warper(generation_config)
+        try:
+            stopping_criteria = self._get_stopping_criteria(
+                generation_config=generation_config, stopping_criteria=stopping_criteria
+            )
+        except TypeError:
+            stopping_criteria = stopping_criteria
+
+        try:
+            logits_warper = self._get_logits_warper(generation_config)
+        except TypeError:
+            # 新版可能需要 device 参数
+            try:
+                logits_warper = self._get_logits_warper(generation_config, device=input_ids.device)
+            except (TypeError, AttributeError):
+                logits_warper = LogitsProcessorList()
 
         unfinished_sequences = input_ids.new(input_ids.shape[0]).fill_(1)
         scores = None
@@ -1228,7 +1260,7 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
 
 
 class ChatGLMForSequenceClassification(ChatGLMPreTrainedModel):
-    def __init__(self, config: ChatGLMConfig, empty_init=True, device=None):
+    def __init__(self, config: ChatGLMConfig, empty_init=True, device=None, **kwargs):
         super().__init__(config)
 
         self.num_labels = config.num_labels

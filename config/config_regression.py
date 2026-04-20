@@ -88,7 +88,7 @@ class ConfigRegression():
                     'batch_size': 16,
                     'gradient_accumulation_steps': 1,
                     'learning_rate': 5e-5,
-                    # feature subNets
+                    # feature modules
                     'a_lstm_hidden_size': 64,
                     'v_lstm_hidden_size': 32,
                     'a_lstm_layers': 1,
@@ -112,7 +112,7 @@ class ConfigRegression():
                     'batch_size': 16,
                     'gradient_accumulation_steps': 1,
                     'learning_rate': 5e-5,
-                    # feature subNets
+                    # feature modules
                     'a_lstm_hidden_size': 64,
                     'v_lstm_hidden_size': 64,
                     'a_lstm_layers': 1,

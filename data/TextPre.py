@@ -3,6 +3,7 @@ import sys
 import h5py
 import pickle
 import argparse
+import warnings
 import numpy as np
 from tqdm import tqdm
 
@@ -13,8 +14,20 @@ import torch.nn.functional as F
 # from pytorch_transformers.amir_tokenization import BertTokenizer
 # from pytorch_transformers.optimization import AdamW, WarmupLinearSchedule
 
-# from transformers.tokenization import BertTokenizer
-from models.subNets.BertTextEncoder import BertTextEncoder
+# [DEPRECATED] 此脚本使用 BERT 编码器做文本预处理，已被 LLM-based pipeline 替代。
+# 原 import: from models.subNets.BertTextEncoder import BertTextEncoder
+# subNets 目录已在重构中移除，若需复用此脚本，请将 BertTextEncoder 迁移至 models/text_modules/。
+try:
+    from models.text_modules.BertTextEncoder import BertTextEncoder
+except ImportError:
+    warnings.warn(
+        "BertTextEncoder not found. TextPre.py is a legacy script and is no longer "
+        "part of the active training pipeline. If you need it, migrate BertTextEncoder "
+        "to models/text_modules/.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    BertTextEncoder = None
 
 class TextPre(object):
     """A single set of features of data."""

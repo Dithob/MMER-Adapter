@@ -155,7 +155,7 @@ class ConfigClassification():
                     'batch_size': 24,
                     'gradient_accumulation_steps': 1,
                     'learning_rate': 5e-4,
-                    # feature subNets
+                    # feature modules
                     'a_lstm_hidden_size': 32,
                     'v_lstm_hidden_size': 16,
                     'a_lstm_layers': 1,
@@ -181,7 +181,7 @@ class ConfigClassification():
                     'batch_size': 16,
                     'gradient_accumulation_steps': 2,
                     'learning_rate': 5e-5,
-                    # feature subNets
+                    # feature modules
                     'a_lstm_hidden_size': 32,
                     'v_lstm_hidden_size': 16,
                     'a_lstm_layers': 1,

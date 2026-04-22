@@ -10,7 +10,16 @@ import torch.nn.functional as F
 from models.text_modules import Language_model
 from .HMMEM_loss import DiffLoss, LightweightCrossCPC
 from .HMMEM_moe import GlobalMoE, LocalMoE
-from .HMMEM_modules import TVA_LSTM, Text_guide_mixer, Lightweight_mixer, mutli_scale_fusion, FeatureAdapter
+from .HMMEM_modules import (
+    TVA_LSTM,
+    Text_guide_mixer,
+    Lightweight_mixer,
+    mutli_scale_fusion,
+    FeatureAdapter,
+    ATGFBFF,
+    MultiScaleLatentAttentionFusion,
+    SharedOffsetFusion,
+)
 from .HMMEM_mixer import AdaptiveModalMixer
 
 __all__ = ['HMMEM']
@@ -78,14 +87,16 @@ class HMMEM(nn.Module):
             raise ValueError("--modalities must contain at least one of: t, a, v")
 
         # ── Feature flags ──
-        # Mixer layer (mutually exclusive: use_amm overrides use_tgm)
+        # Mixer layer (mutually exclusive: use_amm / use_atgfbff / use_tgm)
         # Mixers require text + at least one AV modality
         self.use_tgm = getattr(args, 'use_tgm', True) and self.use_text and self.has_av
         self.use_amm = getattr(args, 'use_amm', False) and self.use_text and self.has_av
-        if self.use_amm:
-            self.use_tgm = False  # AMM overrides TGM
+        self.use_atgfbff = getattr(args, 'use_atgfbff', False) and self.use_text and self.has_av
+        self.use_shared_offset = getattr(args, 'use_shared_offset', False) and self.use_text and self.has_av
+        if self.use_amm or self.use_atgfbff or self.use_shared_offset:
+            self.use_tgm = False  # explicit overrides TGM
 
-        # Fusion layer (mutually exclusive: use_moe_fusion overrides use_msf)
+        # Fusion layer (mutually exclusive: use_moe_fusion / use_atgfbff / use_msf)
         # Fusion only makes sense when AV modalities are present
         self.use_msf = getattr(args, 'use_msf', True) and self.has_av
         self.use_moe_fusion = getattr(args, 'use_moe_fusion', False) and self.has_av
@@ -98,6 +109,11 @@ class HMMEM(nn.Module):
         self.use_diff_loss = getattr(args, 'use_diff_loss', False) and self.has_av
         self.use_expert_diff_loss = getattr(args, 'use_expert_diff_loss', False) and self.has_av
         self.use_nce_loss = getattr(args, 'use_nce_loss', False) and self.use_text and self.has_av
+        self.use_atgfbff_loss = getattr(args, 'use_atgfbff_loss', True) and self.use_atgfbff
+        self.use_shared_offset_loss = getattr(args, 'use_shared_offset_loss', True) and self.use_shared_offset
+        self.alpha_align = getattr(args, 'alpha_align', 0.6)
+        self.beta_fiber = getattr(args, 'beta_fiber', 0.1)
+        self.beta_offset = getattr(args, 'beta_offset', 0.1)
         self.diff_loss_weight = getattr(args, 'diff_loss_weight', 0.01)
         self.nce_weight = getattr(args, 'nce_weight', 0.05)
 
@@ -109,6 +125,15 @@ class HMMEM(nn.Module):
         # ══════════════════════════════════════════════
         if self.use_amm:
             self.mixer = AdaptiveModalMixer(text_in=text_in, fusion_dim=fusion_input_size)
+        elif self.use_atgfbff:
+            self.mixer = ATGFBFF(input_size=fusion_input_size, hidden_size=fusion_input_size)
+        elif self.use_shared_offset:
+            self.mixer = SharedOffsetFusion(
+                input_size=fusion_input_size,
+                hidden_size=fusion_input_size,
+                pseudo_tokens=args.pseudo_tokens,
+                mode=getattr(args, 'shared_offset_mode', 'gate')
+            )
         elif self.use_tgm:
             self.mixer = Text_guide_mixer(text_in)
         elif self.has_av:
@@ -147,6 +172,12 @@ class HMMEM(nn.Module):
             self.shared_projector = nn.Linear(fusion_input_size, text_in)
             self.shared_token_projector = nn.Linear(1, args.pseudo_tokens)
 
+        elif self.use_atgfbff:
+            self.fusion = MultiScaleLatentAttentionFusion(
+                input_size=fusion_input_size,
+                latent_size=fusion_input_size,
+                num_latents=getattr(args, 'num_latents', 4),
+            )
         elif self.use_msf:
             # ── Original multi_scale_fusion (baseline) ──
             self.fusion = mutli_scale_fusion(
@@ -254,12 +285,15 @@ class HMMEM(nn.Module):
 
     def _apply_fusion(self, feature_f):
         """Apply the non-MoE fusion path (MSF or direct projection)."""
+        if self.use_atgfbff:
+            return self.fusion(feature_f)
+        if self.use_shared_offset:
+            return self.fusion(feature_f)
         if self.use_msf:
             return self.fusion(feature_f)
-        else:
-            projected = self.direct_proj(feature_f)
-            fusion_h = self.direct_token_proj(projected.unsqueeze(2))
-            return fusion_h.permute(0, 2, 1)
+        projected = self.direct_proj(feature_f)
+        fusion_h = self.direct_token_proj(projected.unsqueeze(2))
+        return fusion_h.permute(0, 2, 1)
 
     def _build_llm_input(self, fusion_h, text_embed, audio_h, video_h, audio_raw, video_raw):
         """Build LLM input sequence with optional raw AV token bypass and dynamic mask.
@@ -392,7 +426,11 @@ class HMMEM(nn.Module):
             fusion_h, moe_aux = self._dual_moe_forward(audio_h, video_h, feature_f)
         else:
             feature_f = self._mix_modalities(audio_h, video_h, text_embed)
-            fusion_h = self._apply_fusion(feature_f)
+            fusion_aux = None
+            if self.use_atgfbff or self.use_shared_offset:
+                fusion_h, fusion_aux = self.mixer(audio_h, video_h, text_embed)
+            else:
+                fusion_h = self._apply_fusion(feature_f)
 
         # ── Build LLM input with optional AV token bypass ──
         LLM_input, input_attn_mask = self._build_llm_input(
@@ -405,6 +443,9 @@ class HMMEM(nn.Module):
             'Feature_v': video_h,
             'Feature_f': feature_f,
         }
+        if fusion_aux is not None:
+            res['ATGFBFF_align'] = fusion_aux['align_loss']
+            res['ATGFBFF_fiber'] = fusion_aux['fiber_loss']
 
         # ── Auxiliary Losses (training only) ──
         if self.use_moe_fusion and self.training:
@@ -421,6 +462,14 @@ class HMMEM(nn.Module):
                 diff_global = self._compute_diff_loss_pairs(moe_aux['global_experts'])
                 diff_local = self._compute_diff_loss_pairs(moe_aux['local_experts'])
                 res['ExpertDiffLoss'] = (diff_global + diff_local) * self.diff_loss_weight
+
+        if self.use_atgfbff and self.training and self.use_atgfbff_loss and fusion_aux is not None:
+            res['ATGFBFF_Align_Loss'] = self.alpha_align * fusion_aux['align_loss']
+            res['ATGFBFF_Fiber_Loss'] = self.beta_fiber * fusion_aux['fiber_loss']
+
+        if self.use_shared_offset and self.training and self.use_shared_offset_loss and fusion_aux is not None:
+            res['SharedAlignLoss'] = self.alpha_align * fusion_aux['align_loss']
+            res['OffsetRegLoss'] = self.beta_offset * fusion_aux['offset_loss']
 
         if self.use_nce_loss and self.training:
             nce_terms = []
@@ -468,7 +517,10 @@ class HMMEM(nn.Module):
             fusion_h, _ = self._dual_moe_forward(audio_h, video_h, feature_f)
         else:
             feature_f = self._mix_modalities(audio_h, video_h, text_embed)
-            fusion_h = self._apply_fusion(feature_f)
+            if self.use_atgfbff:
+                fusion_h, fusion_aux = self.mixer(audio_h, video_h, text_embed)
+            else:
+                fusion_h = self._apply_fusion(feature_f)
 
         # ── Build LLM input with optional AV token bypass ──
         LLM_input, input_attn_mask = self._build_llm_input(

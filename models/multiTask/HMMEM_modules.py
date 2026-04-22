@@ -2,7 +2,17 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
-__all__ = ['TVA_LSTM', 'Text_guide_mixer', 'Lightweight_mixer', 'mutli_scale_fusion', 'Integrating', 'FeatureAdapter']
+__all__ = [
+    'TVA_LSTM',
+    'Text_guide_mixer',
+    'Lightweight_mixer',
+    'mutli_scale_fusion',
+    'Integrating',
+    'FeatureAdapter',
+    'ATGFBFF',
+    'MultiScaleLatentAttentionFusion',
+    'SharedOffsetFusion',
+]
 
 
 class FeatureAdapter(nn.Module):
@@ -118,3 +128,232 @@ class Integrating(nn.Module):
         x = self.Integrating_layer(x)
         x = x.squeeze((1, 3))
         return x
+
+
+class ATGFBFF(nn.Module):
+    """Adaptive Text-Guided Fiber Bundle Feature Fusion.
+
+    Projects text/audio/video into shared and private spaces, then forms a
+    shared semantic core plus modality-specific fiber offsets.
+    """
+
+    def __init__(self, input_size=256, hidden_size=256, dropout=0.1):
+        super().__init__()
+        self.text_shared = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.LayerNorm(hidden_size),
+        )
+        self.audio_shared = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.LayerNorm(hidden_size),
+        )
+        self.audio_private = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.LayerNorm(hidden_size),
+        )
+        self.video_shared = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.LayerNorm(hidden_size),
+        )
+        self.video_private = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.LayerNorm(hidden_size),
+        )
+        self.modality_logits = nn.Parameter(torch.zeros(3))
+
+    def forward(self, audio, video, text):
+        z_c_t = self.text_shared(text)
+        z_c_a = self.audio_shared(audio)
+        z_p_a = self.audio_private(audio)
+        z_c_v = self.video_shared(video)
+        z_p_v = self.video_private(video)
+
+        weights = torch.softmax(self.modality_logits, dim=0)
+        z_s = weights[0] * z_c_t + weights[1] * z_c_a + weights[2] * z_c_v
+        delta_a = z_p_a - z_s
+        delta_v = z_p_v - z_s
+        fused = z_s + delta_a + delta_v
+
+        aux = {
+            'align_loss': 0.5 * (
+                (z_c_t - z_c_a).pow(2).mean() +
+                (z_c_t - z_c_v).pow(2).mean() +
+                (z_c_a - z_c_v).pow(2).mean()
+            ),
+            'fiber_loss': delta_a.pow(2).mean() + delta_v.pow(2).mean(),
+            'shared_text': z_c_t,
+            'shared_audio': z_c_a,
+            'shared_video': z_c_v,
+            'fiber_audio': delta_a,
+            'fiber_video': delta_v,
+            'weights': weights,
+        }
+        return fused, aux
+
+
+class MultiScaleLatentAttentionFusion(nn.Module):
+    """Multi-Scale Latent Attention Fusion.
+
+    Uses multi-branch MLPs, latent projection, and cross-attention over learnable
+    latent queries to build compact multimodal tokens.
+    """
+
+    def __init__(self, input_size=256, latent_size=256, num_latents=4, dropout=0.1):
+        super().__init__()
+        self.branches = nn.ModuleList([
+            nn.Sequential(
+                nn.Linear(input_size, input_size // 8),
+                nn.GELU(),
+                nn.Linear(input_size // 8, latent_size),
+            ),
+            nn.Sequential(
+                nn.Linear(input_size, input_size // 16),
+                nn.GELU(),
+                nn.Linear(input_size // 16, latent_size),
+            ),
+            nn.Sequential(
+                nn.Linear(input_size, input_size // 32),
+                nn.GELU(),
+                nn.Linear(input_size // 32, latent_size),
+            ),
+        ])
+        self.latent_proj = nn.ModuleList([nn.Linear(latent_size, latent_size) for _ in range(3)])
+        self.latents = nn.Parameter(torch.randn(num_latents, latent_size) * 0.02)
+        self.attn = nn.MultiheadAttention(latent_size, num_heads=4, batch_first=True, dropout=dropout)
+        self.norm1 = nn.LayerNorm(latent_size)
+        self.ffn = nn.Sequential(
+            nn.Linear(latent_size, latent_size * 2),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(latent_size * 2, latent_size),
+        )
+        self.norm2 = nn.LayerNorm(latent_size)
+        self.out_proj = nn.Linear(latent_size, input_size)
+        self.pseudo_tokens = 4
+        self.token_offset = nn.Parameter(torch.zeros(self.pseudo_tokens, input_size))
+
+    def forward(self, fused):
+        scale_feats = []
+        for branch, proj in zip(self.branches, self.latent_proj):
+            scale_feats.append(proj(branch(fused)))
+
+        kv = torch.cat(scale_feats, dim=1)
+        q = self.latents.unsqueeze(0).expand(fused.size(0), -1, -1)
+        attn_out, _ = self.attn(q, kv, kv, need_weights=False)
+        latent_state = self.norm1(q + attn_out)
+        latent_state = self.norm2(latent_state + self.ffn(latent_state))
+
+        core = self.out_proj(latent_state.mean(dim=1))
+        pseudo_tokens = core.unsqueeze(1) + self.token_offset.unsqueeze(0)
+        return pseudo_tokens
+
+
+class SharedOffsetFusion(nn.Module):
+    """Shared semantic core + micro offset fusion.
+
+    Designed as a lightweight, switchable bridge between ATGFB-style decomposition
+    and the existing MMER dual-path setup.
+    """
+
+    def __init__(self, input_size=256, hidden_size=256, pseudo_tokens=4, dropout=0.1, mode='gate'):
+        super().__init__()
+        self.mode = mode
+        self.text_shared = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.LayerNorm(hidden_size),
+        )
+        self.audio_shared = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.LayerNorm(hidden_size),
+        )
+        self.video_shared = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.LayerNorm(hidden_size),
+        )
+        self.audio_private = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.LayerNorm(hidden_size),
+        )
+        self.video_private = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.LayerNorm(hidden_size),
+        )
+        self.modality_logits = nn.Parameter(torch.zeros(3))
+        self.fusion_gate = nn.Sequential(
+            nn.Linear(hidden_size * 2, hidden_size),
+            nn.GELU(),
+            nn.Linear(hidden_size, 1),
+        )
+        self.core_proj = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size),
+            nn.GELU(),
+            nn.Dropout(dropout),
+        )
+        self.token_offset = nn.Parameter(torch.zeros(pseudo_tokens, hidden_size))
+
+    def forward(self, audio, video, text):
+        if text.dim() == 3:
+            text = text.mean(dim=1)
+
+        z_c_t = self.text_shared(text)
+        z_c_a = self.audio_shared(audio)
+        z_c_v = self.video_shared(video)
+        z_p_a = self.audio_private(audio)
+        z_p_v = self.video_private(video)
+
+        weights = torch.softmax(self.modality_logits, dim=0)
+        z_shared = weights[0] * z_c_t + weights[1] * z_c_a + weights[2] * z_c_v
+        delta_a = z_p_a - z_shared
+        delta_v = z_p_v - z_shared
+        delta_micro = delta_a + delta_v
+
+        if self.mode == 'add':
+            fused_core = z_shared + delta_micro
+        elif self.mode == 'residual':
+            fused_core = z_shared + 0.5 * delta_micro
+        else:
+            gate = torch.sigmoid(self.fusion_gate(torch.cat([z_shared, delta_micro], dim=-1)))
+            fused_core = gate * z_shared + (1 - gate) * delta_micro
+
+        core = self.core_proj(fused_core)
+        fusion_h = core.unsqueeze(1) + self.token_offset.unsqueeze(0)
+
+        align_loss = 0.5 * (
+            (z_c_t - z_c_a).pow(2).mean() +
+            (z_c_t - z_c_v).pow(2).mean() +
+            (z_c_a - z_c_v).pow(2).mean()
+        )
+        offset_loss = delta_a.pow(2).mean() + delta_v.pow(2).mean()
+
+        aux = {
+            'align_loss': align_loss,
+            'offset_loss': offset_loss,
+            'shared_text': z_c_t,
+            'shared_audio': z_c_a,
+            'shared_video': z_c_v,
+            'delta_audio': delta_a,
+            'delta_video': delta_v,
+            'weights': weights,
+            'fused_core': fused_core,
+        }
+        return fusion_h, aux

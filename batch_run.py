@@ -38,13 +38,15 @@ from collections import OrderedDict
 
 EXPERIMENT_GROUPS = OrderedDict()
 
-# ── 1. Mixer 消融: None vs TGM vs AMM ──
+# ── 1. Mixer 消融: None vs TGM vs AMM vs ATGFBFF vs SharedOffset ──
 EXPERIMENT_GROUPS['mixer_ablation'] = {
-    'description': 'Mixer层消融: None(Direct) vs TGM vs AMM',
+    'description': 'Mixer层消融: None(Direct) vs TGM vs AMM vs ATGFBFF vs SharedOffset',
     'experiments': [
-        {'name': 'mixer_none',   'use_tgm': False, 'use_amm': False},
-        {'name': 'mixer_tgm',    'use_tgm': True,  'use_amm': False},
-        {'name': 'mixer_amm',    'use_tgm': False, 'use_amm': True},
+        {'name': 'mixer_none',       'use_tgm': False, 'use_amm': False, 'use_atgfbff': False, 'use_shared_offset': False},
+        {'name': 'mixer_tgm',        'use_tgm': True,  'use_amm': False, 'use_atgfbff': False, 'use_shared_offset': False},
+        {'name': 'mixer_amm',        'use_tgm': False, 'use_amm': True,  'use_atgfbff': False, 'use_shared_offset': False},
+        {'name': 'mixer_atgfbff',    'use_tgm': False, 'use_amm': False, 'use_atgfbff': True,  'use_shared_offset': False},
+        {'name': 'mixer_sharedoff',  'use_tgm': False, 'use_amm': False, 'use_atgfbff': False, 'use_shared_offset': True},
     ]
 }
 
@@ -128,20 +130,24 @@ EXPERIMENT_GROUPS['moe_detail_ablation'] = {
 
 # ── 9. 完整消融（最佳配置搜索）──
 EXPERIMENT_GROUPS['full_ablation'] = {
-    'description': '完整消融: Mixer × Fusion 组合',
+    'description': '完整消融: Mixer × Fusion 组合（含 ATGFBFF）',
     'experiments': [
         # Direct + Direct
-        {'name': 'direct_direct', 'use_tgm': False, 'use_amm': False, 'use_msf': False, 'use_moe_fusion': False},
+        {'name': 'direct_direct', 'use_tgm': False, 'use_amm': False, 'use_atgfbff': False, 'use_msf': False, 'use_moe_fusion': False},
         # TGM + MSF
-        {'name': 'tgm_msf',      'use_tgm': True,  'use_amm': False, 'use_msf': True,  'use_moe_fusion': False},
+        {'name': 'tgm_msf',      'use_tgm': True,  'use_amm': False, 'use_atgfbff': False, 'use_msf': True,  'use_moe_fusion': False},
         # TGM + MoE
-        {'name': 'tgm_moe',      'use_tgm': True,  'use_amm': False, 'use_msf': False, 'use_moe_fusion': True},
+        {'name': 'tgm_moe',      'use_tgm': True,  'use_amm': False, 'use_atgfbff': False, 'use_msf': False, 'use_moe_fusion': True},
         # AMM + MSF
-        {'name': 'amm_msf',      'use_tgm': False, 'use_amm': True,  'use_msf': True,  'use_moe_fusion': False},
+        {'name': 'amm_msf',      'use_tgm': False, 'use_amm': True,  'use_atgfbff': False, 'use_msf': True,  'use_moe_fusion': False},
         # AMM + MoE
-        {'name': 'amm_moe',      'use_tgm': False, 'use_amm': True,  'use_msf': False, 'use_moe_fusion': True},
+        {'name': 'amm_moe',      'use_tgm': False, 'use_amm': True,  'use_atgfbff': False, 'use_msf': False, 'use_moe_fusion': True},
+        # ATGFBFF + latent fusion
+        {'name': 'atgfbff_base', 'use_tgm': False, 'use_amm': False, 'use_atgfbff': True,  'use_msf': False, 'use_moe_fusion': False},
+        # ATGFBFF + latent fusion + MoE
+        {'name': 'atgfbff_moe',  'use_tgm': False, 'use_amm': False, 'use_atgfbff': True,  'use_msf': False, 'use_moe_fusion': True},
         # AMM + MoE + LoRA
-        {'name': 'amm_moe_lora', 'use_tgm': False, 'use_amm': True,  'use_msf': False, 'use_moe_fusion': True, 'use_lora': True},
+        {'name': 'amm_moe_lora', 'use_tgm': False, 'use_amm': True,  'use_atgfbff': False, 'use_msf': False, 'use_moe_fusion': True, 'use_lora': True},
     ]
 }
 
@@ -164,7 +170,8 @@ EXPERIMENT_GROUPS['cross_dataset'] = {
 
 # run.py 中 action='store_true' 的参数列表
 BOOLEAN_FLAGS = {
-    'use_tgm', 'use_amm', 'use_msf', 'use_moe_fusion',
+    'use_tgm', 'use_amm', 'use_atgfbff', 'use_atgfbff_loss', 'use_shared_offset', 'use_shared_offset_loss',
+    'use_msf', 'use_moe_fusion',
     'use_gate', 'use_moe_lb_loss',
     'use_diff_loss', 'use_expert_diff_loss',
     'use_nce_loss',

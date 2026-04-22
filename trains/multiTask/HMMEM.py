@@ -195,7 +195,7 @@ class HMMEM():
                         output= model(labels_m, (text,text_lengths), (audio, audio_lengths), (vision, vision_lengths))
                         loss = output['Loss']
                         # Add optional auxiliary losses
-                        for aux_key in ['MoE_LB_Loss', 'DiffLoss', 'ExpertDiffLoss', 'NCELoss']:
+                        for aux_key in ['MoE_LB_Loss', 'DiffLoss', 'ExpertDiffLoss', 'NCELoss', 'ATGFBFF_Align_Loss', 'ATGFBFF_Fiber_Loss', 'SharedAlignLoss', 'OffsetRegLoss']:
                             if aux_key in output:
                                 loss = loss + output[aux_key]
                         # Scale loss by gradient accumulation steps

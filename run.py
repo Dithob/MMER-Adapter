@@ -227,7 +227,7 @@ def run_normal(args):
             getattr(args, 'batch_size', 1) * grad_accum,  # effective batch
             getattr(args, 'warm_up_epochs', ''),
             getattr(args, 'early_stop', ''),
-            'AMM' if getattr(args, 'use_amm', False) else ('TGM' if getattr(args, 'use_tgm', False) else 'None'),
+            'ATGFBFF' if getattr(args, 'use_atgfbff', False) else ('AMM' if getattr(args, 'use_amm', False) else ('TGM' if getattr(args, 'use_tgm', False) else 'None')),
             'MoE' if getattr(args, 'use_moe_fusion', False) else ('MSF' if getattr(args, 'use_msf', False) else 'None'),
             getattr(args, 'use_gate', False),
             getattr(args, 'use_lora', False),
@@ -306,11 +306,30 @@ def parse_args():
     parser.add_argument('--seeds', type=str, default='1111,2222,3333,4444,5555',
                         help='random seeds (e.g. 1111,2222)')
                         
-    # ── Mixer layer ablation (mutually exclusive: use_amm overrides use_tgm) ──
+    # ── Mixer layer ablation (mutually exclusive: use_amm / use_atgfbff overrides use_tgm) ──
     parser.add_argument('--use_tgm', action='store_true', default=False,
                         help='use Text-Guided Mixer (default baseline)')
     parser.add_argument('--use_amm', action='store_true',
                         help='use Adaptive Modal Mixer (overrides TGM)')
+    parser.add_argument('--use_atgfbff', action='store_true',
+                        help='use ATGFB-MFF style fusion (overrides TGM; can be combined with MSF if desired)')
+    parser.add_argument('--use_atgfbff_loss', action='store_true', default=True,
+                        help='enable ATGFBFF auxiliary losses (align + fiber); default True')
+    parser.add_argument('--use_shared_offset', action='store_true',
+                        help='use shared-space + offset-space fusion for MMER dual-path optimization')
+    parser.add_argument('--use_shared_offset_loss', action='store_true', default=True,
+                        help='enable shared-offset auxiliary losses (align + offset regularization)')
+    parser.add_argument('--shared_offset_mode', type=str, default='gate',
+                        choices=['add', 'gate', 'residual'],
+                        help='fusion mode for shared-offset branch')
+    parser.add_argument('--alpha_align', type=float, default=0.6,
+                        help='weight for shared-space alignment loss')
+    parser.add_argument('--beta_fiber', type=float, default=0.1,
+                        help='weight for fiber offset regularization loss')
+    parser.add_argument('--beta_offset', type=float, default=0.1,
+                        help='weight for shared-offset regularization loss')
+    parser.add_argument('--num_latents', type=int, default=4,
+                        help='number of learnable latents in ATGFBFF multi-scale attention fusion')
     
     # ── Fusion layer ablation (mutually exclusive: use_moe_fusion overrides use_msf) ──
     parser.add_argument('--use_msf', action='store_true', default=False,
@@ -415,7 +434,7 @@ if __name__ == '__main__':
         args.seeds = [int(x) for x in clean_seeds.split(',') if x.strip()]
     
     # Resolve mutually exclusive switches (so config log shows correct state)
-    if args.use_amm:
+    if args.use_amm or args.use_atgfbff or args.use_shared_offset:
         args.use_tgm = False
     if args.use_moe_fusion:
         args.use_msf = False

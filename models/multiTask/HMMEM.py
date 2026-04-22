@@ -126,7 +126,11 @@ class HMMEM(nn.Module):
         if self.use_amm:
             self.mixer = AdaptiveModalMixer(text_in=text_in, fusion_dim=fusion_input_size)
         elif self.use_atgfbff:
-            self.mixer = ATGFBFF(input_size=fusion_input_size, hidden_size=fusion_input_size)
+            self.mixer = ATGFBFF(
+                input_size=fusion_input_size,
+                hidden_size=fusion_input_size,
+                pseudo_tokens=getattr(args, 'pseudo_tokens', 4),
+            )
         elif self.use_shared_offset:
             self.mixer = SharedOffsetFusion(
                 input_size=fusion_input_size,
@@ -432,6 +436,9 @@ class HMMEM(nn.Module):
             else:
                 fusion_h = self._apply_fusion(feature_f)
 
+            if self.use_atgfbff and fusion_h.dim() == 2:
+                fusion_h = fusion_h.unsqueeze(1).expand(-1, getattr(self.args, 'pseudo_tokens', 4), -1)
+
         # ── Build LLM input with optional AV token bypass ──
         LLM_input, input_attn_mask = self._build_llm_input(
             fusion_h, text_embed, audio_h, video_h, audio_raw, video_raw)
@@ -521,6 +528,9 @@ class HMMEM(nn.Module):
                 fusion_h, fusion_aux = self.mixer(audio_h, video_h, text_embed)
             else:
                 fusion_h = self._apply_fusion(feature_f)
+
+            if self.use_atgfbff and fusion_h.dim() == 2:
+                fusion_h = fusion_h.unsqueeze(1).expand(-1, getattr(self.args, 'pseudo_tokens', 4), -1)
 
         # ── Build LLM input with optional AV token bypass ──
         LLM_input, input_attn_mask = self._build_llm_input(

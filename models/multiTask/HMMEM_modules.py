@@ -135,10 +135,14 @@ class ATGFBFF(nn.Module):
 
     Projects text/audio/video into shared and private spaces, then forms a
     shared semantic core plus modality-specific fiber offsets.
+
+    Output is a pseudo-token sequence shaped [B, pseudo_tokens, hidden_size]
+    so it can be directly consumed by the frozen LLM prompt wrapper.
     """
 
-    def __init__(self, input_size=256, hidden_size=256, dropout=0.1):
+    def __init__(self, input_size=256, hidden_size=256, pseudo_tokens=4, dropout=0.1):
         super().__init__()
+        self.pseudo_tokens = pseudo_tokens
         self.text_shared = nn.Sequential(
             nn.Linear(input_size, hidden_size),
             nn.GELU(),
@@ -170,6 +174,12 @@ class ATGFBFF(nn.Module):
             nn.LayerNorm(hidden_size),
         )
         self.modality_logits = nn.Parameter(torch.zeros(3))
+        self.core_proj = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size),
+            nn.GELU(),
+            nn.Dropout(dropout),
+        )
+        self.token_offset = nn.Parameter(torch.zeros(pseudo_tokens, hidden_size))
 
     def forward(self, audio, video, text):
         z_c_t = self.text_shared(text)
@@ -183,6 +193,8 @@ class ATGFBFF(nn.Module):
         delta_a = z_p_a - z_s
         delta_v = z_p_v - z_s
         fused = z_s + delta_a + delta_v
+        core = self.core_proj(fused)
+        fusion_h = core.unsqueeze(1) + self.token_offset.unsqueeze(0)
 
         aux = {
             'align_loss': 0.5 * (
@@ -198,7 +210,7 @@ class ATGFBFF(nn.Module):
             'fiber_video': delta_v,
             'weights': weights,
         }
-        return fused, aux
+        return fusion_h, aux
 
 
 class MultiScaleLatentAttentionFusion(nn.Module):

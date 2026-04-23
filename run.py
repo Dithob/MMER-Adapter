@@ -7,6 +7,10 @@ import gc
 import time
 import random
 import torch
+# Suppress noisy torch.compile internal fallback traces (e.g. fake_tensor baddbmm)
+import logging as _logging
+_logging.getLogger('torch._dynamo').setLevel(_logging.WARNING)
+_logging.getLogger('torch._inductor').setLevel(_logging.WARNING)
 import logging
 import argparse
 import numpy as np
@@ -75,22 +79,23 @@ def run(args):
 
     # ── torch.compile 加速可训练小模块（不编译冻结的 LLM）──
     if hasattr(torch, 'compile'):
-        try:
-            if hasattr(model.Model, 'audio_LSTM'):
-                model.Model.audio_LSTM = torch.compile(model.Model.audio_LSTM)
-            if hasattr(model.Model, 'video_LSTM'):
-                model.Model.video_LSTM = torch.compile(model.Model.video_LSTM)
-            if hasattr(model.Model, 'mixer'):
-                model.Model.mixer = torch.compile(model.Model.mixer)
-            if hasattr(model.Model, 'fusion'):
-                model.Model.fusion = torch.compile(model.Model.fusion)
-            if hasattr(model.Model, 'audio_adapter') and model.Model.audio_adapter is not None:
-                model.Model.audio_adapter = torch.compile(model.Model.audio_adapter)
-            if hasattr(model.Model, 'video_adapter') and model.Model.video_adapter is not None:
-                model.Model.video_adapter = torch.compile(model.Model.video_adapter)
-            logger.info("torch.compile enabled for trainable sub-modules")
-        except Exception as e:
-            logger.warning(f"torch.compile failed, falling back to eager mode: {e}")
+        _compile_targets = [
+            'audio_LSTM', 'video_LSTM', 'mixer', 'fusion',
+            'audio_adapter', 'video_adapter',
+            'text_proj_for_mixer', 'mixer_out_proj',
+        ]
+        compiled_names = []
+        for name in _compile_targets:
+            module = getattr(model.Model, name, None)
+            if module is not None:
+                try:
+                    setattr(model.Model, name, torch.compile(module))
+                    compiled_names.append(name)
+                except Exception:
+                    pass  # silently skip modules incompatible with compile
+        if compiled_names:
+            logger.info(f"torch.compile enabled for: {', '.join(compiled_names)}")
+
 
     def print_trainable_parameters(model):
         """

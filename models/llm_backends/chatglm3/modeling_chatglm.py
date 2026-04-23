@@ -698,9 +698,6 @@ class ChatGLMPreTrainedModel(PreTrainedModel):
         position_ids = torch.arange(seq_length, dtype=torch.long, device=device).unsqueeze(0).repeat(batch_size, 1)
         return position_ids
 
-    def _set_gradient_checkpointing(self, module, value=False):
-        if isinstance(module, GLMTransformer):
-            module.gradient_checkpointing = value
 
 
 class Embedding(torch.nn.Module):

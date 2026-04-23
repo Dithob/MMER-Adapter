@@ -34,11 +34,10 @@ class ChatGLM3Backend(BaseLLMBackend):
 
         model = ChatGLMForConditionalGeneration.from_pretrained(
             pretrained_model,
-            trust_remote_code=True,
-            torch_dtype=torch.bfloat16,
+            dtype=torch.bfloat16,
             use_safetensors=True,
         ).half()
-        tokenizer = ChatGLMTokenizer.from_pretrained(pretrained_model, trust_remote_code=True)
+        tokenizer = ChatGLMTokenizer.from_pretrained(pretrained_model)
 
         if hasattr(model, 'gradient_checkpointing_enable'):
             model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})

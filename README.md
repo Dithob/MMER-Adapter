@@ -1,8 +1,8 @@
-# MMER-Adapter
+# HMMEM: Hierarchical MoE Multimodal ERC Model
 
 ## 项目概述
 
-MMER-Adapter 是一个统一的多模态情感识别框架，支持多种大语言模型后端适配。该项目通过可插拔的 Mixer-Fusion 两阶段架构，实现了对文本、音频和视频三种模态信息的灵活整合与消融实验。
+HMMEM 是一个统一的多模态情感识别框架，支持多种大语言模型后端适配。该项目通过可插拔的 Mixer-Fusion 两阶段架构，实现了对文本、音频和视频三种模态信息的灵活整合与消融实验。
 
 ## 项目结构
 
@@ -34,95 +34,36 @@ MMER-Adapter/
 
 ### 1. 统一的语言模型加载器
 
-在 `models/subNets/Textmodel.py` 中，我们创建了一个统一的语言模型加载器，支持：
+在 `models/text_modules/` 中，我们创建了一个统一的语言模型加载器，支持：
 
-- **ChatGLM3-6B**: 使用原生ChatGLM3实现
-- **Qwen-1.8B**: 使用ModelScope加载
-- **Qwen3.5系列**: 使用ModelScope加载
-- **Llama2-7B**: 使用ModelScope加载
-- **DeepSeek模型**: 使用ModelScope加载
+- **ChatGLM3-6B**
+- **Qwen-1.8B / Qwen3.5**
+- **Llama2-7B**
+- **DeepSeek**
+- **Gemma**
 
-### 2. 模型类型参数
+### 2. 模型与配置统一入口
 
-通过 `--model_type` 参数指定使用的语言模型：
-
-```bash
-python run.py --model_type chatglm3  # 使用ChatGLM3-6B
-python run.py --model_type qwen      # 使用Qwen-1.8B
-python run.py --model_type llama2    # 使用Llama2-7B
-```
-
-### 3. 自动路径配置
-
-系统会根据模型类型自动设置默认的预训练模型路径，也可以通过 `--pretrain_LM` 参数自定义路径。
-
-### 4. 统一的配置系统
-
-配置系统支持：
+通过 `--model_type` 指定语言模型，通过配置文件统一管理回归 / 分类任务：
 
 - 回归任务：MOSEI、SIMSV2、MOSI、SIMS
-- 分类任务：MELD、CHERMA、IEMOCAP（4分类和6分类）
+- 分类任务：MELD、CHERMA、IEMOCAP（4 分类和 6 分类）
 
-### 5. 消除代码冗余
+### 3. 代码结构统一
 
-通过重构，我们：
+当前项目保留 HMMEM 作为架构名，并将多模态编码、融合、损失与训练流程统一到一套可插拔实现中，便于维护和消融实验。
 
-- 将三个独立的项目合并为一个统一框架
-- 提取公共代码，减少重复
-- 统一接口，便于维护和扩展
+## 新增模块说明
 
-## 新增模块说明：ATGFB-MFF 相关适配
+在原始 HMMEM 的 Mixer-Fusion 两阶段架构基础上，当前版本新增了以下模块：
 
-在原始 HMMEM 的 Mixer-Fusion 两阶段架构基础上，当前版本进一步融入了 ATGFB-MFF 风格的模块设计，并保留了原始结构作为消融基线。新增内容主要体现在以下几个方面。
+- **ATGFBFF**：共享语义与偏移建模的融合模块，输出 pseudo tokens 供 LLM 使用
+- **SharedOffsetFusion**：ATGFBFF 的简化过渡版本，支持 `add / gate / residual`
+- **Dual-Branch MoE**：GlobalMoE + LocalMoE + Meta-Gate 的双分支融合
+- **FeatureAdapter**：用于高维音频 / 视频特征的降维适配
+- **Raw AV Token Bypass**：支持 `raw_av_mode`，可将原始音频 / 视频 token 直接注入 LLM 输入
 
-### 1. ATGFBFF / SharedOffset 融合模块
-
-在 `models/multiTask/HMMEM_modules.py` 中新增了与 ATGFB-MFF 相关的融合模块：
-
-- `ATGFBFF`
-- `SharedOffsetFusion`
-- `MultiScaleLatentAttentionFusion`
-- `FeatureAdapter`
-
-其中：
-
-- `ATGFBFF` 对应 ATGFB-MFF 风格的共享语义建模与 fiber 偏移建模
-- `SharedOffsetFusion` 是兼容原框架的过渡版本，用于实现共享空间 + 偏移空间的联合建模
-- `FeatureAdapter` 用于高维音频 / 视频特征降维，方便接入 HuBERT、Whisper 等编码器
-
-### 2. Mixer 层新增可选分支
-
-当前版本的 Mixer 层不再只有 TGM 和 AMM，还支持：
-
-- `TGM`：原始 Text-Guided Mixer
-- `AMM`：Adaptive Modal Mixer
-- `ATGFBFF`：ATGFB-MFF 风格共享 / 私有融合
-- `SharedOffsetFusion`：共享偏移双空间融合
-- `Lightweight_mixer`：仅在无文本或简化场景下使用
-
-### 3. Fusion 层新增双分支 MoE
-
-在 Fusion 层中新增了：
-
-- `GlobalMoE`
-- `LocalMoE`
-- `Meta-Gate`
-
-其中：
-
-- Global 分支接收融合后的语义特征
-- Local 分支接收更接近原始模态的局部信息
-- Meta-Gate 负责根据分支差异做后验感知融合
-
-### 4. LLM 输入侧增强
-
-除了融合后的 pseudo tokens，当前版本还支持：
-
-- `raw_av_mode`：直接注入原始 audio / video token
-- `av_pseudo_tokens`：控制原始 AV token 数量
-- `prompt_style`：控制多模态 prompt 风格
-
-这样做的目的是在保留融合语义的同时，尽可能保留局部模态细节。
+这些模块都支持单独开关，方便进行消融对比。
 
 ## 使用方法
 
@@ -243,9 +184,9 @@ python run.py --model_type qwen3.5 --datasetName meld --use_shared_offset --shar
   - **iemocap4**: 4类情感（angry, happy, sad, neutral）
   - **iemocap6**: 6类情感（angry, happy, excited, sad, neutral, frustrated）
 
-## 模型架构 (HMMEM v2)
+## 模型架构 (HMMEM)
 
-### 信号流
+### 信号流（通用路径）
 
 ```
 audio → [FeatureAdapter] → LSTM → audio_h ─┐
@@ -253,13 +194,27 @@ video → [FeatureAdapter] → LSTM → video_h ─┤──→ 【Mixer 层】�
 text  → LLM Embedding → text_embed ────────┘
 ```
 
+### 信号流（ATGFBFF / SharedOffset 专用路径）
+
+```
+audio → [FeatureAdapter] → LSTM → audio_h ─────────────────────┐
+video → [FeatureAdapter] → LSTM → video_h ─────────────────────┤
+text  → LLM Embed → GAP Pool → Linear(text_in→256) → text_h ──┘
+                                                                ↓
+                                              ATGFBFF / SharedOffset (Mixer)
+                                                                ↓
+                                              [B, pt, 256] → Linear(256→text_in)
+                                                                ↓
+                                              fusion_h [B, pt, text_in] → LLM
+```
+
 ### Mixer 层（模态交互）
 
 | 模块 | 说明 |
 |---|---|
-| **TGM** (Text-Guided Mixer) | 文本主导：GAP 池化文本 → 逐元素调制音频/视频 → 相加。基线方案。 |
-| **AMM** (Adaptive Modal Mixer) | 三模态对等：Self-Attention 让音频↔视频直接交互 → 自适应加权池化。 |
-| **ATGFBFF** | ATGFB-MFF 风格：共享语义 + fiber offset 建模，文本池化后与音频 / 视频共同参与融合。 |
+| **TGM** (Text-Guided Mixer) | 文本主导：GAP 池化文本 → 调制音频/视频 → 融合。基线方案。 |
+| **AMM** (Adaptive Modal Mixer) | 三模态对等：音频↔视频直接交互，再进行自适应加权。 |
+| **ATGFBFF** | 共享语义 + 偏移建模的融合模块，文本池化后与音频 / 视频共同参与融合。 |
 | **SharedOffsetFusion** | 共享空间 + 偏移空间的过渡版本，可通过 `add/gate/residual` 调整融合方式。 |
 | **Lightweight_mixer** | 简化版 AV 融合，仅在缺少文本或轻量场景下使用。 |
 
@@ -276,101 +231,96 @@ text  → LLM Embedding → text_embed ────────┘
 | 模块 | 说明 | 依赖 |
 |---|---|---|
 | **LB Loss** | Expert 负载均衡 | `use_moe_fusion` |
-| **DiffLoss** | 分支/Expert 间正交互补 | `use_moe_fusion` |
-| **NCE Loss** | 跨模态时序对比学习 (text↔audio, text↔video) | `use_nce_loss` |
-| **ATGFBFF Align/Fiber Loss** | 对齐共享语义并约束 fiber 偏移 | `use_atgfbff` |
+| **DiffLoss** | 分支 / Expert 间正交互补 | `use_moe_fusion` |
+| **NCE Loss** | 跨模态时序对比学习 | `use_nce_loss` |
+| **ATGFBFF Align/Fiber Loss** | 对齐共享语义并约束偏移 | `use_atgfbff` |
 | **SharedOffset Align/Offset Loss** | 对齐共享表征并约束 offset 分量 | `use_shared_offset` |
 
 ### 高维特征适配
 
 | 模块 | 说明 |
 |---|---|
-| **FeatureAdapter** | 当输入特征维度 > `adapter_dim` 时自动启用的轻量降维层，支持 HuBERT (768) / Whisper (1280) 等高维 Encoder。 |
+| **FeatureAdapter** | 当输入特征维度 > `adapter_dim` 时自动启用的轻量降维层，支持 HuBERT / Whisper 等高维 Encoder。 |
 
 ## 消融实验命令参考
 
 以 MELD 数据集为例，基础命令前缀：
 
 ```bash
-BASE="python run.py --model_type chatglm3 --datasetName meld --pretrain_LM /path/to/chatglm3-6b --seeds 1111,2222,3333"
+BASE="python run.py --model_type chatglm3 --datasetName meld \
+  --pretrain_LM /root/autodl-tmp/models/chatglm3-6b-base \
+  --seeds 1234,2314,4321"
 ```
 
-### 第一阶段：Mixer × Fusion 组合验证
+### 1. Mixer 层消融
 
 ```bash
-# A0: TGM + MSF (Base 锚点)
+# 基线：TGM + MSF
 $BASE
 
-# A1: AMM + MSF — 单独验证 AMM 是否优于 TGM
+# AMM 替换 TGM
 $BASE --use_amm
 
-# A2: TGM + MoE — 单独验证新 MoE 是否优于 MSF
-$BASE --use_moe_fusion
-
-# A3: AMM + MoE — 组合
-$BASE --use_amm --use_moe_fusion
-```
-
-### 第二阶段：ATGFB-MFF 相关消融
-
-```bash
-# B0: 原始基线
-$BASE
-
-# B1: 仅引入 ATGFBFF 融合
+# ATGFBFF 替换 TGM
 $BASE --use_atgfbff
 
-# B2: ATGFBFF + 辅助损失
-$BASE --use_atgfbff --use_atgfbff_loss
-
-# B3: 仅引入 SharedOffset 过渡版本
-$BASE --use_shared_offset
-
-# B4: SharedOffset + gate 融合方式
+# SharedOffset 替换 TGM
 $BASE --use_shared_offset --shared_offset_mode gate
-
-# B5: SharedOffset + 辅助损失
-$BASE --use_shared_offset --use_shared_offset_loss
 ```
 
-### 第三阶段：辅助机制消融（在 A3 基础上逐个加入）
+### 2. Fusion 层消融
 
 ```bash
-# C1: + cosine bias 门控
-$BASE --use_amm --use_moe_fusion --use_gate
-
-# C2: + 分支间 DiffLoss
-$BASE --use_amm --use_moe_fusion --use_diff_loss
-
-# C3: + 跨模态 NCE
-$BASE --use_amm --use_moe_fusion --use_nce_loss
-
-# C4: 最优组合 (根据 C1-C3 结果选择)
-$BASE --use_amm --use_moe_fusion --use_gate --use_diff_loss
-```
-
-### 第四阶段：特殊消融
-
-```bash
-# 仅保留原始基线：TGM + MSF
+# 基线：MSF
 $BASE
 
-# 启用原始 AV bypass
-$BASE --raw_av_mode both
+# MoE 替换 MSF
+$BASE --use_moe_fusion
 
-# NCE 独立于 MoE 测试
-$BASE --use_nce_loss
+# MoE + Gate
+$BASE --use_moe_fusion --use_gate
+
+# MoE + DiffLoss
+$BASE --use_moe_fusion --use_diff_loss
+```
+
+### 3. ATGFBFF / SharedOffset 相关消融
+
+```bash
+# ATGFBFF 不启用辅助损失
+$BASE --use_atgfbff
+
+# ATGFBFF + 辅助损失
+$BASE --use_atgfbff --use_atgfbff_loss --alpha_align 0.6 --beta_fiber 0.2
+
+# SharedOffset + 辅助损失
+$BASE --use_shared_offset --use_shared_offset_loss --shared_offset_mode gate
+```
+
+### 4. 模态与输入增强消融
+
+```bash
+# 仅文本
+$BASE --modalities t
+
+# 文本 + 音频
+$BASE --modalities ta
+
+# 文本 + 视频
+$BASE --modalities tv
+
+# 原始 AV bypass
+$BASE --raw_av_mode both
 ```
 
 ## 技术特点
 
-1. **两阶段可插拔架构**: Mixer (模态交互) 与 Fusion (特征映射) 完全解耦，每层各有 2+ 种实现，可独立消融。
-2. **异构 Expert 设计**: GlobalMoE 的 3 个 Expert 使用不同计算范式 (Bilinear 交互 / SE 通道注意力 / 线性残差)，让 Gate 有真正有意义的选择。
-3. **差异化 MoE 输入**: Global 分支接收融合后语义特征，Local 分支接收原始音视频拼接，天然实现宏观/微观分化。
-4. **后验感知 Meta-Gate**: 在分支路由中引入两分支输出差异作为后验信号，提升决策精度。
-5. **三模态对等交互 (AMM)**: 通过 Self-Attention 让音频和视频直接对话，不再被文本单向束缚。
-6. **ATGFB-MFF 风格扩展**: 在原始 HMMEM 之上增加 ATGFBFF / SharedOffset 路径，支持共享语义与偏移建模。
-7. **高维 Encoder 无缝适配**: FeatureAdapter 自动按需启用，支持从 Librosa 64 维到 HuBERT/Whisper 1280 维的无缝切换。
+1. **两阶段可插拔架构**: Mixer 与 Fusion 解耦，每层都支持多种实现，便于替换和消融。
+2. **双分支 MoE 设计**: Global / Local 两路专家协同建模，Meta-Gate 根据分支差异进行加权。
+3. **多种 Mixer 方案**: 支持 TGM、AMM、ATGFBFF、SharedOffset 等不同模态交互方式。
+4. **高维 Encoder 适配**: FeatureAdapter 自动按需启用，支持高维音频 / 视频特征降维。
+5. **原始 AV 输入增强**: 支持 raw AV bypass，保留更多局部模态信息。
+6. **实验工程化完整**: 支持多 seed、多数据集、断点续训、仅评估模式和结果汇总。
 
 ## 依赖项
 
@@ -386,8 +336,8 @@ $BASE --use_nce_loss
 
 训练结果将保存在以下位置：
 
-- **模型文件**: `results/models/{modelName}-{model_type}-{datasetName}-{train_mode}-{timestamp}.pth`
-- **实验结果**: `results/results/{modelName}-{model_type}-{datasetName}-{train_mode}.csv`
+- **模型文件**: `{model_save_dir}/{modelName}-{model_type}-{datasetName}-{train_mode}-{timestamp}.pth`
+- **实验结果**: `{res_save_dir}/{modelName}-{model_type}-{datasetName}-{train_mode}.csv`
 - **日志文件**: `logs/{modelName}-{datasetName}-{model_type}.log`
 
 ## 注意事项
@@ -401,28 +351,22 @@ $BASE --use_nce_loss
 
 ## 迁移指南
 
-如果您之前使用的是原始 MMER/HMMEM 版本，迁移到当前框架主要有以下变化：
+如果您之前使用的是原始 HMMEM 版本，迁移到当前框架主要有以下变化：
 
 1. 使用新的统一项目结构
 2. 在运行命令中通过 `--model_type` 指定 LLM 类型
 3. 如需启用新增模块，再按需添加 `--use_atgfbff`、`--use_shared_offset`、`--use_moe_fusion` 等开关
 4. 其余基础训练参数保持兼容
 
-例如，基础命令可以写成：
+例如：
 
 ```bash
 python run.py --model_type chatglm3 --datasetName mosei
 ```
 
-如需启用 ATGFBFF，可进一步加上：
-
-```bash
-python run.py --model_type qwen3.5 --datasetName meld --use_atgfbff
-```
-
 ## IEMOCAP数据集动态分类配置
 
-MMER-Adapter 框架支持 IEMOCAP 数据集的 4 分类和 6 分类任务，通过以下方式实现动态配置：
+HMMEM 框架支持 IEMOCAP 数据集的 4 分类和 6 分类任务，通过以下方式实现动态配置：
 
 ### 1. 数据集名称映射
 

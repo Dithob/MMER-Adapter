@@ -264,21 +264,27 @@ def set_log(args):
         os.makedirs('logs')
     log_file_path = f'logs/{args.modelName}-{args.datasetName}-{args.model_type}.log'
     # set logging
-    logger = logging.getLogger() 
-    logger.setLevel(logging.DEBUG)
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
 
     for ph in logger.handlers:
         logger.removeHandler(ph)
+
+    # 关闭第三方库的噪声级 debug 输出，尤其是 matplotlib 的 font matching
+    logging.getLogger('matplotlib').setLevel(logging.WARNING)
+    logging.getLogger('matplotlib.font_manager').setLevel(logging.WARNING)
+    logging.getLogger('PIL').setLevel(logging.WARNING)
+
     # add FileHandler to log file
     formatter_file = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s', datefmt='%Y-%m-%d %H:%M:%S')
     fh = logging.FileHandler(log_file_path)
-    fh.setLevel(logging.DEBUG)
+    fh.setLevel(logging.INFO)
     fh.setFormatter(formatter_file)
     logger.addHandler(fh)
     # add StreamHandler to terminal outputs
     formatter_stream = logging.Formatter('%(message)s')
     ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
+    ch.setLevel(logging.INFO)
     ch.setFormatter(formatter_stream)
     logger.addHandler(ch)
     return logger

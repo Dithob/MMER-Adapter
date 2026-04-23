@@ -32,17 +32,17 @@ class HMMEM():
         self.metrics = MetricsTop(args).getMetics(args.datasetName)
 
         self.feature_map = {
-            'fusion': torch.zeros(args.train_samples, args.post_fusion_dim, requires_grad=False).to(args.device),
-            'text': torch.zeros(args.train_samples, args.post_text_dim, requires_grad=False).to(args.device),
-            'audio': torch.zeros(args.train_samples, args.post_audio_dim, requires_grad=False).to(args.device),
-            'vision': torch.zeros(args.train_samples, args.post_video_dim, requires_grad=False).to(args.device),
+            'fusion': torch.zeros(args.train_samples, getattr(args, 'post_fusion_dim', 256), requires_grad=False).to(args.device),
+            'text': torch.zeros(args.train_samples, getattr(args, 'post_text_dim', 256), requires_grad=False).to(args.device),
+            'audio': torch.zeros(args.train_samples, getattr(args, 'post_audio_dim', 256), requires_grad=False).to(args.device),
+            'vision': torch.zeros(args.train_samples, getattr(args, 'post_video_dim', 256), requires_grad=False).to(args.device),
         }
 
         self.dim_map = {
-            'fusion': torch.tensor(args.post_fusion_dim).float(),
-            'text': torch.tensor(args.post_text_dim).float(),
-            'audio': torch.tensor(args.post_audio_dim).float(),
-            'vision': torch.tensor(args.post_video_dim).float(),
+            'fusion': torch.tensor(getattr(args, 'post_fusion_dim', 256)).float(),
+            'text': torch.tensor(getattr(args, 'post_text_dim', 256)).float(),
+            'audio': torch.tensor(getattr(args, 'post_audio_dim', 256)).float(),
+            'vision': torch.tensor(getattr(args, 'post_video_dim', 256)).float(),
         }
         # new labels
         self.label_map = {

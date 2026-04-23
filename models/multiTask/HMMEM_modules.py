@@ -257,9 +257,13 @@ class MultiScaleLatentAttentionFusion(nn.Module):
     def forward(self, fused):
         scale_feats = []
         for branch, proj in zip(self.branches, self.latent_proj):
-            scale_feats.append(proj(branch(fused)))
+            feat = proj(branch(fused))
+            # Ensure 3D: [B, dim] → [B, 1, dim] for cross-attention KV
+            if feat.dim() == 2:
+                feat = feat.unsqueeze(1)
+            scale_feats.append(feat)
 
-        kv = torch.cat(scale_feats, dim=1)
+        kv = torch.cat(scale_feats, dim=1)  # [B, 3, latent_size]
         q = self.latents.unsqueeze(0).expand(fused.size(0), -1, -1)
         attn_out, _ = self.attn(q, kv, kv, need_weights=False)
         latent_state = self.norm1(q + attn_out)

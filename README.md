@@ -23,7 +23,7 @@ MMER-Adapter/
 │       ├── HMMEM_mixer.py         # Mixer 层: AMM (Adaptive Modal Mixer)
 │       ├── HMMEM_moe.py           # Fusion 层: GlobalMoE / LocalMoE
 │       ├── HMMEM_loss.py          # 辅助损失: DiffLoss / NCE (CPC)
-│       └── HMMEM_modules.py       # 基础组件: LSTM / TGM / MSF / FeatureAdapter / ATGFBFF / SharedOffset
+│       └── HMMEM_modules.py       # 基础组件: LSTM / TGM / MSF / FeatureAdapter / ATGFBFF / MSLAF / SharedOffset
 ├── trains/                        # 训练逻辑
 │   └── ATIO.py                    # 训练 / 测试路由
 ├── run.py                         # 主入口脚本
@@ -57,7 +57,9 @@ MMER-Adapter/
 
 在原始 HMMEM 的 Mixer-Fusion 两阶段架构基础上，当前版本新增了以下模块：
 
-- **ATGFBFF**：共享语义与偏移建模的融合模块，输出 pseudo tokens 供 LLM 使用
+- **ATGFBFF** (论文 §3.3)：自适应文本引导纤维丛特征融合，将多模态表示分解为共享语义空间 + 纤维偏移空间
+- **MSLAF** (论文 §3.4)：多尺度潜在注意力融合，通过三路 bottleneck MLP + cross-attention 精炼融合表示
+- **Offset-based Pseudo-tokens** (论文 §3.5)：基于共享语义核 + 可学习逐词元偏移生成伪词元
 - **SharedOffsetFusion**：ATGFBFF 的简化过渡版本，支持 `add / gate / residual`
 - **Dual-Branch MoE**：GlobalMoE + LocalMoE + Meta-Gate 的双分支融合
 - **FeatureAdapter**：用于高维音频 / 视频特征的降维适配
@@ -117,7 +119,8 @@ python run.py --model_type llama2 --datasetName mosei --pretrain_LM /path/to/lla
 | `--alpha_align` | 对齐损失权重 | 0.6 |
 | `--beta_fiber` | fiber 正则权重 | 0.1 |
 | `--beta_offset` | offset 正则权重 | 0.1 |
-| `--num_latents` | ATGFBFF 多尺度 latent 数量 | 4 |
+| `--num_latents` | MSLAF 可学习潜变量数量 | 4 |
+| `--use_mslaf` | 启用多尺度潜在注意力融合 (MSLAF) | False |
 
 **MoE 配置：**
 
@@ -201,11 +204,13 @@ audio → [FeatureAdapter] → LSTM → audio_h ──────────�
 video → [FeatureAdapter] → LSTM → video_h ─────────────────────┤
 text  → LLM Embed → GAP Pool → Linear(text_in→256) → text_h ──┘
                                                                 ↓
-                                              ATGFBFF / SharedOffset (Mixer)
+                                   ATGFBFF (共享/特有投影 → Z_s + ΔV + ΔA → M)
                                                                 ↓
-                                              [B, pt, 256] → Linear(256→text_in)
+                                   [可选] MSLAF (三路MLP → latent cross-attn → L')
                                                                 ↓
-                                              fusion_h [B, pt, text_in] → LLM
+                                   Z_M = Linear(L') → T_M[j] = Z_M + E[j] (offset伪词元)
+                                                                ↓
+                                   Linear(256→text_in) → fusion_h [B, pt, text_in] → LLM
 ```
 
 ### Mixer 层（模态交互）
@@ -214,8 +219,8 @@ text  → LLM Embed → GAP Pool → Linear(text_in→256) → text_h ──┘
 |---|---|
 | **TGM** (Text-Guided Mixer) | 文本主导：GAP 池化文本 → 调制音频/视频 → 融合。基线方案。 |
 | **AMM** (Adaptive Modal Mixer) | 三模态对等：音频↔视频直接交互，再进行自适应加权。 |
-| **ATGFBFF** | 共享语义 + 偏移建模的融合模块，文本池化后与音频 / 视频共同参与融合。 |
-| **SharedOffsetFusion** | 共享空间 + 偏移空间的过渡版本，可通过 `add/gate/residual` 调整融合方式。 |
+| **ATGFBFF** | 纤维丛特征融合 (论文核心)：共享语义空间 + 纤维偏移空间，文本偏向初始化。可选搭配 MSLAF。 |
+| **SharedOffsetFusion** | 共享空间 + 偏移空间的过渡版本，可通过 `add/gate/residual` 调整融合方式。可选搭配 MSLAF。 |
 | **Lightweight_mixer** | 简化版 AV 融合，仅在缺少文本或轻量场景下使用。 |
 
 ### Fusion 层（特征映射）
@@ -223,6 +228,7 @@ text  → LLM Embed → GAP Pool → Linear(text_in→256) → text_h ──┘
 | 模块 | 说明 |
 |---|---|
 | **MSF** (Multi-Scale Fusion) | 原始多尺度融合模块，基线方案。 |
+| **MSLAF** (Multi-Scale Latent Attention Fusion) | 论文 §3.4：三路 bottleneck MLP + latent cross-attention + FFN。集成在 ATGFBFF/SharedOffset 内部。 |
 | **Dual-Branch MoE** | Global MoE + Local MoE 的双分支融合，Meta-Gate 根据分支差异进行加权。 |
 | **Direct Projection** | 当未启用 MSF / MoE 时的兜底映射方式。 |
 
@@ -284,17 +290,36 @@ $BASE --use_moe_fusion --use_gate
 $BASE --use_moe_fusion --use_diff_loss
 ```
 
-### 3. ATGFBFF / SharedOffset 相关消融
+### 3. ATGFB-MFF 逐步消融
 
 ```bash
 # ATGFBFF 不启用辅助损失
 $BASE --use_atgfbff
 
-# ATGFBFF + 辅助损失
-$BASE --use_atgfbff --use_atgfbff_loss --alpha_align 0.6 --beta_fiber 0.2
+# ATGFBFF + 辅助损失 (论文最优超参)
+$BASE --use_atgfbff --use_atgfbff_loss --alpha_align 0.6 --beta_fiber 0.1
 
-# SharedOffset + 辅助损失
-$BASE --use_shared_offset --use_shared_offset_loss --shared_offset_mode gate
+# ATGFBFF + MSLAF (论文完整复现)
+$BASE --use_atgfbff --use_mslaf --alpha_align 0.6 --beta_fiber 0.1
+
+# SharedOffset + MSLAF
+$BASE --use_shared_offset --use_mslaf --shared_offset_mode gate
+```
+
+### 3.1 使用 batch_run.py 批量消融
+
+```bash
+# 逐步消融 (A0→A5, 推荐首次运行)
+python batch_run.py --group atgfbff_ablation --model_type chatglm3 --dataset meld --seeds 1234
+
+# 超参数敏感性分析
+python batch_run.py --group atgfbff_hyperparams --model_type chatglm3 --dataset meld --seeds 1234
+
+# 论文级三 seed 最终对比
+python batch_run.py --group atgfbff_final --model_type chatglm3 --dataset meld --seeds 1234,2314,4321
+
+# 预览命令 (不执行)
+python batch_run.py --group atgfbff_ablation --dry_run
 ```
 
 ### 4. 模态与输入增强消融
@@ -316,11 +341,12 @@ $BASE --raw_av_mode both
 ## 技术特点
 
 1. **两阶段可插拔架构**: Mixer 与 Fusion 解耦，每层都支持多种实现，便于替换和消融。
-2. **双分支 MoE 设计**: Global / Local 两路专家协同建模，Meta-Gate 根据分支差异进行加权。
-3. **多种 Mixer 方案**: 支持 TGM、AMM、ATGFBFF、SharedOffset 等不同模态交互方式。
-4. **高维 Encoder 适配**: FeatureAdapter 自动按需启用，支持高维音频 / 视频特征降维。
-5. **原始 AV 输入增强**: 支持 raw AV bypass，保留更多局部模态信息。
-6. **实验工程化完整**: 支持多 seed、多数据集、断点续训、仅评估模式和结果汇总。
+2. **ATGFB-MFF 完整复现**: 纤维丛特征融合 (ATGFBFF) + 多尺度潜在注意力融合 (MSLAF) + offset 伪词元。
+3. **双分支 MoE 设计**: Global / Local 两路专家协同建模，Meta-Gate 根据分支差异进行加权。
+4. **多种 Mixer 方案**: 支持 TGM、AMM、ATGFBFF、SharedOffset 等不同模态交互方式。
+5. **高维 Encoder 适配**: FeatureAdapter 自动按需启用，支持高维音频 / 视频特征降维。
+6. **原始 AV 输入增强**: 支持 raw AV bypass，保留更多局部模态信息。
+7. **实验工程化完整**: 支持多 seed、多数据集、断点续训、仅评估模式、批量消融和结果汇总。
 
 ## 依赖项
 

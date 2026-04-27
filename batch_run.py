@@ -130,7 +130,7 @@ EXPERIMENT_GROUPS['moe_detail_ablation'] = {
 
 # ── 9. 完整消融（最佳配置搜索）──
 EXPERIMENT_GROUPS['full_ablation'] = {
-    'description': '完整消融: Mixer × Fusion 组合（含 ATGFBFF）',
+    'description': '完整消融: Mixer × Fusion 组合（含 ATGFBFF + MSLAF）',
     'experiments': [
         # Direct + Direct
         {'name': 'direct_direct', 'use_tgm': False, 'use_amm': False, 'use_atgfbff': False, 'use_msf': False, 'use_moe_fusion': False},
@@ -142,16 +142,91 @@ EXPERIMENT_GROUPS['full_ablation'] = {
         {'name': 'amm_msf',      'use_tgm': False, 'use_amm': True,  'use_atgfbff': False, 'use_msf': True,  'use_moe_fusion': False},
         # AMM + MoE
         {'name': 'amm_moe',      'use_tgm': False, 'use_amm': True,  'use_atgfbff': False, 'use_msf': False, 'use_moe_fusion': True},
-        # ATGFBFF + latent fusion
-        {'name': 'atgfbff_base', 'use_tgm': False, 'use_amm': False, 'use_atgfbff': True,  'use_msf': False, 'use_moe_fusion': False},
-        # ATGFBFF + latent fusion + MoE
-        {'name': 'atgfbff_moe',  'use_tgm': False, 'use_amm': False, 'use_atgfbff': True,  'use_msf': False, 'use_moe_fusion': True},
-        # AMM + MoE + LoRA
-        {'name': 'amm_moe_lora', 'use_tgm': False, 'use_amm': True,  'use_atgfbff': False, 'use_msf': False, 'use_moe_fusion': True, 'use_lora': True},
+        # ATGFBFF (no MSLAF)
+        {'name': 'atgfbff_base', 'use_tgm': False, 'use_amm': False, 'use_atgfbff': True,  'use_mslaf': False, 'use_msf': False, 'use_moe_fusion': False},
+        # ATGFBFF + MSLAF (论文完整)
+        {'name': 'atgfbff_mslaf', 'use_tgm': False, 'use_amm': False, 'use_atgfbff': True,  'use_mslaf': True, 'use_msf': False, 'use_moe_fusion': False},
     ]
 }
 
-# ── 10. 跨数据集验证 ──
+# ── 10. ATGFB-MFF 组件逐步消融 ──
+# 验证每个新增模块的独立贡献，从基线到论文完整复现
+EXPERIMENT_GROUPS['atgfbff_ablation'] = {
+    'description': 'ATGFB-MFF 逐步消融: 基线 → ATGFBFF → +MSLAF → +损失调优',
+    'experiments': [
+        # A0: 原始基线 (TGM + MSF，无 ATGFB 组件)
+        {'name': 'A0_baseline_tgm_msf',
+         'use_tgm': True, 'use_msf': True},
+
+        # A1: ATGFBFF 不带辅助损失 (纯结构替换)
+        {'name': 'A1_atgfbff_no_loss',
+         'use_atgfbff': True, 'use_atgfbff_loss': False},
+
+        # A2: ATGFBFF + 辅助损失 (α=0.6, β=0.2 — 之前的配置)
+        {'name': 'A2_atgfbff_beta02',
+         'use_atgfbff': True, 'use_atgfbff_loss': True,
+         'alpha_align': 0.6, 'beta_fiber': 0.2},
+
+        # A3: ATGFBFF + 辅助损失 (α=0.6, β=0.1 — 论文最优)
+        {'name': 'A3_atgfbff_beta01',
+         'use_atgfbff': True, 'use_atgfbff_loss': True,
+         'alpha_align': 0.6, 'beta_fiber': 0.1},
+
+        # A4: ATGFBFF + MSLAF (α=0.6, β=0.1 — 论文完整流程)
+        {'name': 'A4_atgfbff_mslaf',
+         'use_atgfbff': True, 'use_mslaf': True, 'use_atgfbff_loss': True,
+         'alpha_align': 0.6, 'beta_fiber': 0.1},
+
+        # A5: SharedOffset + MSLAF (对比替代方案)
+        {'name': 'A5_sharedoff_mslaf',
+         'use_shared_offset': True, 'use_mslaf': True,
+         'use_shared_offset_loss': True, 'shared_offset_mode': 'gate',
+         'alpha_align': 0.6, 'beta_offset': 0.1},
+    ]
+}
+
+# ── 11. ATGFB-MFF 超参数敏感性分析 ──
+# 参照论文 §5.3 对 α 和 β 进行网格搜索
+EXPERIMENT_GROUPS['atgfbff_hyperparams'] = {
+    'description': 'ATGFB-MFF 超参数分析: α∈{0.5,0.6,0.7,0.8} × β∈{0.1,0.15,0.2}',
+    'experiments': [
+        # α 扫描 (固定 β=0.1)
+        {'name': 'hp_a05_b01', 'use_atgfbff': True, 'use_mslaf': True, 'use_atgfbff_loss': True,
+         'alpha_align': 0.5, 'beta_fiber': 0.1},
+        {'name': 'hp_a06_b01', 'use_atgfbff': True, 'use_mslaf': True, 'use_atgfbff_loss': True,
+         'alpha_align': 0.6, 'beta_fiber': 0.1},
+        {'name': 'hp_a07_b01', 'use_atgfbff': True, 'use_mslaf': True, 'use_atgfbff_loss': True,
+         'alpha_align': 0.7, 'beta_fiber': 0.1},
+        {'name': 'hp_a08_b01', 'use_atgfbff': True, 'use_mslaf': True, 'use_atgfbff_loss': True,
+         'alpha_align': 0.8, 'beta_fiber': 0.1},
+        # β 扫描 (固定 α=0.6)
+        {'name': 'hp_a06_b015', 'use_atgfbff': True, 'use_mslaf': True, 'use_atgfbff_loss': True,
+         'alpha_align': 0.6, 'beta_fiber': 0.15},
+        {'name': 'hp_a06_b02', 'use_atgfbff': True, 'use_mslaf': True, 'use_atgfbff_loss': True,
+         'alpha_align': 0.6, 'beta_fiber': 0.2},
+    ]
+}
+
+# ── 12. ATGFB-MFF 完整对比 (带多 seed 验证) ──
+# 用于论文级结果复现: 最佳配置 × 三 seed
+EXPERIMENT_GROUPS['atgfbff_final'] = {
+    'description': 'ATGFB-MFF 最终对比: 论文完整流程 vs 各 baseline（建议配合 --seeds 1234,2314,4321 使用）',
+    'experiments': [
+        # MSE-Adapter 原始基线
+        {'name': 'final_tgm_msf',
+         'use_tgm': True, 'use_msf': True},
+        # ATGFBFF only (无 MSLAF)
+        {'name': 'final_atgfbff_only',
+         'use_atgfbff': True, 'use_atgfbff_loss': True,
+         'alpha_align': 0.6, 'beta_fiber': 0.1},
+        # 论文完整复现: ATGFBFF + MSLAF
+        {'name': 'final_atgfbff_mslaf',
+         'use_atgfbff': True, 'use_mslaf': True, 'use_atgfbff_loss': True,
+         'alpha_align': 0.6, 'beta_fiber': 0.1},
+    ]
+}
+
+# ── 13. 跨数据集验证 ──
 EXPERIMENT_GROUPS['cross_dataset'] = {
     'description': '跨数据集验证: 使用相同配置在多个数据集上测试',
     'experiments': [
@@ -171,6 +246,7 @@ EXPERIMENT_GROUPS['cross_dataset'] = {
 # run.py 中 action='store_true' 的参数列表
 BOOLEAN_FLAGS = {
     'use_tgm', 'use_amm', 'use_atgfbff', 'use_atgfbff_loss', 'use_shared_offset', 'use_shared_offset_loss',
+    'use_mslaf',
     'use_msf', 'use_moe_fusion',
     'use_gate', 'use_moe_lb_loss',
     'use_diff_loss', 'use_expert_diff_loss',

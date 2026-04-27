@@ -131,71 +131,117 @@ class Integrating(nn.Module):
 
 
 class ATGFBFF(nn.Module):
-    """Adaptive Text-Guided Fiber Bundle Feature Fusion.
+    """Adaptive Text-Guided Fiber Bundle Feature Fusion (论文 §3.3).
 
     Projects text/audio/video into shared and private spaces, then forms a
     shared semantic core plus modality-specific fiber offsets.
+
+    When use_mslaf=True, the fused representation M is further refined through
+    MultiScaleLatentAttentionFusion (论文 §3.4) before pseudo-token generation.
 
     Output is a pseudo-token sequence shaped [B, pseudo_tokens, hidden_size]
     so it can be directly consumed by the frozen LLM prompt wrapper.
     """
 
-    def __init__(self, input_size=256, hidden_size=256, pseudo_tokens=4, dropout=0.1):
+    def __init__(self, input_size=256, hidden_size=256, pseudo_tokens=4,
+                 dropout=0.1, use_mslaf=False, num_latents=4, latent_size=None):
         super().__init__()
         self.pseudo_tokens = pseudo_tokens
+        self.use_mslaf = use_mslaf
+
+        # ── 共享 / 特有投影层 (论文 §3.3: z_c = V̄·W) ──
+        # 简化为 Linear + LayerNorm，匹配论文的线性投影设计
         self.text_shared = nn.Sequential(
             nn.Linear(input_size, hidden_size),
-            nn.GELU(),
-            nn.Dropout(dropout),
             nn.LayerNorm(hidden_size),
         )
         self.audio_shared = nn.Sequential(
             nn.Linear(input_size, hidden_size),
-            nn.GELU(),
-            nn.Dropout(dropout),
             nn.LayerNorm(hidden_size),
         )
         self.audio_private = nn.Sequential(
             nn.Linear(input_size, hidden_size),
-            nn.GELU(),
-            nn.Dropout(dropout),
             nn.LayerNorm(hidden_size),
         )
         self.video_shared = nn.Sequential(
             nn.Linear(input_size, hidden_size),
-            nn.GELU(),
-            nn.Dropout(dropout),
             nn.LayerNorm(hidden_size),
         )
         self.video_private = nn.Sequential(
             nn.Linear(input_size, hidden_size),
-            nn.GELU(),
-            nn.Dropout(dropout),
             nn.LayerNorm(hidden_size),
         )
-        self.modality_logits = nn.Parameter(torch.zeros(3))
-        self.core_proj = nn.Sequential(
-            nn.Linear(hidden_size, hidden_size),
-            nn.GELU(),
-            nn.Dropout(dropout),
-        )
-        self.token_offset = nn.Parameter(torch.zeros(pseudo_tokens, hidden_size))
+
+        # ── 可学习模态权重 (论文: α_logits → softmax → (λ_T, λ_V, λ_A)) ──
+        # 初始化偏向文本 (论文: "initializing by maximizing λ_T")
+        self.modality_logits = nn.Parameter(torch.tensor([1.0, 0.0, 0.0]))
+
+        # ── 伪词元生成 ──
+        if use_mslaf:
+            # 论文完整流程: M → MSLAF → L' → Z_M → offset pseudo-tokens
+            _latent_size = latent_size or hidden_size
+            self.mslaf = MultiScaleLatentAttentionFusion(
+                input_size=hidden_size,
+                latent_size=_latent_size,
+                num_latents=num_latents,
+                dropout=dropout,
+            )
+            # 论文 §3.5: Z_M = Linear(L'), T_M[b,j,:] = Z_M[b,:] + E[j,:]
+            self.mslaf_core_proj = nn.Linear(_latent_size, hidden_size)
+            self.mslaf_token_offset = nn.Parameter(
+                torch.randn(pseudo_tokens, hidden_size) * 0.02
+            )
+        else:
+            # 简化路径: M → core_proj → offset pseudo-tokens
+            self.core_proj = nn.Sequential(
+                nn.Linear(hidden_size, hidden_size),
+                nn.GELU(),
+                nn.Dropout(dropout),
+            )
+            self.token_offset = nn.Parameter(
+                torch.randn(pseudo_tokens, hidden_size) * 0.02
+            )
 
     def forward(self, audio, video, text):
+        """
+        Args:
+            audio: [B, H] — sLSTM audio encoding
+            video: [B, H] — sLSTM video encoding
+            text:  [B, H] — pooled text embedding
+        Returns:
+            fusion_h: [B, pseudo_tokens, hidden_size]
+            aux: dict with align_loss, fiber_loss, shared/fiber features, weights
+        """
+        # ── 共享 / 特有投影 ──
         z_c_t = self.text_shared(text)
         z_c_a = self.audio_shared(audio)
         z_p_a = self.audio_private(audio)
         z_c_v = self.video_shared(video)
         z_p_v = self.video_private(video)
 
+        # ── 自适应加权共享语义核 Z_s ──
         weights = torch.softmax(self.modality_logits, dim=0)
         z_s = weights[0] * z_c_t + weights[1] * z_c_a + weights[2] * z_c_v
+
+        # ── 纤维偏移 ──
         delta_a = z_p_a - z_s
         delta_v = z_p_v - z_s
-        fused = z_s + delta_a + delta_v
-        core = self.core_proj(fused)
-        fusion_h = core.unsqueeze(1) + self.token_offset.unsqueeze(0)
 
+        # ── 融合表示 M = Z_s + ΔV + ΔA ──
+        fused = z_s + delta_a + delta_v
+
+        # ── 伪词元生成 ──
+        if self.use_mslaf:
+            # 论文完整流程: M → MSLAF → L' → Z_M + E[j]
+            L_prime = self.mslaf(fused)                         # [B, n_l, d_l]
+            Z_M = self.mslaf_core_proj(L_prime.mean(dim=1))     # [B, H]
+            fusion_h = Z_M.unsqueeze(1) + self.mslaf_token_offset.unsqueeze(0)
+        else:
+            # 简化路径: M → core_proj → Z_M + E[j]
+            core = self.core_proj(fused)
+            fusion_h = core.unsqueeze(1) + self.token_offset.unsqueeze(0)
+
+        # ── 辅助损失 ──
         aux = {
             'align_loss': 0.5 * (
                 (z_c_t - z_c_a).pow(2).mean() +
@@ -214,64 +260,88 @@ class ATGFBFF(nn.Module):
 
 
 class MultiScaleLatentAttentionFusion(nn.Module):
-    """Multi-Scale Latent Attention Fusion.
+    """Multi-Scale Latent Attention Fusion (论文 §3.4).
 
-    Uses multi-branch MLPs, latent projection, and cross-attention over learnable
-    latent queries to build compact multimodal tokens.
+    M → 三路 bottleneck MLP(r∈{8,16,32}) → latent projection(d_l)
+    → LN → concat as KV → learnable latents as Q → cross-attention
+    → 残差 + FFN → L'
+
+    Args:
+        input_size:  融合表示 M 的维度 H
+        latent_size: 潜在空间维度 d_l（默认与 input_size 相同）
+        num_latents: 可学习潜变量数量 n_l
+        bottleneck_factors: 三路 MLP 的压缩因子 r（论文取 {8, 16, 32}）
+        num_heads:   cross-attention 头数
+        dropout:     dropout 率
     """
 
-    def __init__(self, input_size=256, latent_size=256, num_latents=4, dropout=0.1):
+    def __init__(self, input_size=256, latent_size=256, num_latents=4,
+                 bottleneck_factors=(8, 16, 32), num_heads=4, dropout=0.1):
         super().__init__()
-        self.branches = nn.ModuleList([
+        self.num_latents = num_latents
+
+        # 三路 bottleneck MLP: M → W1(H→H/r) → GELU → W2(H/r→H)
+        self.scale_mlps = nn.ModuleList([
             nn.Sequential(
-                nn.Linear(input_size, input_size // 8),
+                nn.Linear(input_size, input_size // r),
                 nn.GELU(),
-                nn.Linear(input_size // 8, latent_size),
-            ),
-            nn.Sequential(
-                nn.Linear(input_size, input_size // 16),
-                nn.GELU(),
-                nn.Linear(input_size // 16, latent_size),
-            ),
-            nn.Sequential(
-                nn.Linear(input_size, input_size // 32),
-                nn.GELU(),
-                nn.Linear(input_size // 32, latent_size),
-            ),
+                nn.Linear(input_size // r, input_size),
+            ) for r in bottleneck_factors
         ])
-        self.latent_proj = nn.ModuleList([nn.Linear(latent_size, latent_size) for _ in range(3)])
+
+        # 低秩潜在投影: H → d_l
+        self.latent_projs = nn.ModuleList([
+            nn.Linear(input_size, latent_size) for _ in bottleneck_factors
+        ])
+
+        # Latent Normalization (LN) — per-branch
+        self.latent_norms = nn.ModuleList([
+            nn.LayerNorm(latent_size) for _ in bottleneck_factors
+        ])
+
+        # 可学习潜变量 L ∈ R^{n_l × d_l}
         self.latents = nn.Parameter(torch.randn(num_latents, latent_size) * 0.02)
-        self.attn = nn.MultiheadAttention(latent_size, num_heads=4, batch_first=True, dropout=dropout)
+
+        # Cross-attention: Q = L, KV = concat(LN(m'_1), LN(m'_2), LN(m'_3))
+        self.cross_attn = nn.MultiheadAttention(
+            latent_size, num_heads=num_heads, batch_first=True, dropout=dropout
+        )
+
+        # 残差 + FFN (论文: N(L + M̄) + ψ(N(L + M̄)))
         self.norm1 = nn.LayerNorm(latent_size)
         self.ffn = nn.Sequential(
-            nn.Linear(latent_size, latent_size * 2),
+            nn.Linear(latent_size, latent_size * 4),
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(latent_size * 2, latent_size),
+            nn.Linear(latent_size * 4, latent_size),
         )
         self.norm2 = nn.LayerNorm(latent_size)
-        self.out_proj = nn.Linear(latent_size, input_size)
-        self.pseudo_tokens = 4
-        self.token_offset = nn.Parameter(torch.zeros(self.pseudo_tokens, input_size))
 
     def forward(self, fused):
-        scale_feats = []
-        for branch, proj in zip(self.branches, self.latent_proj):
-            feat = proj(branch(fused))
-            # Ensure 3D: [B, dim] → [B, 1, dim] for cross-attention KV
-            if feat.dim() == 2:
-                feat = feat.unsqueeze(1)
-            scale_feats.append(feat)
+        """
+        Args:
+            fused: [B, H] — ATGFBFF 融合输出 M
+        Returns:
+            L_prime: [B, num_latents, latent_size] — 精炼后的潜在状态
+        """
+        # 三路多尺度 MLP + 低秩投影 + LN
+        kv_parts = []
+        for mlp, proj, norm in zip(self.scale_mlps, self.latent_projs, self.latent_norms):
+            m_i = mlp(fused)                        # [B, H]
+            m_i_proj = norm(proj(m_i))              # [B, d_l] → LN
+            kv_parts.append(m_i_proj.unsqueeze(1))  # [B, 1, d_l]
 
-        kv = torch.cat(scale_feats, dim=1)  # [B, 3, latent_size]
-        q = self.latents.unsqueeze(0).expand(fused.size(0), -1, -1)
-        attn_out, _ = self.attn(q, kv, kv, need_weights=False)
-        latent_state = self.norm1(q + attn_out)
-        latent_state = self.norm2(latent_state + self.ffn(latent_state))
+        kv = torch.cat(kv_parts, dim=1)  # [B, 3, d_l]
 
-        core = self.out_proj(latent_state.mean(dim=1))
-        pseudo_tokens = core.unsqueeze(1) + self.token_offset.unsqueeze(0)
-        return pseudo_tokens
+        # Cross-attention: learnable latents as Q
+        Q = self.latents.unsqueeze(0).expand(fused.size(0), -1, -1)  # [B, n_l, d_l]
+        attn_out, _ = self.cross_attn(Q, kv, kv, need_weights=False)
+
+        # 残差 + LayerNorm + FFN + 残差 + LayerNorm
+        L_prime = self.norm1(Q + attn_out)
+        L_prime = self.norm2(L_prime + self.ffn(L_prime))  # [B, n_l, d_l]
+
+        return L_prime
 
 
 class SharedOffsetFusion(nn.Module):
@@ -279,53 +349,71 @@ class SharedOffsetFusion(nn.Module):
 
     Designed as a lightweight, switchable bridge between ATGFB-style decomposition
     and the existing MMER dual-path setup.
+
+    When use_mslaf=True, the fused output is refined through MSLAF before
+    pseudo-token generation.
     """
 
-    def __init__(self, input_size=256, hidden_size=256, pseudo_tokens=4, dropout=0.1, mode='gate'):
+    def __init__(self, input_size=256, hidden_size=256, pseudo_tokens=4,
+                 dropout=0.1, mode='gate', use_mslaf=False, num_latents=4,
+                 latent_size=None):
         super().__init__()
         self.mode = mode
+        self.use_mslaf = use_mslaf
+
+        # ── 共享 / 特有投影层 (简化: Linear + LN) ──
         self.text_shared = nn.Sequential(
             nn.Linear(input_size, hidden_size),
-            nn.GELU(),
-            nn.Dropout(dropout),
             nn.LayerNorm(hidden_size),
         )
         self.audio_shared = nn.Sequential(
             nn.Linear(input_size, hidden_size),
-            nn.GELU(),
-            nn.Dropout(dropout),
             nn.LayerNorm(hidden_size),
         )
         self.video_shared = nn.Sequential(
             nn.Linear(input_size, hidden_size),
-            nn.GELU(),
-            nn.Dropout(dropout),
             nn.LayerNorm(hidden_size),
         )
         self.audio_private = nn.Sequential(
             nn.Linear(input_size, hidden_size),
-            nn.GELU(),
-            nn.Dropout(dropout),
             nn.LayerNorm(hidden_size),
         )
         self.video_private = nn.Sequential(
             nn.Linear(input_size, hidden_size),
-            nn.GELU(),
-            nn.Dropout(dropout),
             nn.LayerNorm(hidden_size),
         )
-        self.modality_logits = nn.Parameter(torch.zeros(3))
+
+        # 初始化偏向文本
+        self.modality_logits = nn.Parameter(torch.tensor([1.0, 0.0, 0.0]))
+
         self.fusion_gate = nn.Sequential(
             nn.Linear(hidden_size * 2, hidden_size),
             nn.GELU(),
             nn.Linear(hidden_size, 1),
         )
-        self.core_proj = nn.Sequential(
-            nn.Linear(hidden_size, hidden_size),
-            nn.GELU(),
-            nn.Dropout(dropout),
-        )
-        self.token_offset = nn.Parameter(torch.zeros(pseudo_tokens, hidden_size))
+
+        # ── 伪词元生成 ──
+        if use_mslaf:
+            _latent_size = latent_size or hidden_size
+            self.mslaf = MultiScaleLatentAttentionFusion(
+                input_size=hidden_size,
+                latent_size=_latent_size,
+                num_latents=num_latents,
+                dropout=dropout,
+            )
+            self.mslaf_core_proj = nn.Linear(_latent_size, hidden_size)
+            self.mslaf_token_offset = nn.Parameter(
+                torch.randn(pseudo_tokens, hidden_size) * 0.02
+            )
+        else:
+            self.core_proj = nn.Sequential(
+                nn.Linear(hidden_size, hidden_size),
+                nn.GELU(),
+                nn.Dropout(dropout),
+            )
+            self.token_offset = nn.Parameter(
+                torch.randn(pseudo_tokens, hidden_size) * 0.02
+            )
 
     def forward(self, audio, video, text):
         if text.dim() == 3:
@@ -351,8 +439,14 @@ class SharedOffsetFusion(nn.Module):
             gate = torch.sigmoid(self.fusion_gate(torch.cat([z_shared, delta_micro], dim=-1)))
             fused_core = gate * z_shared + (1 - gate) * delta_micro
 
-        core = self.core_proj(fused_core)
-        fusion_h = core.unsqueeze(1) + self.token_offset.unsqueeze(0)
+        # ── 伪词元生成 ──
+        if self.use_mslaf:
+            L_prime = self.mslaf(fused_core)
+            Z_M = self.mslaf_core_proj(L_prime.mean(dim=1))
+            fusion_h = Z_M.unsqueeze(1) + self.mslaf_token_offset.unsqueeze(0)
+        else:
+            core = self.core_proj(fused_core)
+            fusion_h = core.unsqueeze(1) + self.token_offset.unsqueeze(0)
 
         align_loss = 0.5 * (
             (z_c_t - z_c_a).pow(2).mean() +

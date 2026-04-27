@@ -94,6 +94,7 @@ class HMMEM(nn.Module):
         self.use_amm = getattr(args, 'use_amm', False) and self.use_text and self.has_av
         self.use_atgfbff = getattr(args, 'use_atgfbff', False) and self.use_text and self.has_av
         self.use_shared_offset = getattr(args, 'use_shared_offset', False) and self.use_text and self.has_av
+        self.use_mslaf = getattr(args, 'use_mslaf', False) and self.has_av
         if self.use_amm or self.use_atgfbff or self.use_shared_offset:
             self.use_tgm = False  # explicit overrides TGM
 
@@ -131,13 +132,17 @@ class HMMEM(nn.Module):
                 input_size=fusion_input_size,
                 hidden_size=fusion_input_size,
                 pseudo_tokens=getattr(args, 'pseudo_tokens', 4),
+                use_mslaf=self.use_mslaf,
+                num_latents=getattr(args, 'num_latents', 4),
             )
         elif self.use_shared_offset:
             self.mixer = SharedOffsetFusion(
                 input_size=fusion_input_size,
                 hidden_size=fusion_input_size,
                 pseudo_tokens=getattr(args, 'pseudo_tokens', 4),
-                mode=getattr(args, 'shared_offset_mode', 'gate')
+                mode=getattr(args, 'shared_offset_mode', 'gate'),
+                use_mslaf=self.use_mslaf,
+                num_latents=getattr(args, 'num_latents', 4),
             )
         elif self.use_tgm:
             self.mixer = Text_guide_mixer(text_in)

@@ -85,7 +85,7 @@ def run(args):
         _compile_targets = [
             'audio_LSTM', 'video_LSTM', 'mixer', 'fusion',
             'audio_adapter', 'video_adapter',
-            'text_proj_for_mixer', 'mixer_out_proj',
+            'text_proj_for_mixer', 'mixer_out_proj', 'mslaf',
         ]
         compiled_names = []
         for name in _compile_targets:
@@ -235,8 +235,8 @@ def run_normal(args):
             getattr(args, 'batch_size', 1) * grad_accum,  # effective batch
             getattr(args, 'warm_up_epochs', ''),
             getattr(args, 'early_stop', ''),
-            'ATGFBFF' if getattr(args, 'use_atgfbff', False) else ('AMM' if getattr(args, 'use_amm', False) else ('TGM' if getattr(args, 'use_tgm', False) else 'None')),
-            'MoE' if getattr(args, 'use_moe_fusion', False) else ('MSF' if getattr(args, 'use_msf', False) else 'None'),
+            'ATGFBFF' if getattr(args, 'use_atgfbff', False) else ('SharedOffset' if getattr(args, 'use_shared_offset', False) else ('AMM' if getattr(args, 'use_amm', False) else ('TGM' if getattr(args, 'use_tgm', False) else 'None'))),
+            ('MSLAF' if getattr(args, 'use_mslaf', False) else '') + ('|' if getattr(args, 'use_mslaf', False) and (getattr(args, 'use_moe_fusion', False) or getattr(args, 'use_msf', False)) else '') + ('MoE' if getattr(args, 'use_moe_fusion', False) else ('MSF' if getattr(args, 'use_msf', False) else ('None' if not getattr(args, 'use_mslaf', False) else ''))),
             getattr(args, 'use_gate', False),
             getattr(args, 'use_lora', False),
             getattr(args, 'lora_r', '') if getattr(args, 'use_lora', False) else '',
@@ -344,6 +344,8 @@ def parse_args():
                         help='weight for shared-offset regularization loss')
     parser.add_argument('--num_latents', type=int, default=4,
                         help='number of learnable latents in ATGFBFF multi-scale attention fusion')
+    parser.add_argument('--use_mslaf', action='store_true',
+                        help='enable Multi-Scale Latent Attention Fusion (MSLAF) after ATGFBFF/SharedOffset mixer')
     
     # ── Fusion layer ablation (mutually exclusive: use_moe_fusion overrides use_msf) ──
     parser.add_argument('--use_msf', action='store_true', default=False,

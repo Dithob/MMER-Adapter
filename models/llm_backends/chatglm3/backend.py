@@ -41,5 +41,6 @@ class ChatGLM3Backend(BaseLLMBackend):
 
         if hasattr(model, 'gradient_checkpointing_enable'):
             model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+            model.config.use_cache = False  # 避免 "use_cache=True incompatible with gradient checkpointing" 警告
 
         return model, tokenizer

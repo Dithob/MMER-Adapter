@@ -6,6 +6,10 @@ os.environ['MKL_NUM_THREADS'] = '1'
 # Suppress PyTorch C++ level fake_tensor/baddbmm traces from torch.compile
 os.environ['TORCH_CPP_LOG_LEVEL'] = 'WARNING'
 os.environ.setdefault('TORCHDYNAMO_VERBOSE', '0')
+# Suppress upstream transformers FutureWarnings (pytree, torch.load weights_only)
+import warnings
+warnings.filterwarnings("ignore", message=".*_register_pytree_node.*", category=FutureWarning)
+warnings.filterwarnings("ignore", message=".*torch\\.load.*weights_only.*", category=FutureWarning)
 import gc
 import time
 import random
@@ -92,7 +96,7 @@ def run(args):
             module = getattr(model.Model, name, None)
             if module is not None:
                 try:
-                    setattr(model.Model, name, torch.compile(module))
+                    setattr(model.Model, name, torch.compile(module, dynamic=True))
                     compiled_names.append(name)
                 except Exception:
                     pass  # silently skip modules incompatible with compile

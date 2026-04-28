@@ -340,13 +340,14 @@ class HMMEM():
                     # Concatenate features
                     features_np = np.concatenate(all_features, axis=0) if all_features else None
 
-                    # Save analysis outputs
+                    # Save analysis outputs (with timestamp to avoid overwriting)
                     analysis_dir = os.path.join(
                         getattr(self.args, 'res_save_dir', 'results'), 'analysis'
                     )
                     tag = f"{self.args.modelName}-{self.args.model_type}-{self.args.datasetName}-{mode}"
+                    ts = getattr(self.args, 'timestamp', None)
 
-                    detailed_classification_analysis(
+                    analysis_result = detailed_classification_analysis(
                         y_true=true,
                         y_pred=pred,
                         features=features_np,
@@ -354,7 +355,11 @@ class HMMEM():
                         save_dir=analysis_dir,
                         tag=tag,
                         log=logger,
+                        timestamp=ts,
                     )
+                    # Attach plot paths to eval_results for CSV recording
+                    eval_results['cm_path'] = analysis_result.get('cm_path', '')
+                    eval_results['tsne_path'] = analysis_result.get('tsne_path', '')
                 except Exception as e:
                     logger.warning(f"Detailed analysis failed (non-fatal): {e}")
 

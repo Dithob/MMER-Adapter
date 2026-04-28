@@ -207,7 +207,9 @@ def run_normal(args):
         # restore results
         model_results.append(test_results)
 
-        criterions = list(model_results[0].keys())
+        # Separate plot paths from metric criterions (plot paths are strings, not numeric)
+        _plot_keys = {'cm_path', 'tsne_path'}
+        criterions = [k for k in model_results[0].keys() if k not in _plot_keys]
         # 移除时间后缀，按模型、架构、数据集保存csv，方便追加记录
         save_path = os.path.join(args.res_save_dir, f'{args.modelName}-{args.model_type}-{args.datasetName}-{args.train_mode}.csv')
         if not os.path.exists(args.res_save_dir):
@@ -219,7 +221,8 @@ def run_normal(args):
             "Mixer", "Fusion", "Gate", "LoRA", "LoRA_r",
             "AdapterDim", "Modalities", "RawAV", "PromptStyle", "PretrainLM",
         ]
-        columns = ["Model", "ModelType", "Dataset", "Seed", "Timestamp", "PTH Path"] \
+        columns = ["Model", "ModelType", "Dataset", "Seed", "Timestamp", "PTH Path",
+                    "ConfusionMatrix", "tSNE"] \
                   + param_columns + criterions
         if os.path.exists(save_path):
             df = pd.read_csv(save_path)
@@ -252,7 +255,11 @@ def run_normal(args):
         ]
 
         for k, test_results in enumerate(model_results):
-            res = [args.modelName, args.model_type, args.datasetName, f'{seed}', args.timestamp, args.model_save_path] \
+            # Extract plot paths (may be absent for regression tasks)
+            cm_path_val = test_results.get('cm_path', '')
+            tsne_path_val = test_results.get('tsne_path', '')
+            res = [args.modelName, args.model_type, args.datasetName, f'{seed}', args.timestamp,
+                   args.model_save_path, cm_path_val, tsne_path_val] \
                   + param_values
             for c in criterions:
                 res.append(round(test_results[c] * 100, 2))

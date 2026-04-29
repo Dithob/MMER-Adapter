@@ -159,13 +159,14 @@ class EmotionLLaMAStyleExtractor:
 
     def _load_eva(self):
         if self._eva is not None: return
-        print("[Model] Loading EVA-ViT-G...")
+        print("[Model] Loading EVA-ViT-G (float16 for speed)...")
         self._eva = create_model("eva_giant_patch14_224", pretrained=False, num_classes=0, global_pool="")
         ckpt = self.eva_ckpt or os.path.expanduser("~/.cache/torch/hub/checkpoints/eva_vit_g.pth")
         state = torch.load(ckpt, map_location="cpu", weights_only=True)
         if isinstance(state, dict) and "model" in state: state = state["model"]
         self._eva.load_state_dict(state, strict=False)
-        self._eva = self._eva.to(self.device); self._eva.eval()
+        self._eva = self._eva.half().to(self.device); self._eva.eval()  # FP16
+        torch.backends.cudnn.benchmark = True
         self._eva_tf = transforms.Compose([
             transforms.Resize((224,224)), transforms.ToTensor(),
             transforms.Normalize(mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225]),
@@ -176,49 +177,90 @@ class EmotionLLaMAStyleExtractor:
             del self._eva; self._eva = None
             torch.cuda.empty_cache(); print("[Model] EVA-ViT unloaded.")
 
-    def extract_audio(self, wave: torch.Tensor, sr: int, batch_size: int = 16) -> np.ndarray:
-        """Extract audio features for a single utterance. Returns (64, 1280)."""
+    def extract_audio_batch(self, waveforms: List[Tuple[torch.Tensor, int]],
+                            batch_size: int = 16) -> List[np.ndarray]:
+        """Batch-extract audio features. Input: list of (wave, sr). Returns list of (64, 1280)."""
         self._load_whisper()
-        if wave.ndim == 2: wave = wave.mean(dim=0)
-        if sr != 16000: wave = torchaudio.functional.resample(wave, sr, 16000)
-        wave_np = wave.detach().cpu().numpy()
-        inputs = self._whisper_fe([wave_np], sampling_rate=16000, return_tensors="pt", padding="max_length")
-        input_features = inputs.input_features.to(device=self.device, dtype=next(self._whisper.parameters()).dtype)
-        decoder_input_ids = torch.tensor([[self._whisper.config.decoder_start_token_id]], device=self.device)
-        with torch.no_grad():
-            out = self._whisper(input_features=input_features, decoder_input_ids=decoder_input_ids)
-        feat = out.encoder_last_hidden_state  # (1, T, 1280)
-        feat = adaptive_downsample_with_padding(feat, target_len=64).squeeze(0)
-        return feat.float().cpu().numpy().astype(np.float32)
+        # Preprocess all waveforms to 16kHz numpy
+        wav_nps = []
+        for wave, sr in waveforms:
+            if wave.ndim == 2: wave = wave.mean(dim=0)
+            if sr != 16000: wave = torchaudio.functional.resample(wave, sr, 16000)
+            wav_nps.append(wave.detach().cpu().numpy())
 
-    def extract_video(self, video_path: str) -> np.ndarray:
-        """Extract video features for a single utterance mp4. Returns (64, 1408)."""
-        self._load_eva()
-        import decord; decord.bridge.set_bridge('torch')
-        use_decord = True
-        try:
-            vr = decord.VideoReader(video_path, ctx=decord.cpu(0))
-            fps = vr.get_avg_fps(); total_frames = len(vr)
-        except Exception:
-            use_decord = False
-            cap = cv2.VideoCapture(video_path)
-            fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
-            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)); cap.release()
+        results = []
+        for i in range(0, len(wav_nps), batch_size):
+            batch_segs = wav_nps[i:i + batch_size]
+            actual_b = len(batch_segs)
+            inputs = self._whisper_fe(batch_segs, sampling_rate=16000, return_tensors="pt", padding="max_length")
+            input_features = inputs.input_features.to(device=self.device, dtype=next(self._whisper.parameters()).dtype)
+            decoder_input_ids = torch.tensor(
+                [[self._whisper.config.decoder_start_token_id]] * actual_b, device=self.device
+            )
+            with torch.no_grad():
+                out = self._whisper(input_features=input_features, decoder_input_ids=decoder_input_ids)
+            feat = out.encoder_last_hidden_state  # (B, T, 1280)
+            feat = adaptive_downsample_with_padding(feat, target_len=64)  # (B, 64, 1280)
+            for j in range(actual_b):
+                results.append(feat[j].float().cpu().numpy().astype(np.float32))
+        return results
+
+    def _read_video_frames(self, video_path: str) -> List[np.ndarray]:
+        """Read 16 sampled frames from a video file. Returns list of (H,W,3) uint8 arrays."""
+        cap = cv2.VideoCapture(video_path)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        cap.release()
         seg_len = max(1, total_frames)
         rel_idx = sample_frame_indices(clip_len=16, frame_sample_rate=1, seg_len=seg_len)
-        if use_decord:
-            try: frames = vr.get_batch(rel_idx).numpy()
-            except Exception: frames = read_video_cv2_abs(video_path, rel_idx)
-        else:
-            frames = read_video_cv2_abs(video_path, rel_idx)
-        images_tensor = torch.stack([self._eva_tf(Image.fromarray(f)) for f in frames], dim=0)
-        batch_tensor = images_tensor.unsqueeze(0).view(16, 3, 224, 224).to(self.device)
-        with torch.no_grad():
-            feat = self._eva.forward_features(batch_tensor)
-        feat = feat.view(1, 16, 257, 1408)
-        feat = feat[:, :, 1:, :].reshape(1, 16, 16, 16, -1)
-        feat = spatiotemporal_downsample(feat, 2, 2, 16)
-        return feat[0].float().cpu().numpy().astype(np.float32)
+        frames = read_video_cv2_abs(video_path, rel_idx)
+        # Fallback to decord if cv2 got only black frames
+        if len(frames) == 16 and np.max(frames[0]) == 0 and total_frames > 0:
+            try:
+                import decord
+                vr = decord.VideoReader(video_path, ctx=decord.cpu(0))
+                raw = vr.get_batch(rel_idx)
+                dec_frames = raw.asnumpy() if hasattr(raw, 'asnumpy') else np.asarray(raw)
+                if isinstance(dec_frames, np.ndarray) and dec_frames.ndim == 4:
+                    frames = [dec_frames[i] for i in range(dec_frames.shape[0])]
+                    while len(frames) < 16: frames.append(frames[-1].copy())
+            except Exception:
+                pass
+        if isinstance(frames, np.ndarray) and frames.ndim == 4:
+            frames = [frames[i] for i in range(frames.shape[0])]
+        return frames
+
+    def _prepare_video_tensor(self, video_path: str) -> torch.Tensor:
+        """Read + transform frames for one video. Returns (16, 3, 224, 224) tensor."""
+        frames = self._read_video_frames(video_path)
+        return torch.stack(
+            [self._eva_tf(Image.fromarray(np.asarray(f, dtype=np.uint8))) for f in frames], dim=0
+        )
+
+    def extract_video_batch(self, video_paths: List[str],
+                            batch_size: int = 12) -> List[np.ndarray]:
+        """Batch-extract video features with multi-threaded I/O + FP16 inference.
+        Input: list of video paths. Returns list of (64, 1408)."""
+        self._load_eva()
+        from concurrent.futures import ThreadPoolExecutor
+        # Multi-threaded frame reading (I/O bound, benefits from threads)
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            all_image_tensors = list(pool.map(self._prepare_video_tensor, video_paths))
+
+        results = []
+        for i in range(0, len(all_image_tensors), batch_size):
+            batch_list = all_image_tensors[i:i + batch_size]
+            actual_b = len(batch_list)
+            batch_tensor = torch.stack(batch_list, dim=0).view(actual_b * 16, 3, 224, 224)
+            batch_tensor = batch_tensor.half().to(self.device)  # FP16
+            with torch.no_grad(), torch.amp.autocast('cuda'):
+                feat = self._eva.forward_features(batch_tensor)
+            feat = feat.float()  # back to FP32 for downstream
+            feat = feat.view(actual_b, 16, 257, 1408)
+            feat = feat[:, :, 1:, :].reshape(actual_b, 16, 16, 16, -1)
+            feat = spatiotemporal_downsample(feat, 2, 2, 16)
+            for j in range(actual_b):
+                results.append(feat[j].cpu().numpy().astype(np.float32))
+        return results
 
 # ═══════════════════════════════════════════════════════
 # Post-extraction Compression
@@ -303,6 +345,9 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max_utts", type=int, default=None)
     parser.add_argument("--no_media", action="store_true", default=False)
+    parser.add_argument("--pass_order", type=str, default="video_first",
+                        choices=["video_first", "audio_first"],
+                        help="Which modality to extract first (default: video_first)")
     args = parser.parse_args()
 
     np.random.seed(args.seed); torch.manual_seed(args.seed)
@@ -355,34 +400,91 @@ def main():
     else:
         extractor = EmotionLLaMAStyleExtractor(args.whisper_model, args.eva_ckpt, args.device)
 
-        # ── Pass 1: Audio (Whisper) ──
-        print(f"\n{'='*60}\nPass 1/2: Extracting audio features (Whisper)\n{'='*60}")
-        audio_map: Dict[str, np.ndarray] = {}
-        pbar = tqdm(total=len(utt_meta), desc="[Audio] Whisper", ncols=120)
-        for vid_cid, si, label, text, ctx, speaker, vpath in utt_meta:
-            if vpath:
-                try:
-                    wav, sr = read_audio_from_video(vpath)
-                    audio_map[vid_cid] = extractor.extract_audio(wav, sr)
-                except Exception as e:
-                    print(f"\n[Skip Audio] {vid_cid}: {e}")
-            pbar.update(1)
-        pbar.close()
-        extractor._unload_whisper()
+        # Group utterances by dialogue for batch processing
+        from itertools import groupby
+        def group_by_dialogue(meta):
+            """Group utt_meta by dialogue_id prefix for batching."""
+            groups = defaultdict(list)
+            for item in meta:
+                vid_cid = item[0]  # e.g. "dia125_utt3"
+                dia_id = vid_cid.rsplit("_utt", 1)[0]
+                groups[dia_id].append(item)
+            return list(groups.values())
 
-        # ── Pass 2: Video (EVA-ViT) ──
-        print(f"\n{'='*60}\nPass 2/2: Extracting video features (EVA-ViT-G)\n{'='*60}")
-        video_map: Dict[str, np.ndarray] = {}
-        pbar = tqdm(total=len(utt_meta), desc="[Video] EVA-ViT", ncols=120)
-        for vid_cid, si, label, text, ctx, speaker, vpath in utt_meta:
-            if vpath:
-                try:
-                    video_map[vid_cid] = extractor.extract_video(vpath)
-                except Exception as e:
-                    print(f"\n[Skip Video] {vid_cid}: {e}")
-            pbar.update(1)
-        pbar.close()
-        extractor._unload_eva()
+        dialogue_groups = group_by_dialogue(utt_meta)
+        print(f"[Info] Grouped into {len(dialogue_groups)} dialogues for batch processing")
+
+        def run_audio_pass(pass_num):
+            print(f"\n{'='*60}\nPass {pass_num}/2: Extracting audio features (Whisper, batched)\n{'='*60}")
+            amap: Dict[str, np.ndarray] = {}
+            skip = 0
+            pbar = tqdm(total=len(utt_meta), desc="[Audio] Whisper", ncols=120)
+            for group in dialogue_groups:
+                # Load audio from all utterances in this dialogue
+                batch_ids = []
+                batch_wavs = []
+                for vid_cid, si, label, text, ctx, speaker, vpath in group:
+                    if vpath:
+                        try:
+                            wav, sr = read_audio_from_video(vpath)
+                            batch_ids.append(vid_cid)
+                            batch_wavs.append((wav, sr))
+                        except Exception as e:
+                            skip += 1
+                            if skip <= 3:
+                                print(f"\n[Skip Audio Load] {vid_cid}: {e}")
+                if batch_wavs:
+                    try:
+                        feats = extractor.extract_audio_batch(batch_wavs, batch_size=16)
+                        for uid, feat in zip(batch_ids, feats):
+                            amap[uid] = feat
+                    except Exception as e:
+                        skip += len(batch_ids)
+                        if skip <= 5:
+                            import traceback
+                            print(f"\n[Skip Audio Batch] {batch_ids[0]}~: {e}")
+                            traceback.print_exc()
+                pbar.update(len(group))
+            pbar.close()
+            if skip > 0: print(f"[Audio] Total skipped: {skip}")
+            extractor._unload_whisper()
+            return amap
+
+        def run_video_pass(pass_num):
+            print(f"\n{'='*60}\nPass {pass_num}/2: Extracting video features (EVA-ViT-G, batched)\n{'='*60}")
+            vmap: Dict[str, np.ndarray] = {}
+            skip = 0
+            pbar = tqdm(total=len(utt_meta), desc="[Video] EVA-ViT", ncols=120)
+            for group in dialogue_groups:
+                batch_ids = []
+                batch_paths = []
+                for vid_cid, si, label, text, ctx, speaker, vpath in group:
+                    if vpath:
+                        batch_ids.append(vid_cid)
+                        batch_paths.append(vpath)
+                if batch_paths:
+                    try:
+                        feats = extractor.extract_video_batch(batch_paths, batch_size=4)
+                        for uid, feat in zip(batch_ids, feats):
+                            vmap[uid] = feat
+                    except Exception as e:
+                        skip += len(batch_ids)
+                        if skip <= 5:
+                            import traceback
+                            print(f"\n[Skip Video Batch] {batch_ids[0]}~: {e}")
+                            traceback.print_exc()
+                pbar.update(len(group))
+            pbar.close()
+            if skip > 0: print(f"[Video] Total skipped: {skip}")
+            extractor._unload_eva()
+            return vmap
+
+        if args.pass_order == "video_first":
+            video_map = run_video_pass(1)
+            audio_map = run_audio_pass(2)
+        else:
+            audio_map = run_audio_pass(1)
+            video_map = run_video_pass(2)
 
         # ── Assemble ──
         for vid_cid, si, label, text, ctx, speaker, vpath in utt_meta:

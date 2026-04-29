@@ -318,6 +318,10 @@ def parse_args():
                         help='support mosei/simsv2/meld/cherma')
     parser.add_argument('--root_dataset_dir', type=str, default='/root/autodl-tmp/datasets/',
                         help='Location of the root directory where the dataset is stored')
+    parser.add_argument('--data_dir', type=str, default=None,
+                        help='Override the default dataset subfolder name under root_dataset_dir. '
+                             'e.g. --data_dir MELD_Raw will load from {root_dataset_dir}/MELD_Raw/ instead of {root_dataset_dir}/MELD/. '
+                             'If not set, uses built-in defaults (MELD, IEMOCAP, CHERMA0723, etc.)')
     parser.add_argument('--num_workers', type=int, default=4,
                         help='num workers of loading data (0=main process only, 4+ recommended for GPU)')
     parser.add_argument('--model_save_dir', type=str, default='/root/autodl-tmp/results/models',

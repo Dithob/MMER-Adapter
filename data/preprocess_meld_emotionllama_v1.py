@@ -1,13 +1,3 @@
-"""MELD Preprocessing V2 — EmotionLLaMA-style feature extraction.
-
-Changes from V1:
-  - CSV 'text' field stores ONLY the raw utterance (matching UniMSE's proven approach).
-    Context and speaker are kept as separate metadata columns but are NOT prepended,
-    because MELD's long dialogues (8-12 turns) would exceed the 65-token seq_len limit
-    and truncate the actual utterance.
-  - Audio/video features are L2-normalized per sample before saving for training stability.
-  - NaN/Inf values are explicitly cleaned.
-"""
 import argparse, csv, hashlib, json, os, pickle, re, warnings
 from collections import defaultdict
 from dataclasses import dataclass
@@ -333,7 +323,7 @@ def compress_features(audio_splits, video_splits, method, out_dim=64,
 # ═══════════════════════════════════════════════════════
 def write_csv(path: str, rows: List[Dict[str, str]]):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    fields = ["text","speaker","label","index","vid_cid"]
+    fields = ["text","context","speaker","label","index","vid_cid"]
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fields); writer.writeheader()
         for i, r in enumerate(rows):
@@ -375,8 +365,13 @@ def main():
     }
     if args.max_utts: splits = {k: v[:args.max_utts] for k, v in splits.items()}
 
-    # V2: No context building — text field is pure utterance only
-    # Context/speaker are stored as separate CSV columns for reference
+    # Build context per dialogue
+    context_all: Dict[str, str] = {}
+    for split_name, items in splits.items():
+        groups: Dict[str, List[Utterance]] = defaultdict(list)
+        for u in items: groups[u.dialogue_id].append(u)
+        for gid in groups: groups[gid].sort(key=lambda x: x.utterance_id)
+        for gid, gutts in groups.items(): context_all.update(build_context(gutts))
 
     # Build utterance list with video paths
     emo_map = EMO_MAP_7 if args.split_mode == "emotion7" else EMO_MAP_3
@@ -389,7 +384,7 @@ def main():
             if label is None: continue
             vid_cid = f"dia{u.dialogue_id}_utt{u.utterance_id}"
             vpath = None if args.no_media else find_meld_video_path(meld_root, split_name, u.dialogue_id, u.utterance_id)
-            utt_meta.append((vid_cid, si, label, u.text, u.speaker, vpath))
+            utt_meta.append((vid_cid, si, label, u.text, context_all.get(u.uid,"[]"), u.speaker, vpath))
 
     print(f"[Info] Total utterances: {len(utt_meta)}")
     audio_splits = [dict(), dict(), dict()]
@@ -398,10 +393,10 @@ def main():
 
     if args.no_media:
         # Placeholder features only
-        for vid_cid, si, label, text, speaker, _ in utt_meta:
+        for vid_cid, si, label, text, ctx, speaker, _ in utt_meta:
             audio_splits[si][vid_cid] = np.zeros((64, 1280), dtype=np.float32)
             video_splits[si][vid_cid] = np.zeros((64, 1408), dtype=np.float32)
-            all_rows[si].append({"text":text,"speaker":speaker,"label":label,"vid_cid":vid_cid})
+            all_rows[si].append({"text":text,"context":ctx,"speaker":speaker,"label":label,"vid_cid":vid_cid})
     else:
         extractor = EmotionLLaMAStyleExtractor(args.whisper_model, args.eva_ckpt, args.device)
 
@@ -428,7 +423,7 @@ def main():
                 # Load audio from all utterances in this dialogue
                 batch_ids = []
                 batch_wavs = []
-                for vid_cid, si, label, text, speaker, vpath in group:
+                for vid_cid, si, label, text, ctx, speaker, vpath in group:
                     if vpath:
                         try:
                             wav, sr = read_audio_from_video(vpath)
@@ -463,7 +458,7 @@ def main():
             for group in dialogue_groups:
                 batch_ids = []
                 batch_paths = []
-                for vid_cid, si, label, text, speaker, vpath in group:
+                for vid_cid, si, label, text, ctx, speaker, vpath in group:
                     if vpath:
                         batch_ids.append(vid_cid)
                         batch_paths.append(vpath)
@@ -492,28 +487,13 @@ def main():
             video_map = run_video_pass(2)
 
         # ── Assemble ──
-        for vid_cid, si, label, text, speaker, vpath in utt_meta:
+        for vid_cid, si, label, text, ctx, speaker, vpath in utt_meta:
             a_feat = audio_map.get(vid_cid, np.zeros((64, 1280), dtype=np.float32))
             v_feat = video_map.get(vid_cid, np.zeros((64, 1408), dtype=np.float32))
             audio_splits[si][vid_cid] = a_feat
             video_splits[si][vid_cid] = v_feat
-            all_rows[si].append({"text":text,"speaker":speaker,"label":label,"vid_cid":vid_cid})
+            all_rows[si].append({"text":text,"context":ctx,"speaker":speaker,"label":label,"vid_cid":vid_cid})
         del audio_map, video_map
-
-    # ── V2: Per-sample L2 normalization + NaN cleanup ──
-    print("[V2] Applying per-sample L2 normalization...")
-    for split_dict in audio_splits:
-        for uid in split_dict:
-            feat = np.nan_to_num(split_dict[uid], nan=0.0, posinf=0.0, neginf=0.0)
-            norm = np.linalg.norm(feat, axis=-1, keepdims=True)
-            norm = np.maximum(norm, 1e-8)
-            split_dict[uid] = (feat / norm).astype(np.float32)
-    for split_dict in video_splits:
-        for uid in split_dict:
-            feat = np.nan_to_num(split_dict[uid], nan=0.0, posinf=0.0, neginf=0.0)
-            norm = np.linalg.norm(feat, axis=-1, keepdims=True)
-            norm = np.maximum(norm, 1e-8)
-            split_dict[uid] = (feat / norm).astype(np.float32)
 
     # ── Post-extraction compression ──
     if args.mode == "compressed":
@@ -548,7 +528,7 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # Raw mode (default, with L2 normalization):
+    # Raw mode (default):
     # python preprocess_meld_emotionllama_v2.py --mode raw
     #
     # Compressed + PCA:
@@ -559,8 +539,3 @@ if __name__ == "__main__":
     #
     # No media (text-only placeholders):
     # python preprocess_meld_emotionllama_v2.py --no_media
-    #
-    # NOTE: V2 differences from V1:
-    #   - Text field is pure utterance only (no context prepending)
-    #   - Features are L2-normalized per sample
-    #   - Compatible with the same load_data.py loader

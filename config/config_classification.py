@@ -11,6 +11,7 @@ class ConfigClassification():
         }
         # hyper parameters for datasets
         self.root_dataset_dir = args.root_dataset_dir
+        self.data_dir_override = getattr(args, 'data_dir', None)
         HYPER_DATASET_MAP = self.__datasetCommonParams()
 
         # normalize
@@ -93,13 +94,20 @@ class ConfigClassification():
     
     def __datasetCommonParams(self):
         root_dataset_dir = self.root_dataset_dir
+        data_dir = self.data_dir_override  # CLI override for dataset subfolder name
+
+        # Default subfolder names per dataset (used when --data_dir is not set)
+        iemocap_dir = data_dir if data_dir else 'IEMOCAP'
+        meld_dir    = data_dir if data_dir else 'MELD'
+        cherma_dir  = data_dir if data_dir else 'CHERMA0723'
+
         tmp = {
             'iemocap':{
                 # Old compressed setting (kept here as reference):
                 # 'seq_lens': (84, 157, 32)
                 # 'feature_dims': (0, 64, 64)
                 'unaligned_compressed': {
-                    'dataPath': os.path.join(root_dataset_dir, 'IEMOCAP', 'iemocap_data_0610.pkl'),
+                    'dataPath': os.path.join(root_dataset_dir, iemocap_dir, 'iemocap_data_0610.pkl'),
                     'seq_lens': (84, 157, 32),
                     # (text, audio, video) text_dim=0 means auto-detect from LLM hidden_size
                     'feature_dims': (0, 64, 64),
@@ -109,7 +117,7 @@ class ConfigClassification():
                     'KeyEval': 'weight_F1'
                 },
                 'unaligned_raw': {
-                    'dataPath': os.path.join(root_dataset_dir, 'IEMOCAP', 'iemocap_data_0610.pkl'),
+                    'dataPath': os.path.join(root_dataset_dir, iemocap_dir, 'iemocap_data_0610.pkl'),
                     'seq_lens': (84, 64, 64),
                     # (text, audio, video) text_dim=0 means auto-detect from LLM hidden_size
                     'feature_dims': (0, 1280, 1408),
@@ -121,7 +129,7 @@ class ConfigClassification():
             },
             'meld':{
                 'unaligned_compressed': {
-                    'dataPath': os.path.join(root_dataset_dir, 'MELD'),
+                    'dataPath': os.path.join(root_dataset_dir, meld_dir),
                     'seq_lens': (65, 157, 32),
                     # (text, audio, video) text_dim=0 means auto-detect from LLM hidden_size
                     'feature_dims': (0, 64, 64),
@@ -131,7 +139,7 @@ class ConfigClassification():
                     'KeyEval': 'weight_F1'
                 },
                 'unaligned_raw': {
-                    'dataPath': os.path.join(root_dataset_dir, 'MELD', 'meld_data_0610.pkl'),
+                    'dataPath': os.path.join(root_dataset_dir, meld_dir, 'meld_data_0610.pkl'),
                     'seq_lens': (65, 64, 64),
                     # (text, audio, video) text_dim=0 means auto-detect from LLM hidden_size
                     'feature_dims': (0, 1280, 1408),
@@ -143,7 +151,7 @@ class ConfigClassification():
             },
             'cherma':{
                 'unaligned': {
-                    'dataPath': os.path.join(root_dataset_dir, 'CHERMA0723'),
+                    'dataPath': os.path.join(root_dataset_dir, cherma_dir),
                     # (batch_size, seq_lens, feature_dim)
                     'seq_lens': (78, 543, 16), # (text, audio, video)
                     'feature_dims': (0, 1024, 2048), # text_dim=0 means auto-detect from LLM hidden_size

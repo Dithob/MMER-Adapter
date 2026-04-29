@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>HMMEM Architecture v2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter','Microsoft YaHei',sans-serif; background:#fff; display:flex; flex-direction:column; align-items:center; padding:16px; }
+  
+  h1 { font-size:13px; color:#2d3436; margin-bottom:2px; text-align:center; }
+  h2 { font-size:10px; color:#636e72; margin-bottom:10px; text-align:center; font-weight:400; }
+  
+  .diagram { width:1440px; }
+  
+  /* Stage Headers */
+  .headers { display:flex; width:100%; margin-bottom:4px; }
+  .hdr { text-align:center; font-size:10px; font-weight:700; padding:3px 0; }
+  .h1 { width:200px; color:#e67e22; }
+  .h2 { width:270px; color:#2980b9; }
+  .h3 { width:310px; color:#27ae60; }
+  .h4 { width:370px; color:#8e44ad; }
+  .h5 { width:220px; color:#c0392b; }
+  
+  /* Main row */
+  .row { display:flex; width:100%; min-height:560px; gap:0; }
+  
+  /* Stage columns */
+  .stg { border:2px dashed #bdc3c7; border-radius:6px; padding:10px 8px; display:flex; flex-direction:column; justify-content:center; gap:6px; }
+  .stg1 { width:200px; }
+  .stg2 { width:270px; margin-left:-1px; }
+  .stg3 { width:310px; margin-left:-1px; }
+  .stg4 { width:370px; margin-left:-1px; }
+  .stg5 { width:220px; margin-left:-1px; }
+  
+  /* Boxes */
+  .b { border-radius:4px; padding:4px 6px; font-size:9px; text-align:center; font-weight:500; border:1.5px solid; line-height:1.3; }
+  .b-vis  { background:#ffeaa7; border-color:#fdcb6e; }
+  .b-txt  { background:#fab1a0; border-color:#e17055; }
+  .b-aud  { background:#81ecec; border-color:#00cec9; }
+  .b-fus  { background:#a29bfe; border-color:#6c5ce7; color:#fff; }
+  .b-grn  { background:#55efc4; border-color:#00b894; }
+  .b-gry  { background:#dfe6e9; border-color:#636e72; }
+  .b-llm  { background:#fd79a8; border-color:#e84393; color:#fff; }
+  .b-loss { background:#ffeaa7; border-color:#fdcb6e; }
+  .b-gmoe { background:#74b9ff; border-color:#0984e3; }
+  .b-lmoe { background:#55efc4; border-color:#00b894; }
+  .b-msf  { background:#ff7675; border-color:#d63031; color:#fff; }
+  .b-meta { background:#fdcb6e; border-color:#e17055; }
+  .b-tcap { background:#fd79a8; border-color:#e84393; color:#fff; font-weight:700; }
+  
+  /* Sub-stage */
+  .sub { border:1.5px solid #b2bec3; border-radius:5px; padding:6px; background:rgba(255,255,255,0.8); }
+  .sub-t { font-size:8px; font-weight:700; color:#636e72; margin-bottom:3px; text-align:center; }
+  
+  /* Layout helpers */
+  .fc { display:flex; flex-direction:column; gap:4px; align-items:center; }
+  .fr { display:flex; gap:4px; align-items:center; justify-content:center; }
+  .ann { font-size:7px; color:#636e72; font-style:italic; text-align:center; }
+  
+  /* Arrows */
+  .ar { width:20px; height:2px; background:#636e72; position:relative; }
+  .ar::after { content:''; position:absolute; right:-1px; top:-3px; border:4px solid transparent; border-left:5px solid #636e72; }
+  .ad { width:2px; height:12px; background:#636e72; margin:0 auto; position:relative; }
+  .ad::after { content:''; position:absolute; bottom:-1px; left:-3px; border:4px solid transparent; border-top:5px solid #636e72; }
+  
+  /* Expert grid */
+  .eg { display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px; }
+  .eb { border-radius:3px; padding:2px 3px; font-size:7px; text-align:center; font-weight:500; border:1px solid; }
+  
+  /* Token vis */
+  .tseq { display:flex; gap:2px; align-items:center; justify-content:center; }
+  .tk { width:16px; height:22px; border-radius:2px; border:1px solid; display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:600; }
+  .tk-f { background:#a29bfe; border-color:#6c5ce7; color:#fff; }
+  .tk-a { background:#55efc4; border-color:#00b894; font-size:5px; }
+  .tk-t { background:#fab1a0; border-color:#e17055; }
+  .tk-d { border:none; background:none; font-size:7px; color:#636e72; width:8px; }
+  
+  .sep { border-top:1px dashed #dfe6e9; margin:2px 0; }
+  .mlabel { font-size:9px; font-weight:600; width:40px; text-align:right; color:#2d3436; }
+  .micon { width:12px; height:12px; border-radius:50%; display:inline-block; }
+  
+  /* New badge */
+  .badge { display:inline-block; background:#d63031; color:#fff; font-size:6px; font-weight:700; padding:1px 3px; border-radius:2px; vertical-align:super; }
+  
+  /* Legend */
+  .legend { display:flex; flex-wrap:wrap; gap:12px; padding:8px 16px; border:1.5px solid #dfe6e9; border-radius:5px; margin-top:10px; font-size:9px; align-items:center; width:100%; justify-content:center; }
+  .li { display:flex; align-items:center; gap:3px; }
+  .licon { width:12px; height:12px; border-radius:50%; border:1px solid #636e72; }
+  .lbox { width:32px; height:14px; border-radius:2px; border:1px solid; font-size:6px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:600; }
+  
+  .prompt { border:1px solid #b2bec3; border-radius:3px; padding:4px; font-size:7px; background:#f8f9fa; color:#2d3436; line-height:1.3; margin-top:3px; }
+</style>
+</head>
+<body>
+
+<div class="diagram">
+  <h1>HMMEM: Hierarchical Mixture-of-Experts for Multimodal Emotion Recognition</h1>
+  <h2>Overall Framework Architecture (v2 — with TCAP, L_amm_align, MSF-MoE integration, Scaled Bypass)</h2>
+  
+  <div class="headers">
+    <div class="hdr h1">(1) Modality Encoding</div>
+    <div class="hdr h2">(2) Adaptive Modal<br>Mixing (AMM)</div>
+    <div class="hdr h3">(3) Dual-Branch MoE<br>Emotion Fusion</div>
+    <div class="hdr h4">(4) Multi-Scale Pseudo-Token<br>Generation & LLM Inference</div>
+    <div class="hdr h5">(5) Model Learning</div>
+  </div>
+  
+  <div class="row">
+    
+    <!-- ═══ Stage 1 ═══ -->
+    <div class="stg stg1">
+      <div class="fc">
+        <div class="fr"><div class="mlabel">Visual</div><div class="micon" style="background:#fdcb6e"></div></div>
+        <div class="fr">
+          <div class="b b-vis" style="font-size:8px">Feature<br>Extract.</div>
+          <div class="ar"></div>
+          <div class="b b-vis">sLSTM</div>
+        </div>
+        <div class="ann">V → V̄</div>
+        
+        <div class="sep"></div>
+        
+        <div class="fr"><div class="mlabel">Text</div><div class="micon" style="background:#e17055"></div></div>
+        <div class="fr">
+          <div class="b b-txt" style="font-size:8px">LLM<br>Embed.</div>
+          <div class="ar"></div>
+          <div class="b b-txt">GAP</div>
+        </div>
+        <div class="ann">T → T̄</div>
+        
+        <div class="sep"></div>
+        
+        <div class="fr"><div class="mlabel">Audio</div><div class="micon" style="background:#00cec9"></div></div>
+        <div class="fr">
+          <div class="b b-aud" style="font-size:8px">Feature<br>Extract.</div>
+          <div class="ar"></div>
+          <div class="b b-aud">sLSTM</div>
+        </div>
+        <div class="ann">A → Ā</div>
+      </div>
+    </div>
+    
+    <!-- ═══ Stage 2: AMM + TCAP ═══ -->
+    <div class="stg stg2">
+      <div class="fc">
+        <div style="text-align:right; font-size:10px; margin-bottom:-2px;">🔥</div>
+        
+        <div class="sub">
+          <div class="sub-t" style="color:#2980b9;">Adaptive Modal Mixer</div>
+          
+          <div class="fc">
+            <div class="b b-fus" style="width:92%">
+              Stack Modal Tokens<br>
+              <span style="font-size:7px;font-weight:400">[V̄, T̄, Ā] → [B, 3, D]</span>
+            </div>
+            <div class="ad"></div>
+            
+            <!-- TCAP — NEW -->
+            <div class="b b-tcap" style="width:92%">
+              TCAP <span class="badge">NEW</span><br>
+              <span style="font-size:7px;font-weight:400">Text Confidence-Aware<br>Attention Prior</span>
+            </div>
+            <div class="ad"></div>
+            
+            <div class="b b-fus" style="width:92%">
+              Self-Attention<br>
+              <span style="font-size:7px;font-weight:400">V↔T↔A + text bias</span>
+            </div>
+            <div class="ad"></div>
+            
+            <div class="b b-gry" style="width:65%">FFN + LN</div>
+            <div class="ad"></div>
+            
+            <div class="b b-meta" style="width:92%">
+              Adaptive Weighted Pool<br>
+              <span style="font-size:7px;font-weight:400">gate → weighted sum</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="ann">
+          Output: f ∈ ℝ<sup>B×D</sup><br>
+          <span style="font-size:6px">+ aux: align_loss, text_conf</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ═══ Stage 3: Dual-Branch MoE ═══ -->
+    <div class="stg stg3">
+      <div class="fc">
+        <div style="text-align:right; font-size:10px; margin-bottom:-2px;">🔥</div>
+        
+        <!-- Global MoE -->
+        <div class="sub" style="border-color:#0984e3;">
+          <div class="sub-t" style="color:#0984e3;">Global Emotion MoE</div>
+          <div class="ann">Input: fused f (from AMM)</div>
+          <div class="eg" style="margin:3px 0;">
+            <div class="eb" style="background:#74b9ff;border-color:#0984e3;">Bilinear<br>Inter.</div>
+            <div class="eb" style="background:#74b9ff;border-color:#0984e3;">SE<br>Attn</div>
+            <div class="eb" style="background:#74b9ff;border-color:#0984e3;">Linear<br>Resid.</div>
+          </div>
+          <div class="fr">
+            <div class="b b-gry" style="font-size:7px">Softmax Gate</div>
+            <div class="ar" style="width:12px"></div>
+            <span style="font-size:8px;font-weight:600;color:#0984e3;">g</span>
+          </div>
+        </div>
+        
+        <!-- Meta-Gate -->
+        <div class="fr" style="margin:3px 0;">
+          <div class="b b-meta" style="padding:5px 12px;font-weight:700;">
+            Meta-Gate<br>
+            <span style="font-size:6px;font-weight:400">f + (g−l) → softmax → λ₁g + λ₂l</span>
+          </div>
+        </div>
+        
+        <!-- Local MoE -->
+        <div class="sub" style="border-color:#00b894;">
+          <div class="sub-t" style="color:#00b894;">Local Emotion MoE</div>
+          <div class="ann">Input: cat(a_h, v_h) → proj</div>
+          <div class="eg" style="margin:3px 0;">
+            <div class="eb" style="background:#55efc4;border-color:#00b894;">BN E₁</div>
+            <div class="eb" style="background:#55efc4;border-color:#00b894;">BN E₂</div>
+            <div class="eb" style="background:#55efc4;border-color:#00b894;">BN E₃</div>
+          </div>
+          <div class="fr">
+            <div class="b b-gry" style="font-size:7px">Softmax Gate</div>
+            <div class="ar" style="width:12px"></div>
+            <span style="font-size:8px;font-weight:600;color:#00b894;">l</span>
+          </div>
+        </div>
+        
+        <div class="ann">Fine-grained emotion cues</div>
+      </div>
+    </div>
+    
+    <!-- ═══ Stage 4: MSF + LLM ═══ -->
+    <div class="stg stg4">
+      <div class="fc">
+        
+        <!-- MSF (now connected to MoE output) -->
+        <div class="sub" style="border-color:#d63031;">
+          <div class="sub-t" style="color:#d63031;">Multi-Scale Fusion (MSF) <span class="badge">MoE→MSF</span></div>
+          <div class="fr">
+            <div class="b b-msf" style="font-size:7px">Scale₁<br>H→H/8</div>
+            <div class="b b-msf" style="font-size:7px">Scale₂<br>H→H/16</div>
+            <div class="b b-msf" style="font-size:7px">Scale₃<br>H→H/32</div>
+          </div>
+          <div class="ad"></div>
+          <div class="fr">
+            <div class="b b-gry" style="font-size:7px">Conv1d Integrating</div>
+            <div class="ar" style="width:10px"></div>
+            <div class="b b-gry" style="font-size:7px">Projector</div>
+          </div>
+        </div>
+        
+        <div class="ad"></div>
+        
+        <!-- Token Sequence with role labels -->
+        <div class="sub">
+          <div class="sub-t">Token Sequence (Role-Aware) <span class="badge">NEW</span></div>
+          <div class="tseq">
+            <div style="text-align:center">
+              <div class="tk tk-f">T<sub>M</sub></div>
+              <div style="font-size:5px;color:#6c5ce7">[FUSED]</div>
+            </div>
+            <div class="tk tk-f">…</div>
+            <div class="tk tk-d">…</div>
+            <div style="text-align:center">
+              <div class="tk tk-a" style="opacity:0.6">A</div>
+              <div style="font-size:5px;color:#00b894">[AUX]<br>×0.3</div>
+            </div>
+            <div style="text-align:center">
+              <div class="tk tk-a" style="opacity:0.6">V</div>
+              <div style="font-size:5px;color:#00b894">[AUX]<br>×0.3</div>
+            </div>
+            <div class="tk tk-d">…</div>
+            <div style="text-align:center">
+              <div class="tk tk-t">T<sub>P</sub></div>
+              <div style="font-size:5px;color:#e17055">prompt</div>
+            </div>
+            <div class="tk tk-t">…</div>
+          </div>
+          <div class="ann" style="margin-top:2px">
+            I = [T<sub>M</sub> ; scale·A<sub>bypass</sub> ; scale·V<sub>bypass</sub> ; T<sub>P</sub>]
+          </div>
+        </div>
+        
+        <div class="ad"></div>
+        
+        <!-- LLM -->
+        <div class="fr">
+          <span style="font-size:10px">❄️</span>
+          <div class="b b-llm" style="padding:6px 18px;font-size:10px">Frozen LLM</div>
+          <span style="font-size:10px">❄️</span>
+        </div>
+        
+        <div class="ad"></div>
+        <div class="fr"><div class="b b-gry" style="padding:3px 10px">Predict / Classify</div></div>
+        
+        <div class="prompt">
+          <strong>Prompts (role-aware):</strong><br>
+          "[FUSED] tokens = primary emotion evidence.<br>
+          [AUX] tokens = supplementary cues.<br>
+          Please recognize the emotion ... {neutral:0, ...}"
+        </div>
+      </div>
+    </div>
+    
+    <!-- ═══ Stage 5: Model Learning ═══ -->
+    <div class="stg stg5">
+      <div class="fc">
+        <div style="font-size:10px;font-weight:700;color:#c0392b;">MSA / ERC</div>
+        
+        <div class="sub">
+          <div class="sub-t" style="color:#c0392b;">Loss Functions</div>
+          <div class="fc" style="gap:5px">
+            <div class="b b-loss" style="text-align:left;white-space:normal;font-size:8px;width:100%">
+              <strong>L<sub>task</sub></strong>: Autoregressive CE
+            </div>
+            <div class="b b-loss" style="text-align:left;white-space:normal;font-size:8px;width:100%;border-color:#e84393">
+              <strong>L<sub>amm</sub></strong> <span class="badge">NEW</span>:<br>Modal Alignment<br>
+              <span style="font-size:6px">||t−a||² + ||t−v||² + ||a−v||²</span>
+            </div>
+            <div class="b b-loss" style="text-align:left;white-space:normal;font-size:8px;width:100%">
+              <strong>L<sub>expert</sub></strong>: Expert Diversity<br>
+              <span style="font-size:6px">LB + DiffLoss (Local only)</span>
+            </div>
+            <div class="b b-loss" style="text-align:left;white-space:normal;font-size:8px;width:100%">
+              <strong>L<sub>branch</sub></strong>: Branch Diff<br>
+              <span style="font-size:6px">DiffLoss(g, l)</span>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-top:6px;padding:5px;border:1px solid #dfe6e9;border-radius:3px;font-size:7px;text-align:center;color:#636e72;">
+          L = L<sub>task</sub> + α·L<sub>amm</sub><br>
+          + β·L<sub>expert</sub> + γ·L<sub>branch</sub><br>
+          <span style="font-size:6px">(α=0.5, β=0.01, γ=0.01)</span>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+  <!-- Legend -->
+  <div class="legend">
+    <div class="li"><div class="licon" style="background:#ffeaa7"></div>Visual</div>
+    <div class="li"><div class="licon" style="background:#fab1a0"></div>Text</div>
+    <div class="li"><div class="licon" style="background:#81ecec"></div>Acoustic</div>
+    <div class="li"><div class="lbox" style="background:#a29bfe;border-color:#6c5ce7">AMM</div>Adaptive Modal Mixer</div>
+    <div class="li"><div class="lbox" style="background:#fd79a8;border-color:#e84393">TCAP</div>Text Confidence Prior</div>
+    <div class="li"><div class="lbox" style="background:#74b9ff;border-color:#0984e3">GMoE</div>Global MoE</div>
+    <div class="li"><div class="lbox" style="background:#55efc4;border-color:#00b894;color:#2d3436">LMoE</div>Local MoE</div>
+    <div class="li"><div class="lbox" style="background:#ff7675;border-color:#d63031">MSF</div>Multi-Scale Fusion</div>
+    <div class="li">🔥 Trainable</div>
+    <div class="li">❄️ Frozen LLM</div>
+    <div class="li"><span class="badge">NEW</span> v2 Improvements</div>
+  </div>
+  
+</div>
+</body>
+</html>

@@ -88,30 +88,15 @@ class MMDataset(Dataset):
         logger.info(f"MELD loading NEW format: {data_path}")
 
         def build_multimodal_text(meta):
-            text = str(meta.get('text', '')).strip()
-            speaker = str(meta.get('speaker', '')).strip()
-            context_raw = meta.get('context', '')
-            context_text = ''
-            if isinstance(context_raw, str):
-                context_raw = context_raw.strip()
-                if context_raw and context_raw.startswith('['):
-                    try:
-                        parsed = json.loads(context_raw)
-                        if isinstance(parsed, list):
-                            context_text = ' '.join(str(t).strip() for t in parsed if str(t).strip())
-                        else:
-                            context_text = str(parsed).strip()
-                    except json.JSONDecodeError:
-                        context_text = context_raw
-                elif context_raw:
-                    context_text = context_raw
-            parts = []
-            if context_text:
-                parts.append(f"Context: {context_text}")
-            if speaker:
-                parts.append(f"Speaker: {speaker}")
-            parts.append(f"Utterance: {text}" if text else "Utterance:")
-            return '\n'.join(parts)
+            """Build text input for LLM tokenizer.
+            
+            Only use the raw utterance text (matching UniMSE's proven approach).
+            Context/speaker are intentionally NOT prepended because:
+            - MELD dialogues average 8-12 turns, context can be 200+ tokens
+            - seq_lens[0]=65 token limit would truncate the actual utterance
+            - This was confirmed as the root cause of V2's performance collapse
+            """
+            return str(meta.get('text', '')).strip()
 
         with open(data_path, 'rb') as f:
             data = pickle.load(f)

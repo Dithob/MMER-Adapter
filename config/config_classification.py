@@ -50,6 +50,21 @@ class ConfigClassification():
                         f"Unsupported iemocap_feature_mode={iemocap_feature_mode}. "
                         f"Use 'raw' or 'compressed'."
                     )
+        elif base_dataset_name == 'meld':
+            # Switchable MELD feature mode (same pattern as IEMOCAP):
+            meld_feature_mode = str(getattr(args, 'meld_feature_mode', 'raw')).lower()
+            if commonArgs['need_data_aligned'] and 'aligned' in dataArgs:
+                dataArgs = dataArgs['aligned']
+            else:
+                if meld_feature_mode == 'raw':
+                    dataArgs = dataArgs['unaligned_raw']
+                elif meld_feature_mode == 'compressed':
+                    dataArgs = dataArgs['unaligned_compressed']
+                else:
+                    raise ValueError(
+                        f"Unsupported meld_feature_mode={meld_feature_mode}. "
+                        f"Use 'raw' or 'compressed'."
+                    )
         else:
             dataArgs = dataArgs['aligned'] if (commonArgs['need_data_aligned'] and 'aligned' in dataArgs) else dataArgs['unaligned']
         
@@ -105,16 +120,26 @@ class ConfigClassification():
                 },
             },
             'meld':{
-                'unaligned': {
+                'unaligned_compressed': {
                     'dataPath': os.path.join(root_dataset_dir, 'MELD'),
                     'seq_lens': (65, 157, 32),
                     # (text, audio, video) text_dim=0 means auto-detect from LLM hidden_size
                     'feature_dims': (0, 64, 64),
-                    'train_samples': 9992,
-                    'num_classes': 3,
+                    'train_samples': 9988,
+                    'num_classes': 7,
                     'language': 'en',
                     'KeyEval': 'weight_F1'
-                }
+                },
+                'unaligned_raw': {
+                    'dataPath': os.path.join(root_dataset_dir, 'MELD', 'meld_data_0610.pkl'),
+                    'seq_lens': (65, 64, 64),
+                    # (text, audio, video) text_dim=0 means auto-detect from LLM hidden_size
+                    'feature_dims': (0, 1280, 1408),
+                    'train_samples': 9988,
+                    'num_classes': 7,
+                    'language': 'en',
+                    'KeyEval': 'weight_F1'
+                },
             },
             'cherma':{
                 'unaligned': {

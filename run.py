@@ -401,6 +401,8 @@ def parse_args():
                         help='video adapter output dim (overrides adapter_dim for video)')
     parser.add_argument('--iemocap_feature_mode', type=str, default='raw', choices=['raw', 'compressed'],
                         help='IEMOCAP feature preset: raw(64x1280/64x1408) or compressed(157x64/32x64)')
+    parser.add_argument('--meld_feature_mode', type=str, default='raw', choices=['raw', 'compressed'],
+                        help='MELD feature preset: raw(64x1280/64x1408) or compressed(157x64/32x64)')
     
     # ── LoRA Fine-tuning for LLM ──
     parser.add_argument('--use_lora', action='store_true', default=False,

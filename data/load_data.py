@@ -37,30 +37,184 @@ class MMDataset(Dataset):
 
 
     def __init_meld(self):
-        data_path = os.path.join(self.args.dataPath, self.args.datasetName + '_' + self.mode + '.pkl')
+        """Auto-detect and load MELD data in either:
+        - NEW format: single .pkl (split-indexed dicts) + meld_text/ CSV  (from preprocess_meld_emotionllama_v2.py)
+        - OLD format: per-split .pkl files (list of dicts with embedded features+text)  (legacy)
+        """
+        import csv
+
+        data_path = self.args.dataPath
         label_index_mapping = self.args.label_index_mapping
-        with open(data_path, 'rb') as f:
-            data = pickle.load(f)
+
+        # ── Format detection ──
+        is_new_format = data_path.endswith('.pkl') and os.path.isfile(data_path)
+        is_old_format = os.path.isdir(data_path)
+
+        if not is_new_format and not is_old_format:
+            # dataPath might be a .pkl path that points to a new-format file
+            # or a directory for old-format; if neither exists, raise
+            raise FileNotFoundError(
+                f"MELD dataPath not found: {data_path}. "
+                f"Expected a .pkl file (new format) or a directory (old format)."
+            )
+
+        if is_old_format:
+            # ══════════════════════════════════════════════
+            #  OLD FORMAT: per-split pkl (meld_train.pkl, etc.)
+            # ══════════════════════════════════════════════
+            split_pkl = os.path.join(data_path, self.args.datasetName + '_' + self.mode + '.pkl')
+            if not os.path.exists(split_pkl):
+                # Try alternate naming: meld_train.pkl
+                split_pkl = os.path.join(data_path, 'meld_' + self.mode + '.pkl')
+            logger.info(f"MELD loading OLD format: {split_pkl}")
+            with open(split_pkl, 'rb') as f:
+                data = pickle.load(f)
             self.vision = np.array(list(map(lambda item: item['features']['video'], data))).astype(np.float32)
             self.audio = np.array(list(map(lambda item: item['features']['audio'], data))).astype(np.float32)
             self.rawText = np.array(list(map(lambda item: item['features']['text'], data)))
-
-            # self.labels = {
-            #     'M': list(map(lambda item: item['label'], data))
-            # }
             self.labels = {
-                'M': list(map(lambda item: label_index_mapping.get(item['label'],-1), data))
+                'M': list(map(lambda item: label_index_mapping.get(item['label'], -1), data))
             }
             if self.args.use_PLM:
                 self.text = self.PLM_tokenizer(self.rawText)
+            if not self.args.need_data_aligned:
+                self.audio_lengths = np.array(list(map(lambda item: item['features']['audio_len'], data)))
+                self.vision_lengths = np.array(list(map(lambda item: item['features']['video_len'], data)))
+            return
 
-        # label_mapping
+        # ══════════════════════════════════════════════
+        #  NEW FORMAT: single pkl (split-indexed dicts) + CSV text
+        # ══════════════════════════════════════════════
+        logger.info(f"MELD loading NEW format: {data_path}")
 
-        # self.labels['M']  = [label_index_mapping.get(label, -1) for label in self.labels['M']]
+        def build_multimodal_text(meta):
+            text = str(meta.get('text', '')).strip()
+            speaker = str(meta.get('speaker', '')).strip()
+            context_raw = meta.get('context', '')
+            context_text = ''
+            if isinstance(context_raw, str):
+                context_raw = context_raw.strip()
+                if context_raw and context_raw.startswith('['):
+                    try:
+                        parsed = json.loads(context_raw)
+                        if isinstance(parsed, list):
+                            context_text = ' '.join(str(t).strip() for t in parsed if str(t).strip())
+                        else:
+                            context_text = str(parsed).strip()
+                    except json.JSONDecodeError:
+                        context_text = context_raw
+                elif context_raw:
+                    context_text = context_raw
+            parts = []
+            if context_text:
+                parts.append(f"Context: {context_text}")
+            if speaker:
+                parts.append(f"Speaker: {speaker}")
+            parts.append(f"Utterance: {text}" if text else "Utterance:")
+            return '\n'.join(parts)
+
+        with open(data_path, 'rb') as f:
+            data = pickle.load(f)
+
+        split_idx = 0 if self.mode == 'train' else (1 if self.mode == 'valid' else 2)
+        if len(data['audio'][split_idx]) == 0:
+            split_idx = 2
+
+        audio_dict = data['audio'][split_idx]
+        video_dict = data['video'][split_idx]
+
+        # Load text/labels from CSV (meld_text/ directory)
+        meld_text_dir = None
+        data_dir = os.path.dirname(data_path)
+        for p in [os.path.join(data_dir, 'meld_text'),
+                  os.path.join(os.path.dirname(data_dir), 'meld_text'),
+                  os.path.join(data_dir, '..', 'MELD', 'meld_text')]:
+            if os.path.exists(p):
+                meld_text_dir = p
+                break
+
+        meld_meta = {}
+        if meld_text_dir:
+            csv_path = os.path.join(meld_text_dir, f'meld_data_{self.mode}.csv')
+            if os.path.exists(csv_path):
+                with open(csv_path, 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        if 'vid_cid' in row and 'label' in row:
+                            meld_meta[row['vid_cid']] = {
+                                'label': row['label'].strip(),
+                                'text': row.get('text', '').strip(),
+                                'context': row.get('context', '').strip(),
+                                'speaker': row.get('speaker', '').strip(),
+                            }
+                logger.info(f"MELD text loaded from {csv_path}: {len(meld_meta)} entries")
+
+        if not meld_meta:
+            logger.warning(f"No MELD text CSV found near {data_dir}. Using keys from pkl only.")
+            for k in audio_dict.keys():
+                meld_meta[k] = {'label': 'neutral', 'text': '', 'context': '', 'speaker': ''}
+
+        # Build padded arrays
+        def pad_sequence_numpy(sequences, max_len, feature_dim):
+            padded = []
+            for seq in sequences:
+                seq = np.atleast_2d(seq)
+                if seq.shape[0] >= max_len:
+                    padded.append(seq[:max_len, :])
+                else:
+                    pad = np.zeros((max_len - seq.shape[0], feature_dim), dtype=np.float32)
+                    padded.append(np.vstack((seq, pad)))
+            return np.array(padded, dtype=np.float32)
+
+        raw_audio, raw_video, raw_text, labels_m = [], [], [], []
+        audio_lengths, video_lengths = [], []
+        drop_stats = {'missing_meta': 0, 'mapping_missing': 0, 'missing_modal': 0}
+
+        keys = list(audio_dict.keys())
+        for k in keys:
+            meta = meld_meta.get(k)
+            if meta is None:
+                drop_stats['missing_meta'] += 1
+                continue
+
+            mapped_label = meta['label']
+            if mapped_label not in label_index_mapping:
+                drop_stats['mapping_missing'] += 1
+                continue
+
+            aud_feat = audio_dict.get(k)
+            vid_feat = video_dict.get(k)
+            if aud_feat is None or vid_feat is None:
+                drop_stats['missing_modal'] += 1
+                continue
+
+            labels_m.append(label_index_mapping[mapped_label])
+            raw_text.append(build_multimodal_text(meta))
+            raw_audio.append(aud_feat)
+            raw_video.append(vid_feat)
+            audio_lengths.append(max(1, min(aud_feat.shape[0], self.args.seq_lens[1])))
+            video_lengths.append(max(1, min(vid_feat.shape[0], self.args.seq_lens[2])))
+
+        logger.info(
+            "MELD %s split loaded %d/%d samples (drop: missing_meta=%d, mapping_missing=%d, missing_modal=%d)",
+            self.mode, len(raw_text), len(keys),
+            drop_stats['missing_meta'], drop_stats['mapping_missing'], drop_stats['missing_modal'],
+        )
+
+        if len(raw_text) == 0:
+            raise ValueError(f"CRITICAL: No MELD samples loaded from {data_path}. drop_stats={drop_stats}")
+
+        self.rawText = np.array(raw_text)
+        self.labels = {'M': labels_m}
+        self.vision = pad_sequence_numpy(raw_video, self.args.seq_lens[2], self.args.feature_dims[2])
+        self.audio = pad_sequence_numpy(raw_audio, self.args.seq_lens[1], self.args.feature_dims[1])
+
+        if self.args.use_PLM:
+            self.text = self.PLM_tokenizer(self.rawText)
 
         if not self.args.need_data_aligned:
-            self.audio_lengths = np.array(list(map(lambda item: item['features']['audio_len'], data)))
-            self.vision_lengths = np.array(list(map(lambda item: item['features']['video_len'], data)))
+            self.audio_lengths = np.array(audio_lengths)
+            self.vision_lengths = np.array(video_lengths)
 
     def __init_iemocap(self):
         import re

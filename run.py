@@ -429,6 +429,10 @@ def parse_args():
                         help='prepend dialogue context to utterance text (utterance-first safe ordering)')
     parser.add_argument('--text_seq_len', type=int, default=None,
                         help='override text seq_len (seq_lens[0]). Default: 65/84 without context, 128 with context. Does NOT affect AV.')
+    parser.add_argument('--prompt_context', action='store_true', default=False,
+                        help='inject dialogue context into LLM prompt layer (after multimodal wrap, before task prompt)')
+    parser.add_argument('--context_max_tokens', type=int, default=64,
+                        help='max tokens for context segment in prompt (default: 64)')
 
     # ── Raw AV Token Bypass (EmotionLLaMA-v2 style) ──
     parser.add_argument('--raw_av_mode', type=str, default='none',

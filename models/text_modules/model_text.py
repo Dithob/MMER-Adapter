@@ -81,8 +81,8 @@ class Language_model(nn.Module):
         logger.info(f"LoRA enabled: r={args.lora_r}, alpha={args.lora_alpha}, targets={target_modules}")
         logger.info(f"LoRA trainable params: {trainable:,} / {total:,} ({100 * trainable / total:.2f}%)")
 
-    def forward(self, fusion_embedding, labels, input_attn_mask=None):
-        fusion_embedding = self.multimodal_prompt_wrap(fusion_embedding)
+    def forward(self, fusion_embedding, labels, input_attn_mask=None, context_text=None):
+        fusion_embedding = self.multimodal_prompt_wrap(fusion_embedding, context_text=context_text)
         if self.model_type == 'chatglm3':
             return self._forward_chatglm3(fusion_embedding, labels)
         elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek', 'gemma']:
@@ -149,8 +149,8 @@ class Language_model(nn.Module):
         with torch.amp.autocast(device_type='cuda'):
             return self.model(**model_kwargs)
 
-    def generate(self, fusion_embedding, input_attn_mask=None):
-        fusion_embedding = self.multimodal_prompt_wrap(fusion_embedding)
+    def generate(self, fusion_embedding, input_attn_mask=None, context_text=None):
+        fusion_embedding = self.multimodal_prompt_wrap(fusion_embedding, context_text=context_text)
         if self.model_type == 'chatglm3':
             return self._generate_chatglm3(fusion_embedding)
         elif self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek', 'gemma']:
@@ -341,7 +341,7 @@ class Language_model(nn.Module):
         prompt_text = self.task_specific_prompt
         return self.tokenizer(prompt_text, padding=True, return_tensors="pt", add_special_tokens=False)["input_ids"].to(self.device)
 
-    def multimodal_prompt_wrap(self, fusion_embeddings):
+    def multimodal_prompt_wrap(self, fusion_embeddings, context_text=None):
         if self.language == "en":
             prompt = '{question}\n\n <Multimodal><MultimodalHere></Multimodal>'
             special_token = '<MultimodalHere>'
@@ -376,4 +376,42 @@ class Language_model(nn.Module):
 
         self._wrap_prefix_len = p_before_embeds.shape[1]
         self._wrap_suffix_len = p_after_embeds.shape[1]
-        return torch.cat([p_before_embeds, fusion_embeddings, p_after_embeds], dim=1)
+
+        wrapped = torch.cat([p_before_embeds, fusion_embeddings, p_after_embeds], dim=1)
+
+        # ── Prompt-level context injection (UniSA-inspired) ──
+        # Inject dialogue context as tokenized embeddings AFTER the multimodal wrap,
+        # BEFORE the task prompt. This bypasses LSTM/Mixer compression entirely.
+        if context_text is not None and getattr(self._args, 'prompt_context', False):
+            # Filter: only inject if at least one sample has non-empty context
+            has_context = any(c.strip() for c in context_text if isinstance(c, str))
+            if has_context:
+                ctx_max = getattr(self._args, 'context_max_tokens', 64)
+                # Build context prompt strings per sample
+                ctx_strings = []
+                for c in context_text:
+                    c = str(c).strip() if c else ''
+                    if c:
+                        ctx_strings.append(f" Dialogue context: {c}")
+                    else:
+                        ctx_strings.append("")  # empty placeholder
+
+                # Tokenize all context strings with padding
+                ctx_tokenized = self.tokenizer(
+                    ctx_strings,
+                    padding='max_length',
+                    truncation=True,
+                    max_length=ctx_max,
+                    return_tensors='pt',
+                    add_special_tokens=False
+                ).to(self.device)
+
+                ctx_embeds = self.text_embedding(ctx_tokenized['input_ids'])  # [B, ctx_max, hidden]
+                # Zero out padding positions so they don't contribute
+                ctx_mask = ctx_tokenized['attention_mask'].unsqueeze(-1).to(ctx_embeds.dtype)  # [B, ctx_max, 1]
+                ctx_embeds = ctx_embeds * ctx_mask
+
+                wrapped = torch.cat([wrapped, ctx_embeds], dim=1)
+                self._wrap_suffix_len += ctx_max  # update for attention mask accounting
+
+        return wrapped

@@ -394,7 +394,7 @@ class HMMEM(nn.Module):
     # Forward / Generate
     # ──────────────────────────────────────────────
 
-    def forward(self, labels, text, audio, video):
+    def forward(self, labels, text, audio, video, context_text=None):
         audio, audio_len = audio
         video, video_len = video
         text, text_len = text
@@ -457,7 +457,7 @@ class HMMEM(nn.Module):
         # ── Build LLM input with optional AV token bypass ──
         LLM_input, input_attn_mask = self._build_llm_input(
             fusion_h, text_embed, audio_h, video_h, audio_raw, video_raw)
-        LLM_output = self.LLM(LLM_input, labels, input_attn_mask=input_attn_mask)
+        LLM_output = self.LLM(LLM_input, labels, input_attn_mask=input_attn_mask, context_text=context_text)
 
         res = {
             'Loss': LLM_output.loss,
@@ -506,7 +506,7 @@ class HMMEM(nn.Module):
 
         return res
 
-    def generate(self, text, audio, video):
+    def generate(self, text, audio, video, context_text=None):
         audio, audio_len = audio
         video, video_len = video
         text, text_len = text
@@ -553,6 +553,6 @@ class HMMEM(nn.Module):
         # ── Build LLM input with optional AV token bypass ──
         LLM_input, input_attn_mask = self._build_llm_input(
             fusion_h, text_embed, audio_h, video_h, audio_raw, video_raw)
-        LLM_output = self.LLM.generate(LLM_input, input_attn_mask=input_attn_mask)
+        LLM_output = self.LLM.generate(LLM_input, input_attn_mask=input_attn_mask, context_text=context_text)
 
         return LLM_output, feature_f.detach()

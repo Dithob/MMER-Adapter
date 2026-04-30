@@ -169,7 +169,7 @@ class MMDataset(Dataset):
                     padded.append(np.vstack((seq, pad)))
             return np.array(padded, dtype=np.float32)
 
-        raw_audio, raw_video, raw_text, labels_m = [], [], [], []
+        raw_audio, raw_video, raw_text, raw_context, labels_m = [], [], [], [], []
         audio_lengths, video_lengths = [], []
         drop_stats = {'missing_meta': 0, 'mapping_missing': 0, 'missing_modal': 0}
 
@@ -193,6 +193,16 @@ class MMDataset(Dataset):
 
             labels_m.append(label_index_mapping[mapped_label])
             raw_text.append(build_multimodal_text(meta))
+            # Collect context for prompt-level injection
+            ctx = str(meta.get('context', '')).strip()
+            if ctx.startswith('['):
+                try:
+                    parsed = json.loads(ctx)
+                    if isinstance(parsed, list):
+                        ctx = ' '.join(str(t).strip() for t in parsed if str(t).strip())
+                except json.JSONDecodeError:
+                    pass
+            raw_context.append(ctx if ctx and ctx != '[]' else '')
             raw_audio.append(aud_feat)
             raw_video.append(vid_feat)
             audio_lengths.append(max(1, min(aud_feat.shape[0], self.args.seq_lens[1])))
@@ -208,6 +218,7 @@ class MMDataset(Dataset):
             raise ValueError(f"CRITICAL: No MELD samples loaded from {data_path}. drop_stats={drop_stats}")
 
         self.rawText = np.array(raw_text)
+        self.rawContext = raw_context
         self.labels = {'M': labels_m}
         self.vision = pad_sequence_numpy(raw_video, self.args.seq_lens[2], self.args.feature_dims[2])
         self.audio = pad_sequence_numpy(raw_audio, self.args.seq_lens[1], self.args.feature_dims[1])
@@ -648,6 +659,10 @@ class MMDataset(Dataset):
             sample['audio_lengths'] = self.audio_lengths[index]
             sample['vision_lengths'] = self.vision_lengths[index]
             sample['text_lengths'] = self.args.seq_lens[0]
+
+        # Prompt-level context (string, not tensor)
+        if getattr(self.args, 'prompt_context', False) and hasattr(self, 'rawContext'):
+            sample['context_text'] = self.rawContext[index]
 
         return sample
 

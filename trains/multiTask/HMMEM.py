@@ -190,9 +190,12 @@ class HMMEM():
                         audio_lengths = batch_data['audio_lengths'].to(self.args.device)
                         vision_lengths = batch_data['vision_lengths'].to(self.args.device)
 
+                    # ── Prompt-level context ──
+                    context_text = batch_data.get('context_text', None)
+
                     # forward
                     with autocast('cuda', dtype=amp_dtype):
-                        output= model(labels_m, (text,text_lengths), (audio, audio_lengths), (vision, vision_lengths))
+                        output= model(labels_m, (text,text_lengths), (audio, audio_lengths), (vision, vision_lengths), context_text=context_text)
                         loss = output['Loss']
                         # Add optional auxiliary losses
                         for aux_key in ['MoE_LB_Loss', 'DiffLoss', 'ExpertDiffLoss', 'NCELoss', 'ATGFBFF_Align_Loss', 'ATGFBFF_Fiber_Loss', 'SharedAlignLoss', 'OffsetRegLoss']:
@@ -285,8 +288,9 @@ class HMMEM():
                             text_lengths = batch_data['text_lengths'].to(self.args.device)
                             audio_lengths = batch_data['audio_lengths'].to(self.args.device)
                             vision_lengths = batch_data['vision_lengths'].to(self.args.device)
+                        context_text = batch_data.get('context_text', None)
                         with autocast('cuda', dtype=amp_dtype):
-                            outputs, _ = model.generate((text,text_lengths), (audio, audio_lengths), (vision, vision_lengths))
+                            outputs, _ = model.generate((text,text_lengths), (audio, audio_lengths), (vision, vision_lengths), context_text=context_text)
 
                         predict_label = torch.Tensor(outputs).to(self.args.device)
 
@@ -310,9 +314,10 @@ class HMMEM():
                             text_lengths = batch_data['text_lengths'].to(self.args.device)
                             audio_lengths = batch_data['audio_lengths'].to(self.args.device)
                             vision_lengths = batch_data['vision_lengths'].to(self.args.device)
+                        context_text = batch_data.get('context_text', None)
                         with autocast('cuda', dtype=amp_dtype):
                             outputs, feature_f = model.generate((text, text_lengths), (audio, audio_lengths),
-                                                     (vision, vision_lengths))
+                                                     (vision, vision_lengths), context_text=context_text)
 
                         predict_label = outputs
                         labels_m = batch_data['labels']['M']

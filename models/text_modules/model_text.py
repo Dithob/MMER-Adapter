@@ -380,8 +380,8 @@ class Language_model(nn.Module):
         wrapped = torch.cat([p_before_embeds, fusion_embeddings, p_after_embeds], dim=1)
 
         # ── Prompt-level context injection (UniSA-inspired) ──
-        # Inject dialogue context as tokenized embeddings AFTER the multimodal wrap,
-        # BEFORE the task prompt. This bypasses LSTM/Mixer compression entirely.
+        # Inject dialogue context BEFORE the multimodal wrap so that
+        # the LLM sees: [context] → [<Multimodal>...tokens...</Multimodal>] → [task prompt]
         if context_text is not None and getattr(self._args, 'prompt_context', False):
             # Filter: only inject if at least one sample has non-empty context
             has_context = any(c.strip() for c in context_text if isinstance(c, str))
@@ -411,7 +411,8 @@ class Language_model(nn.Module):
                 ctx_mask = ctx_tokenized['attention_mask'].unsqueeze(-1).to(ctx_embeds.dtype)  # [B, ctx_max, 1]
                 ctx_embeds = ctx_embeds * ctx_mask
 
-                wrapped = torch.cat([wrapped, ctx_embeds], dim=1)
-                self._wrap_suffix_len += ctx_max  # update for attention mask accounting
+                # Prepend context BEFORE wrapped multimodal tokens
+                wrapped = torch.cat([ctx_embeds, wrapped], dim=1)
+                self._wrap_prefix_len += ctx_max  # update for attention mask accounting
 
         return wrapped

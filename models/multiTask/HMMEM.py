@@ -92,6 +92,7 @@ class HMMEM(nn.Module):
         # Mixers require text + at least one AV modality
         self.use_tgm = getattr(args, 'use_tgm', True) and self.use_text and self.has_av
         self.use_amm = getattr(args, 'use_amm', False) and self.use_text and self.has_av
+        self.use_tcap = getattr(args, 'use_tcap', True)  # TCAP enabled by default when AMM is used
         self.use_atgfbff = getattr(args, 'use_atgfbff', False) and self.use_text and self.has_av
         self.use_shared_offset = getattr(args, 'use_shared_offset', False) and self.use_text and self.has_av
         self.use_mslaf = getattr(args, 'use_mslaf', False) and self.has_av
@@ -103,7 +104,7 @@ class HMMEM(nn.Module):
         self.use_msf = getattr(args, 'use_msf', True) and self.has_av
         self.use_moe_fusion = getattr(args, 'use_moe_fusion', False) and self.has_av
         if self.use_moe_fusion:
-            self.use_msf = False  # MoE overrides MSF
+            self.use_msf = False  # MoE overrides MSF (MSF is used inside MoE path)
 
         # Auxiliary losses (only meaningful with AV)
         self.use_gate = getattr(args, 'use_gate', False) and self.has_av
@@ -113,6 +114,8 @@ class HMMEM(nn.Module):
         self.use_nce_loss = getattr(args, 'use_nce_loss', False) and self.use_text and self.has_av
         self.use_atgfbff_loss = getattr(args, 'use_atgfbff_loss', True) and self.use_atgfbff
         self.use_shared_offset_loss = getattr(args, 'use_shared_offset_loss', True) and self.use_shared_offset
+        self.use_amm_align_loss = getattr(args, 'use_amm_align_loss', True) and self.use_amm
+        self.alpha_amm = getattr(args, 'alpha_amm', 0.5)
         self.alpha_align = getattr(args, 'alpha_align', 0.6)
         self.beta_fiber = getattr(args, 'beta_fiber', 0.1)
         self.beta_offset = getattr(args, 'beta_offset', 0.1)
@@ -126,7 +129,10 @@ class HMMEM(nn.Module):
         # Mixer Layer (only built when needed)
         # ══════════════════════════════════════════════
         if self.use_amm:
-            self.mixer = AdaptiveModalMixer(text_in=text_in, fusion_dim=fusion_input_size)
+            self.mixer = AdaptiveModalMixer(
+                text_in=text_in, fusion_dim=fusion_input_size,
+                use_tcap=self.use_tcap and self.use_amm,
+            )
         elif self.use_atgfbff:
             self.mixer = ATGFBFF(
                 input_size=fusion_input_size,
@@ -185,9 +191,12 @@ class HMMEM(nn.Module):
                 meta_gate_input_dim += 1  # + cosine bias
             self.meta_gate = nn.Linear(meta_gate_input_dim, 2)
 
-            # Shared projector: 256 → text_in → pseudo_tokens
-            self.shared_projector = nn.Linear(fusion_input_size, text_in)
-            self.shared_token_projector = nn.Linear(1, args.pseudo_tokens)
+            # MSF as pseudo-token expander (replaces simple Linear projector)
+            self.moe_msf = mutli_scale_fusion(
+                input_size=fusion_input_size,
+                output_size=text_in,
+                pseudo_tokens=args.pseudo_tokens
+            )
 
         elif self.use_atgfbff:
             # ATGFBFF already produces pseudo-tokens via token_offset,
@@ -219,12 +228,15 @@ class HMMEM(nn.Module):
         self.inject_audio_tokens = raw_av_mode in ('audio', 'both') and self.use_audio
         self.inject_video_tokens = raw_av_mode in ('video', 'both') and self.use_video
         av_pseudo_tokens = getattr(args, 'av_pseudo_tokens', 4)
+        bypass_scale_init = getattr(args, 'bypass_scale_init', 0.3)
         if self.inject_audio_tokens:
             self.audio_proj = nn.Linear(256, text_in)
             self.audio_token_proj = nn.Linear(1, av_pseudo_tokens)
+            self.audio_bypass_scale = nn.Parameter(torch.tensor(bypass_scale_init))
         if self.inject_video_tokens:
             self.video_proj = nn.Linear(256, text_in)
             self.video_token_proj = nn.Linear(1, av_pseudo_tokens)
+            self.video_bypass_scale = nn.Parameter(torch.tensor(bypass_scale_init))
 
         # ── Optional: DiffLoss ──
         if self.use_diff_loss or self.use_expert_diff_loss:
@@ -282,10 +294,8 @@ class HMMEM(nn.Module):
 
         fused = meta_weights[:, 0:1] * global_out + meta_weights[:, 1:2] * local_out
 
-        # 4. Shared projector → [B, pseudo_tokens, text_in]
-        projected = self.shared_projector(fused)
-        fusion_h = self.shared_token_projector(projected.unsqueeze(2))
-        fusion_h = fusion_h.permute(0, 2, 1)
+        # 4. MSF expander → [B, pseudo_tokens, text_in]
+        fusion_h = self.moe_msf(fused)
 
         aux = {
             'global_gw': global_gw,
@@ -330,6 +340,7 @@ class HMMEM(nn.Module):
             audio_tokens = self.audio_proj(audio_h)                          # [B, text_in]
             audio_tokens = self.audio_token_proj(audio_tokens.unsqueeze(2))  # [B, text_in, av_pt]
             audio_tokens = audio_tokens.permute(0, 2, 1)                    # [B, av_pt, text_in]
+            audio_tokens = self.audio_bypass_scale * audio_tokens            # learnable scaling
             # Dynamic mask: detect zero raw audio
             audio_zero = (audio_raw.abs().sum(dim=list(range(1, audio_raw.dim()))) == 0)  # [B]
             audio_mask = (~audio_zero).long().unsqueeze(1).expand(-1, audio_tokens.shape[1])
@@ -340,6 +351,7 @@ class HMMEM(nn.Module):
             video_tokens = self.video_proj(video_h)                          # [B, text_in]
             video_tokens = self.video_token_proj(video_tokens.unsqueeze(2))  # [B, text_in, av_pt]
             video_tokens = video_tokens.permute(0, 2, 1)                    # [B, av_pt, text_in]
+            video_tokens = self.video_bypass_scale * video_tokens            # learnable scaling
             # Dynamic mask: detect zero raw video
             video_zero = (video_raw.abs().sum(dim=list(range(1, video_raw.dim()))) == 0)  # [B]
             video_mask = (~video_zero).long().unsqueeze(1).expand(-1, video_tokens.shape[1])
@@ -361,34 +373,29 @@ class HMMEM(nn.Module):
     def _mix_modalities(self, audio_h, video_h, text_embed):
         """Fuse enabled modalities into a single [B, 256] feature vector.
         
-        Handles all 7 ablation combinations cleanly:
-          tav: mixer(a, v, t)     ta: mixer(a, zero_v, t)   tv: mixer(zero_a, v, t)
-          av:  a + v              a:  a                      v:  v
-          t:   text_fallback_proj(pool(text))
+        Handles all 7 ablation combinations cleanly.
+        When use_amm=True, returns (output, aux) tuple; otherwise returns output only.
         """
         if self.use_audio and self.use_video:
-            # Both AV present: full mixer
             if self.use_text:
                 return self.mixer(audio_h, video_h, text_embed)
-            return audio_h + video_h
+            return audio_h + video_h, None if self.use_amm else audio_h + video_h
         elif self.use_audio:
-            # Audio only (or ta)
             zero_v = torch.zeros_like(audio_h)
             if self.use_text:
                 return self.mixer(audio_h, zero_v, text_embed)
-            return audio_h
+            return audio_h, None if self.use_amm else audio_h
         elif self.use_video:
-            # Video only (or tv)
             zero_a = torch.zeros_like(video_h)
             if self.use_text:
                 return self.mixer(zero_a, video_h, text_embed)
-            return video_h
+            return video_h, None if self.use_amm else video_h
         else:
-            # Text only: pool text → project to fusion size
-            text_pooled = torch.mean(text_embed, dim=1)  # [B, text_in]
-            projected = self.text_fallback_proj(text_pooled)  # [B, text_in]
-            fusion_h = self.text_fallback_token_proj(projected.unsqueeze(2))  # [B, text_in, pseudo_tokens]
-            return fusion_h.permute(0, 2, 1)  # [B, pseudo_tokens, text_in]
+            text_pooled = torch.mean(text_embed, dim=1)
+            projected = self.text_fallback_proj(text_pooled)
+            fusion_h = self.text_fallback_token_proj(projected.unsqueeze(2))
+            result = fusion_h.permute(0, 2, 1)
+            return (result, None) if self.use_amm else result
 
     # ──────────────────────────────────────────────
     # Forward / Generate
@@ -432,26 +439,35 @@ class HMMEM(nn.Module):
 
         # ── Mixer → Fusion ──
         fusion_aux = None
+        amm_aux = None
+        moe_aux = None
         if self.text_only:
             # Text-only: skip mixer/fusion, use dedicated text path
-            fusion_h = self._mix_modalities(audio_h, video_h, text_embed)
+            mix_result = self._mix_modalities(audio_h, video_h, text_embed)
+            if self.use_amm:
+                fusion_h, amm_aux = mix_result
+            else:
+                fusion_h = mix_result
             feature_f = text_embed.new_zeros(batch_size, 256)
         elif self.use_moe_fusion:
-            feature_f = self._mix_modalities(audio_h, video_h, text_embed)
+            mix_result = self._mix_modalities(audio_h, video_h, text_embed)
+            if self.use_amm:
+                feature_f, amm_aux = mix_result
+            else:
+                feature_f = mix_result
             fusion_h, moe_aux = self._dual_moe_forward(audio_h, video_h, feature_f)
         elif self.use_atgfbff or self.use_shared_offset:
-            # Dedicated ATGFBFF / SharedOffset path:
-            # 1. Pool text: [B, L, text_in] → [B, text_in] → [B, 256]
             text_pooled = self.text_pool(text_embed.permute(0, 2, 1)).squeeze(-1)
             text_proj = self.text_proj_for_mixer(text_pooled)
-            # 2. Mixer: [B,256] × 3 → [B, pseudo_tokens, 256] + aux
             fusion_h_raw, fusion_aux = self.mixer(audio_h, video_h, text_proj)
-            # 3. Project to LLM dim: [B, pt, 256] → [B, pt, text_in]
             fusion_h = self.mixer_out_proj(fusion_h_raw)
-            # 4. Feature for analysis (detached [B, 256])
             feature_f = fusion_h_raw.mean(dim=1).detach()
         else:
-            feature_f = self._mix_modalities(audio_h, video_h, text_embed)
+            mix_result = self._mix_modalities(audio_h, video_h, text_embed)
+            if self.use_amm:
+                feature_f, amm_aux = mix_result
+            else:
+                feature_f = mix_result
             fusion_h = self._apply_fusion(feature_f)
 
         # ── Build LLM input with optional AV token bypass ──
@@ -495,6 +511,10 @@ class HMMEM(nn.Module):
             res['SharedAlignLoss'] = self.alpha_align * fusion_aux['align_loss']
             res['OffsetRegLoss'] = self.beta_offset * fusion_aux['offset_loss']
 
+        # ── AMM Align Loss (v3 NEW) ──
+        if self.use_amm_align_loss and self.training and amm_aux is not None:
+            res['AMM_Align_Loss'] = self.alpha_amm * amm_aux['align_loss']
+
         if self.use_nce_loss and self.training:
             nce_terms = []
             if self.use_audio and audio_seq is not None:
@@ -532,22 +552,24 @@ class HMMEM(nn.Module):
         if self.use_video:
             video_h = self.video_LSTM(video, video_len)
 
-        # Mixer → Fusion
+        # Mixer → Fusion (mirrors forward, discards aux)
         if self.text_only:
-            fusion_h = self._mix_modalities(audio_h, video_h, text_embed)
+            mix_result = self._mix_modalities(audio_h, video_h, text_embed)
+            fusion_h = mix_result[0] if self.use_amm else mix_result
             feature_f = text_embed.new_zeros(batch_size, 256)
         elif self.use_moe_fusion:
-            feature_f = self._mix_modalities(audio_h, video_h, text_embed)
+            mix_result = self._mix_modalities(audio_h, video_h, text_embed)
+            feature_f = mix_result[0] if self.use_amm else mix_result
             fusion_h, _ = self._dual_moe_forward(audio_h, video_h, feature_f)
         elif self.use_atgfbff or self.use_shared_offset:
-            # Dedicated ATGFBFF / SharedOffset path (mirrors forward)
             text_pooled = self.text_pool(text_embed.permute(0, 2, 1)).squeeze(-1)
             text_proj = self.text_proj_for_mixer(text_pooled)
             fusion_h_raw, _ = self.mixer(audio_h, video_h, text_proj)
             fusion_h = self.mixer_out_proj(fusion_h_raw)
             feature_f = fusion_h_raw.mean(dim=1).detach()
         else:
-            feature_f = self._mix_modalities(audio_h, video_h, text_embed)
+            mix_result = self._mix_modalities(audio_h, video_h, text_embed)
+            feature_f = mix_result[0] if self.use_amm else mix_result
             fusion_h = self._apply_fusion(feature_f)
 
         # ── Build LLM input with optional AV token bypass ──

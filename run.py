@@ -362,6 +362,16 @@ def parse_args():
     parser.add_argument('--use_mslaf', action='store_true',
                         help='enable Multi-Scale Latent Attention Fusion (MSLAF) after ATGFBFF/SharedOffset mixer')
     
+    # ── AMM v3 enhancements ──
+    parser.add_argument('--use_tcap', action='store_true', default=True,
+                        help='enable TCAP (Text Confidence-Aware Attention Prior) in AMM (default: True)')
+    parser.add_argument('--use_amm_align_loss', action='store_true', default=True,
+                        help='enable AMM modal alignment loss L_amm (default: True)')
+    parser.add_argument('--alpha_amm', type=float, default=0.5,
+                        help='weight for AMM modal alignment loss (default: 0.5)')
+    parser.add_argument('--bypass_scale_init', type=float, default=0.3,
+                        help='initial scale for bypass AV tokens (learnable, default: 0.3)')
+    
     # ── Fusion layer ablation (mutually exclusive: use_moe_fusion overrides use_msf) ──
     parser.add_argument('--use_msf', action='store_true', default=False,
                         help='use Multi-Scale Fusion (default baseline)')

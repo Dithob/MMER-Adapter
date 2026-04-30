@@ -91,6 +91,18 @@ class ConfigClassification():
                             **commonArgs,
                             **dataset_paras,
                             ))
+
+        # ── Context Ablation: dynamic seq_lens[0] override ──
+        # seq_lens = (text, audio, video) — only text dimension is modified here
+        if hasattr(self.args, 'text_seq_len') and self.args.text_seq_len is not None:
+            old = list(self.args.seq_lens)
+            old[0] = self.args.text_seq_len
+            self.args.seq_lens = tuple(old)
+        elif getattr(self.args, 'use_context', False):
+            # Context mode: auto-increase text seq_len to accommodate context
+            old = list(self.args.seq_lens)
+            old[0] = max(old[0], 128)
+            self.args.seq_lens = tuple(old)
     
     def __datasetCommonParams(self):
         root_dataset_dir = self.root_dataset_dir

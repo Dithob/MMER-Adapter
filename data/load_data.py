@@ -88,15 +88,33 @@ class MMDataset(Dataset):
         logger.info(f"MELD loading NEW format: {data_path}")
 
         def build_multimodal_text(meta):
-            """Build text input for LLM tokenizer.
+            """Build text: utterance-first ordering ensures utterance is never truncated.
             
-            Only use the raw utterance text (matching UniMSE's proven approach).
-            Context/speaker are intentionally NOT prepended because:
-            - MELD dialogues average 8-12 turns, context can be 200+ tokens
-            - seq_lens[0]=65 token limit would truncate the actual utterance
-            - This was confirmed as the root cause of V2's performance collapse
+            If --use_context: "utterance [speaker] Context: ..."
+            If no context:    "utterance"  (matching UniMSE's proven approach)
+            
+            Truncation is right-side, so only context tail gets clipped.
             """
-            return str(meta.get('text', '')).strip()
+            text = str(meta.get('text', '')).strip()
+            if not getattr(self.args, 'use_context', False):
+                return text
+            # Utterance-first: truncation only cuts context tail
+            parts = [text]
+            speaker = str(meta.get('speaker', '')).strip()
+            if speaker:
+                parts.append(f'[{speaker}]')
+            context = str(meta.get('context', '')).strip()
+            if context and context != '[]':
+                # Parse JSON list format if present
+                if context.startswith('['):
+                    try:
+                        parsed = json.loads(context)
+                        if isinstance(parsed, list):
+                            context = ' '.join(str(t).strip() for t in parsed if str(t).strip())
+                    except json.JSONDecodeError:
+                        pass
+                parts.append(f'Context: {context}')
+            return ' '.join(parts)
 
         with open(data_path, 'rb') as f:
             data = pickle.load(f)
@@ -228,34 +246,39 @@ class MMDataset(Dataset):
                 break
 
         def build_multimodal_text(meta):
+            """Build text: utterance-first ordering ensures utterance is never truncated.
+            
+            If --use_context: "utterance [speaker] Context: ..."
+            If no context:    "utterance"  (matching UniMSE's proven approach)
+            
+            Truncation is right-side, so only context tail gets clipped.
+            """
             text = str(meta.get('text', '')).strip()
+            if not getattr(self.args, 'use_context', False):
+                return text
+            # Utterance-first: truncation only cuts context tail
+            parts = [text]
             speaker = str(meta.get('speaker', '')).strip()
+            if speaker:
+                parts.append(f'[{speaker}]')
             context_raw = meta.get('context', '')
             context_text = ''
-
             if isinstance(context_raw, str):
                 context_raw = context_raw.strip()
-                if context_raw:
-                    if context_raw.startswith('['):
-                        try:
-                            parsed_context = json.loads(context_raw)
-                            if isinstance(parsed_context, list):
-                                cleaned_turns = [str(turn).strip() for turn in parsed_context if str(turn).strip()]
-                                context_text = ' '.join(cleaned_turns)
-                            else:
-                                context_text = str(parsed_context).strip()
-                        except json.JSONDecodeError:
-                            context_text = context_raw
-                    else:
+                if context_raw and context_raw.startswith('['):
+                    try:
+                        parsed = json.loads(context_raw)
+                        if isinstance(parsed, list):
+                            context_text = ' '.join(str(t).strip() for t in parsed if str(t).strip())
+                        else:
+                            context_text = str(parsed).strip()
+                    except json.JSONDecodeError:
                         context_text = context_raw
-
-            text_parts = []
+                elif context_raw:
+                    context_text = context_raw
             if context_text:
-                text_parts.append(f"Context: {context_text}")
-            if speaker:
-                text_parts.append(f"Speaker: {speaker}")
-            text_parts.append(f"Utterance: {text}" if text else "Utterance:")
-            return '\n'.join(text_parts)
+                parts.append(f'Context: {context_text}')
+            return ' '.join(parts)
         
         # 1. Detect iemocap_text CSV directory
         iemocap_text_dir = None

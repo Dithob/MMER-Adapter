@@ -424,6 +424,12 @@ def parse_args():
     parser.add_argument('--modalities', type=str, default='tav',
                         help='enabled modalities for ablation: any subset of t(ext)/a(udio)/v(ideo), e.g. tav/ta/tv/av/t/a/v')
 
+    # ── Context Ablation ──
+    parser.add_argument('--use_context', action='store_true', default=False,
+                        help='prepend dialogue context to utterance text (utterance-first safe ordering)')
+    parser.add_argument('--text_seq_len', type=int, default=None,
+                        help='override text seq_len (seq_lens[0]). Default: 65/84 without context, 128 with context. Does NOT affect AV.')
+
     # ── Raw AV Token Bypass (EmotionLLaMA-v2 style) ──
     parser.add_argument('--raw_av_mode', type=str, default='none',
                         choices=['none', 'audio', 'video', 'both'],

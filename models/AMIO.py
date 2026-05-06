@@ -23,9 +23,9 @@ class AMIO(nn.Module):
         lastModel = MODEL_MAP[args.modelName]
         self.Model = lastModel(args)
 
-    def forward(self, labels_m, text_x, audio_x, video_x):
-        return self.Model(labels_m, text_x, audio_x, video_x)
+    def forward(self, labels_m, text_x, audio_x, video_x, context_text=None):
+        return self.Model(labels_m, text_x, audio_x, video_x, context_text=context_text)
 
-    def generate(self, text_x, audio_x, video_x):
+    def generate(self, text_x, audio_x, video_x, context_text=None):
         # Returns (predictions, feature_f) tuple
-        return self.Model.generate(text_x, audio_x, video_x)
+        return self.Model.generate(text_x, audio_x, video_x, context_text=context_text)

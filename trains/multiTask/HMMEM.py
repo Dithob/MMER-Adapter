@@ -325,7 +325,7 @@ class HMMEM():
                         y_pred['M'].append(predict_label)
                         y_true['M'].append(labels_m)
                         # Collect fusion features for t-SNE visualization
-                        all_features.append(feature_f.cpu().numpy())
+                        all_features.append(feature_f.float().cpu().numpy())
             
             pred, true = list(chain(*y_pred['M'])), list(chain(*y_true['M']))
             

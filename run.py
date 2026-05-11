@@ -158,7 +158,11 @@ def run(args):
     resume_ckpt = getattr(args, 'resume_checkpoint', None)
     atio.do_train(model, dataloader, resume_checkpoint=resume_ckpt)
     # load pretrained model
-    assert os.path.exists(args.model_save_path)
+    if not os.path.exists(args.model_save_path):
+        raise FileNotFoundError(
+            f"Best model not found at: {args.model_save_path}. "
+            f"Training may have ended without saving a best model."
+        )
     # load finetune parameters
     checkpoint = torch.load(args.model_save_path)
     model.load_state_dict(checkpoint, strict=False)

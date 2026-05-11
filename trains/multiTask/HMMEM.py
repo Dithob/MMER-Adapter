@@ -138,6 +138,7 @@ class HMMEM():
         min_or_max = 'min' if self.args.KeyEval in ['MAE'] else 'max'
         best_valid = 1e8 if min_or_max == 'min' else 0
         epochs, best_epoch = 0, 0
+        best_model_saved = False  # track whether we saved a best model in this run
 
         if resume_checkpoint is not None:
             logger.info(f"Resuming from checkpoint: {resume_checkpoint}")
@@ -250,6 +251,7 @@ class HMMEM():
                     # save best model weights (only trainable params)
                     self.save_model(model, epochs, self.args.model_save_path)
                     model.to(self.args.device)
+                    best_model_saved = True
 
                 # ── 定期保存断点 checkpoint（每 ckpt_save_interval 个 epoch）──
                 if epochs % ckpt_save_interval == 0:
@@ -265,6 +267,13 @@ class HMMEM():
                     if self.args.save_labels:
                         with open(os.path.join(self.args.res_save_dir, f'{self.args.modelName}-{self.args.datasetName}-labels.pkl'), 'wb') as df:
                             plk.dump(saved_labels, df, protocol=4)
+                    # 断点续训场景：如果本轮没有刷新 best，model_save_path 不存在
+                    # 此时用当前模型（已从 checkpoint 恢复了 best 权重）补存一份
+                    if not best_model_saved and not os.path.exists(self.args.model_save_path):
+                        logger.info(f"No new best found during resumed training. "
+                                    f"Saving checkpoint-restored best model to {self.args.model_save_path}")
+                        self.save_model(model, best_epoch, self.args.model_save_path)
+                        model.to(self.args.device)
                     return
 
     def do_test(self, model, dataloader, mode="VAL"):

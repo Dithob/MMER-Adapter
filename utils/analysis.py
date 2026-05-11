@@ -291,7 +291,7 @@ def _plot_tsne_clusters(features, labels, label_names, save_path, tag,
         random_state=42,
         init='pca',
         learning_rate='auto',
-        n_iter=1000,
+        max_iter=1000,
         metric='cosine',  # cosine distance often works better for high-dim embeddings
     )
     embeddings = tsne.fit_transform(features)

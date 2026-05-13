@@ -9,7 +9,7 @@ import torch.nn.functional as F
 
 from models.text_modules import Language_model
 from .HMMEM_loss import DiffLoss, LightweightCrossCPC
-from .HMMEM_moe import GlobalMoE, LocalMoE
+from .HMMEM_moe import OriginGlobalMoE, OriginLocalMoE, GlobalSemanticMoE, LocalDetailMoE
 from .HMMEM_modules import (
     TVA_LSTM,
     Text_guide_mixer,
@@ -20,7 +20,7 @@ from .HMMEM_modules import (
     MultiScaleLatentAttentionFusion,
     SharedOffsetFusion,
 )
-from .HMMEM_mixer import AdaptiveModalMixer
+from .HMMEM_mixer import OriginAMM, AdaptiveModalMixer
 
 __all__ = ['HMMEM']
 
@@ -88,23 +88,30 @@ class HMMEM(nn.Module):
             raise ValueError("--modalities must contain at least one of: t, a, v")
 
         # ── Feature flags ──
-        # Mixer layer (mutually exclusive: use_amm / use_atgfbff / use_tgm)
+        # Mixer layer (mutually exclusive: use_amm / use_origin_amm / use_atgfbff / use_tgm)
         # Mixers require text + at least one AV modality
         self.use_tgm = getattr(args, 'use_tgm', True) and self.use_text and self.has_av
         self.use_amm = getattr(args, 'use_amm', False) and self.use_text and self.has_av
+        self.use_origin_amm = getattr(args, 'use_origin_amm', False) and self.use_text and self.has_av
         self.use_tcap = getattr(args, 'use_tcap', True)  # TCAP enabled by default when AMM is used
+        self.amm_mode = str(getattr(args, 'amm_mode', 'base')).lower()
+        self.num_emotion_prototypes = getattr(args, 'num_emotion_prototypes', 4)
         self.use_atgfbff = getattr(args, 'use_atgfbff', False) and self.use_text and self.has_av
         self.use_shared_offset = getattr(args, 'use_shared_offset', False) and self.use_text and self.has_av
         self.use_mslaf = getattr(args, 'use_mslaf', False) and self.has_av
-        if self.use_amm or self.use_atgfbff or self.use_shared_offset:
+        if self.use_amm or self.use_origin_amm or self.use_atgfbff or self.use_shared_offset:
             self.use_tgm = False  # explicit overrides TGM
 
-        # Fusion layer (mutually exclusive: use_moe_fusion / use_atgfbff / use_msf)
+        # Fusion layer (mutually exclusive: sd_moe > moe > msf)
         # Fusion only makes sense when AV modalities are present
         self.use_msf = getattr(args, 'use_msf', True) and self.has_av
         self.use_moe_fusion = getattr(args, 'use_moe_fusion', False) and self.has_av
-        if self.use_moe_fusion:
-            self.use_msf = False  # MoE overrides MSF (MSF is used inside MoE path)
+        self.use_sd_moe = getattr(args, 'use_sd_moe', False) and self.has_av
+        if self.use_sd_moe:
+            self.use_moe_fusion = False
+            self.use_msf = False
+        elif self.use_moe_fusion:
+            self.use_msf = False  # MoE overrides MSF
 
         # Auxiliary losses (only meaningful with AV)
         self.use_gate = getattr(args, 'use_gate', False) and self.has_av
@@ -114,7 +121,7 @@ class HMMEM(nn.Module):
         self.use_nce_loss = getattr(args, 'use_nce_loss', False) and self.use_text and self.has_av
         self.use_atgfbff_loss = getattr(args, 'use_atgfbff_loss', True) and self.use_atgfbff
         self.use_shared_offset_loss = getattr(args, 'use_shared_offset_loss', True) and self.use_shared_offset
-        self.use_amm_align_loss = getattr(args, 'use_amm_align_loss', True) and self.use_amm
+        self.use_amm_align_loss = getattr(args, 'use_amm_align_loss', True) and (self.use_amm or self.use_origin_amm)
         self.alpha_amm = getattr(args, 'alpha_amm', 0.5)
         self.alpha_align = getattr(args, 'alpha_align', 0.6)
         self.beta_fiber = getattr(args, 'beta_fiber', 0.1)
@@ -128,10 +135,17 @@ class HMMEM(nn.Module):
         # ══════════════════════════════════════════════
         # Mixer Layer (only built when needed)
         # ══════════════════════════════════════════════
-        if self.use_amm:
+        if self.use_origin_amm:
+            self.mixer = OriginAMM(
+                text_in=text_in, fusion_dim=fusion_input_size,
+                use_tcap=self.use_tcap,
+            )
+        elif self.use_amm:
             self.mixer = AdaptiveModalMixer(
                 text_in=text_in, fusion_dim=fusion_input_size,
-                use_tcap=self.use_tcap and self.use_amm,
+                use_tcap=self.use_tcap,
+                amm_mode=self.amm_mode,
+                num_emotion_prototypes=self.num_emotion_prototypes,
             )
         elif self.use_atgfbff:
             self.mixer = ATGFBFF(
@@ -166,32 +180,62 @@ class HMMEM(nn.Module):
         # ══════════════════════════════════════════════
         # Fusion Layer (only built when AV present)
         # ══════════════════════════════════════════════
-        if self.use_moe_fusion:
-            # ── Dual-Branch MoE ──
+        if self.use_sd_moe:
+            # ── SD-MoE: Semantic-Decomposed MoE (improved v3) ──
             self.pseudo_tokens = args.pseudo_tokens
             num_local = getattr(args, 'num_local_experts', 3)
             expert_bottleneck = getattr(args, 'expert_bottleneck', 64)
 
-            # Global Emotion MoE (heterogeneous experts)
-            self.global_moe = GlobalMoE(input_size=fusion_input_size)
+            # Shared semantic projection (decomposes feature_f)
+            self.shared_proj = nn.Sequential(
+                nn.Linear(fusion_input_size, fusion_input_size),
+                nn.LayerNorm(fusion_input_size),
+                nn.GELU(),
+            )
 
-            # Local Emotion MoE (bottleneck experts, receives raw modality features)
-            self.local_moe = LocalMoE(
+            # Global Semantic MoE (processes z_shared)
+            self.global_moe = GlobalSemanticMoE(input_size=fusion_input_size)
+
+            # Local Detail MoE (processes residual)
+            self.local_moe = LocalDetailMoE(
                 input_size=fusion_input_size,
                 num_experts=num_local,
                 bottleneck_dim=expert_bottleneck
             )
-            # Projection for Local branch input: cat(audio_h, video_h) [512] → [256]
-            self.local_proj = nn.Linear(fusion_input_size * 2, fusion_input_size)
 
-            # Meta-Gate: fuse Global and Local branches
-            # Input: feature_f (256) + (global_out - local_out) (256) + optional cosine bias (1)
-            meta_gate_input_dim = fusion_input_size * 2  # 512
+            # Meta-Gate: feature_f(256) + diff(256) + residual_magnitude(1) [+ cosine_bias(1)]
+            meta_gate_input_dim = fusion_input_size * 2 + 1
             if self.use_gate:
-                meta_gate_input_dim += 1  # + cosine bias
+                meta_gate_input_dim += 1
             self.meta_gate = nn.Linear(meta_gate_input_dim, 2)
 
-            # MSF as pseudo-token expander (replaces simple Linear projector)
+            # MSF as pseudo-token expander
+            self.moe_msf = mutli_scale_fusion(
+                input_size=fusion_input_size,
+                output_size=text_in,
+                pseudo_tokens=args.pseudo_tokens
+            )
+
+        elif self.use_moe_fusion:
+            # ── Original Dual-Branch MoE (preserved for ablation) ──
+            self.pseudo_tokens = args.pseudo_tokens
+            num_local = getattr(args, 'num_local_experts', 3)
+            expert_bottleneck = getattr(args, 'expert_bottleneck', 64)
+
+            self.global_moe = OriginGlobalMoE(input_size=fusion_input_size)
+            self.local_moe = OriginLocalMoE(
+                input_size=fusion_input_size,
+                num_experts=num_local,
+                bottleneck_dim=expert_bottleneck
+            )
+            self.local_proj = nn.Linear(fusion_input_size * 2, fusion_input_size)
+
+            meta_gate_input_dim = fusion_input_size * 2
+            if self.use_gate:
+                meta_gate_input_dim += 1
+            self.meta_gate = nn.Linear(meta_gate_input_dim, 2)
+
+            # MSF as pseudo-token expander
             self.moe_msf = mutli_scale_fusion(
                 input_size=fusion_input_size,
                 output_size=text_in,
@@ -276,8 +320,8 @@ class HMMEM(nn.Module):
                 count += 1
         return total / max(count, 1)
 
-    def _dual_moe_forward(self, audio_h, video_h, feature_f):
-        """Dual-Branch MoE forward: Global MoE + Local MoE + Meta-Gate."""
+    def _origin_dual_moe_forward(self, audio_h, video_h, feature_f):
+        """Original Dual-Branch MoE forward: Global MoE + Local MoE + Meta-Gate."""
         # 1. Global MoE — receives fused feature_f
         global_out, global_gw, global_experts = self.global_moe(feature_f)
 
@@ -305,6 +349,53 @@ class HMMEM(nn.Module):
             'local_out': local_out,
             'global_experts': global_experts,
             'local_experts': local_experts,
+        }
+        return fusion_h, aux
+
+    def _sd_moe_forward(self, feature_f, audio_h, video_h):
+        """SD-MoE forward: Semantic Decomposition → Global + Local → Meta-Gate.
+
+        Both paths share the same input (feature_f), decomposed via shared_proj
+        into coarse-grained semantics (z_shared) and fine-grained residual.
+        """
+        # 1. Semantic decomposition
+        z_shared = self.shared_proj(feature_f)       # [B, 256] coarse semantics
+        residual = feature_f - z_shared              # [B, 256] fine-grained details
+
+        # 2. Global Semantic MoE (processes z_shared)
+        global_out, global_gw, global_experts = self.global_moe(z_shared)
+
+        # 3. Local Detail MoE (processes residual)
+        local_out, local_gw, local_experts = self.local_moe(residual)
+
+        # 4. Meta-Gate with residual magnitude awareness
+        res_magnitude = residual.norm(dim=-1, keepdim=True)  # [B, 1]
+        meta_input = torch.cat([
+            feature_f,                  # original AMM output
+            global_out - local_out,     # posterior path difference
+            res_magnitude,              # residual magnitude signal
+        ], dim=-1)
+
+        if self.use_gate:
+            bias_score = F.cosine_similarity(audio_h, video_h, dim=-1).unsqueeze(-1)
+            meta_input = torch.cat([meta_input, bias_score], dim=-1)
+
+        meta_weights = F.softmax(self.meta_gate(meta_input), dim=-1)  # [B, 2]
+        fused = meta_weights[:, 0:1] * global_out + meta_weights[:, 1:2] * local_out
+
+        # 5. MSF expander → [B, pseudo_tokens, text_in]
+        fusion_h = self.moe_msf(fused)
+
+        aux = {
+            'global_gw': global_gw,
+            'local_gw': local_gw,
+            'meta_weights': meta_weights,
+            'global_out': global_out,
+            'local_out': local_out,
+            'global_experts': global_experts,
+            'local_experts': local_experts,
+            'z_shared': z_shared,
+            'residual': residual,
         }
         return fusion_h, aux
 
@@ -370,32 +461,37 @@ class HMMEM(nn.Module):
 
         return llm_input, input_attn_mask
 
+    @property
+    def _amm_active(self):
+        """True when any AMM variant is active (both return (output, aux) tuples)."""
+        return self.use_amm or self.use_origin_amm
+
     def _mix_modalities(self, audio_h, video_h, text_embed):
         """Fuse enabled modalities into a single [B, 256] feature vector.
         
         Handles all 7 ablation combinations cleanly.
-        When use_amm=True, returns (output, aux) tuple; otherwise returns output only.
+        When any AMM variant is active, returns (output, aux) tuple; otherwise returns output only.
         """
         if self.use_audio and self.use_video:
             if self.use_text:
                 return self.mixer(audio_h, video_h, text_embed)
-            return audio_h + video_h, None if self.use_amm else audio_h + video_h
+            return audio_h + video_h, None if self._amm_active else audio_h + video_h
         elif self.use_audio:
             zero_v = torch.zeros_like(audio_h)
             if self.use_text:
                 return self.mixer(audio_h, zero_v, text_embed)
-            return audio_h, None if self.use_amm else audio_h
+            return audio_h, None if self._amm_active else audio_h
         elif self.use_video:
             zero_a = torch.zeros_like(video_h)
             if self.use_text:
                 return self.mixer(zero_a, video_h, text_embed)
-            return video_h, None if self.use_amm else video_h
+            return video_h, None if self._amm_active else video_h
         else:
             text_pooled = torch.mean(text_embed, dim=1)
             projected = self.text_fallback_proj(text_pooled)
             fusion_h = self.text_fallback_token_proj(projected.unsqueeze(2))
             result = fusion_h.permute(0, 2, 1)
-            return (result, None) if self.use_amm else result
+            return (result, None) if self._amm_active else result
 
     # ──────────────────────────────────────────────
     # Forward / Generate
@@ -444,18 +540,25 @@ class HMMEM(nn.Module):
         if self.text_only:
             # Text-only: skip mixer/fusion, use dedicated text path
             mix_result = self._mix_modalities(audio_h, video_h, text_embed)
-            if self.use_amm:
+            if self._amm_active:
                 fusion_h, amm_aux = mix_result
             else:
                 fusion_h = mix_result
             feature_f = text_embed.new_zeros(batch_size, 256)
-        elif self.use_moe_fusion:
+        elif self.use_sd_moe:
             mix_result = self._mix_modalities(audio_h, video_h, text_embed)
-            if self.use_amm:
+            if self._amm_active:
                 feature_f, amm_aux = mix_result
             else:
                 feature_f = mix_result
-            fusion_h, moe_aux = self._dual_moe_forward(audio_h, video_h, feature_f)
+            fusion_h, moe_aux = self._sd_moe_forward(feature_f, audio_h, video_h)
+        elif self.use_moe_fusion:
+            mix_result = self._mix_modalities(audio_h, video_h, text_embed)
+            if self._amm_active:
+                feature_f, amm_aux = mix_result
+            else:
+                feature_f = mix_result
+            fusion_h, moe_aux = self._origin_dual_moe_forward(audio_h, video_h, feature_f)
         elif self.use_atgfbff or self.use_shared_offset:
             text_pooled = self.text_pool(text_embed.permute(0, 2, 1)).squeeze(-1)
             text_proj = self.text_proj_for_mixer(text_pooled)
@@ -464,7 +567,7 @@ class HMMEM(nn.Module):
             feature_f = fusion_h_raw.mean(dim=1).detach()
         else:
             mix_result = self._mix_modalities(audio_h, video_h, text_embed)
-            if self.use_amm:
+            if self._amm_active:
                 feature_f, amm_aux = mix_result
             else:
                 feature_f = mix_result
@@ -488,7 +591,7 @@ class HMMEM(nn.Module):
                 res['ATGFBFF_fiber'] = fusion_aux['fiber_loss']
 
         # ── Auxiliary Losses (training only) ──
-        if self.use_moe_fusion and self.training:
+        if (self.use_moe_fusion or self.use_sd_moe) and self.training and moe_aux is not None:
             if self.use_moe_lb_loss:
                 # Only apply LB loss to Local branch (Global has heterogeneous experts)
                 lb_local = self._compute_lb_loss(moe_aux['local_gw'])
@@ -555,12 +658,16 @@ class HMMEM(nn.Module):
         # Mixer → Fusion (mirrors forward, discards aux)
         if self.text_only:
             mix_result = self._mix_modalities(audio_h, video_h, text_embed)
-            fusion_h = mix_result[0] if self.use_amm else mix_result
+            fusion_h = mix_result[0] if self._amm_active else mix_result
             feature_f = text_embed.new_zeros(batch_size, 256)
+        elif self.use_sd_moe:
+            mix_result = self._mix_modalities(audio_h, video_h, text_embed)
+            feature_f = mix_result[0] if self._amm_active else mix_result
+            fusion_h, _ = self._sd_moe_forward(feature_f, audio_h, video_h)
         elif self.use_moe_fusion:
             mix_result = self._mix_modalities(audio_h, video_h, text_embed)
-            feature_f = mix_result[0] if self.use_amm else mix_result
-            fusion_h, _ = self._dual_moe_forward(audio_h, video_h, feature_f)
+            feature_f = mix_result[0] if self._amm_active else mix_result
+            fusion_h, _ = self._origin_dual_moe_forward(audio_h, video_h, feature_f)
         elif self.use_atgfbff or self.use_shared_offset:
             text_pooled = self.text_pool(text_embed.permute(0, 2, 1)).squeeze(-1)
             text_proj = self.text_proj_for_mixer(text_pooled)
@@ -569,7 +676,7 @@ class HMMEM(nn.Module):
             feature_f = fusion_h_raw.mean(dim=1).detach()
         else:
             mix_result = self._mix_modalities(audio_h, video_h, text_embed)
-            feature_f = mix_result[0] if self.use_amm else mix_result
+            feature_f = mix_result[0] if self._amm_active else mix_result
             fusion_h = self._apply_fusion(feature_f)
 
         # ── Build LLM input with optional AV token bypass ──

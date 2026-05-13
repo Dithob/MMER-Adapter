@@ -90,6 +90,7 @@ def run(args):
             'audio_LSTM', 'video_LSTM', 'mixer', 'fusion',
             'audio_adapter', 'video_adapter',
             'text_proj_for_mixer', 'mixer_out_proj', 'mslaf',
+            'shared_proj', 'global_moe', 'local_moe', 'moe_msf',
         ]
         compiled_names = []
         for name in _compile_targets:
@@ -246,8 +247,8 @@ def run_normal(args):
             getattr(args, 'batch_size', 1) * grad_accum,  # effective batch
             getattr(args, 'warm_up_epochs', ''),
             getattr(args, 'early_stop', ''),
-            'ATGFBFF' if getattr(args, 'use_atgfbff', False) else ('SharedOffset' if getattr(args, 'use_shared_offset', False) else ('AMM' if getattr(args, 'use_amm', False) else ('TGM' if getattr(args, 'use_tgm', False) else 'None'))),
-            ('MSLAF' if getattr(args, 'use_mslaf', False) else '') + ('|' if getattr(args, 'use_mslaf', False) and (getattr(args, 'use_moe_fusion', False) or getattr(args, 'use_msf', False)) else '') + ('MoE' if getattr(args, 'use_moe_fusion', False) else ('MSF' if getattr(args, 'use_msf', False) else ('None' if not getattr(args, 'use_mslaf', False) else ''))),
+            'ATGFBFF' if getattr(args, 'use_atgfbff', False) else ('SharedOffset' if getattr(args, 'use_shared_offset', False) else ('AMM-' + getattr(args, 'amm_mode', 'base') if getattr(args, 'use_amm', False) else ('OriginAMM' if getattr(args, 'use_origin_amm', False) else ('TGM' if getattr(args, 'use_tgm', False) else 'None')))),
+            ('MSLAF' if getattr(args, 'use_mslaf', False) else '') + ('|' if getattr(args, 'use_mslaf', False) and (getattr(args, 'use_sd_moe', False) or getattr(args, 'use_moe_fusion', False) or getattr(args, 'use_msf', False)) else '') + ('SD-MoE' if getattr(args, 'use_sd_moe', False) else ('MoE' if getattr(args, 'use_moe_fusion', False) else ('MSF' if getattr(args, 'use_msf', False) else ('None' if not getattr(args, 'use_mslaf', False) else '')))),
             getattr(args, 'use_gate', False),
             getattr(args, 'use_lora', False),
             getattr(args, 'lora_r', '') if getattr(args, 'use_lora', False) else '',
@@ -342,8 +343,15 @@ def parse_args():
     # ── Mixer layer ablation (mutually exclusive: use_amm / use_atgfbff overrides use_tgm) ──
     parser.add_argument('--use_tgm', action='store_true', default=False,
                         help='use Text-Guided Mixer (default baseline)')
+    parser.add_argument('--use_origin_amm', action='store_true',
+                        help='use original AMM with TCAP (for ablation, preserved)')
     parser.add_argument('--use_amm', action='store_true',
-                        help='use Adaptive Modal Mixer (overrides TGM)')
+                        help='use improved AMM (H-AMM/EP-AMM, overrides TGM)')
+    parser.add_argument('--amm_mode', type=str, default='base',
+                        choices=['base', 'hierarchical', 'prototype'],
+                        help='AMM interaction mode: base / hierarchical (H-AMM) / prototype (EP-AMM)')
+    parser.add_argument('--num_emotion_prototypes', type=int, default=4,
+                        help='number of emotion prototype tokens (prototype mode only)')
     parser.add_argument('--use_atgfbff', action='store_true',
                         help='use ATGFB-MFF style fusion (overrides TGM; can be combined with MSF if desired)')
     parser.add_argument('--use_atgfbff_loss', action='store_true', default=True,
@@ -376,11 +384,13 @@ def parse_args():
     parser.add_argument('--bypass_scale_init', type=float, default=0.3,
                         help='initial scale for bypass AV tokens (learnable, default: 0.3)')
     
-    # ── Fusion layer ablation (mutually exclusive: use_moe_fusion overrides use_msf) ──
+    # ── Fusion layer ablation (mutually exclusive: sd_moe > moe > msf) ──
     parser.add_argument('--use_msf', action='store_true', default=False,
                         help='use Multi-Scale Fusion (default baseline)')
     parser.add_argument('--use_moe_fusion', action='store_true',
-                        help='enable Dual-Branch MoE fusion (overrides MSF)')
+                        help='enable original Dual-Branch MoE fusion (for ablation)')
+    parser.add_argument('--use_sd_moe', action='store_true',
+                        help='enable Semantic-Decomposed MoE (improved, overrides MSF and MoE)')
     
     # ── MoE configuration ──
     parser.add_argument('--use_gate', action='store_true',
@@ -491,9 +501,12 @@ if __name__ == '__main__':
         args.seeds = [int(x) for x in clean_seeds.split(',') if x.strip()]
     
     # Resolve mutually exclusive switches (so config log shows correct state)
-    if args.use_amm or args.use_atgfbff or args.use_shared_offset:
+    if args.use_amm or args.use_origin_amm or args.use_atgfbff or args.use_shared_offset:
         args.use_tgm = False
-    if args.use_moe_fusion:
+    if args.use_sd_moe:
+        args.use_moe_fusion = False
+        args.use_msf = False
+    elif args.use_moe_fusion:
         args.use_msf = False
         
     logger = set_log(args)

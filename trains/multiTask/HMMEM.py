@@ -280,8 +280,6 @@ class HMMEM():
         model.eval()
         y_pred = {'M': [], 'T': [], 'A': [], 'V': []}
         y_true = {'M': [], 'T': [], 'A': [], 'V': []}
-        all_features = []  # Collect fusion features for t-SNE
-
         # Use same amp_dtype as training for consistency
         use_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
         amp_dtype = torch.bfloat16 if use_bf16 else torch.float16
@@ -313,6 +311,9 @@ class HMMEM():
             logger.info('M: >> ' + dict_to_str(eval_results))
         else:
             # train_mode == 'classification'
+            all_fusion = []   # fusion features for emotion t-SNE
+            all_audio = []    # audio features for modality t-SNE
+            all_video = []    # video features for modality t-SNE
             with torch.no_grad():
                 with tqdm(dataloader) as td:
                     for batch_data in td:
@@ -325,7 +326,7 @@ class HMMEM():
                             vision_lengths = batch_data['vision_lengths'].to(self.args.device)
                         context_text = batch_data.get('context_text', None)
                         with autocast('cuda', dtype=amp_dtype):
-                            outputs, feature_f = model.generate((text, text_lengths), (audio, audio_lengths),
+                            outputs, features_dict = model.generate((text, text_lengths), (audio, audio_lengths),
                                                      (vision, vision_lengths), context_text=context_text)
 
                         predict_label = outputs
@@ -333,8 +334,10 @@ class HMMEM():
                         
                         y_pred['M'].append(predict_label)
                         y_true['M'].append(labels_m)
-                        # Collect fusion features for t-SNE visualization
-                        all_features.append(feature_f.float().cpu().numpy())
+                        # Collect features for visualization
+                        all_fusion.append(features_dict['fusion'].float().cpu().numpy())
+                        all_audio.append(features_dict['audio'].float().cpu().numpy())
+                        all_video.append(features_dict['video'].float().cpu().numpy())
             
             pred, true = list(chain(*y_pred['M'])), list(chain(*y_true['M']))
             
@@ -352,7 +355,9 @@ class HMMEM():
                         label_names[idx] = name
 
                     # Concatenate features
-                    features_np = np.concatenate(all_features, axis=0) if all_features else None
+                    fusion_np = np.concatenate(all_fusion, axis=0) if all_fusion else None
+                    audio_np = np.concatenate(all_audio, axis=0) if all_audio else None
+                    video_np = np.concatenate(all_video, axis=0) if all_video else None
 
                     # Save analysis outputs (with timestamp to avoid overwriting)
                     analysis_dir = os.path.join(
@@ -364,7 +369,8 @@ class HMMEM():
                     analysis_result = detailed_classification_analysis(
                         y_true=true,
                         y_pred=pred,
-                        features=features_np,
+                        features=fusion_np,
+                        modality_features={'audio': audio_np, 'video': video_np, 'fusion': fusion_np},
                         label_names=label_names,
                         save_dir=analysis_dir,
                         tag=tag,

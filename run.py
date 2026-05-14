@@ -225,6 +225,8 @@ def run_normal(args):
             "LR", "BatchSize", "EffBatch", "WarmupEpochs", "EarlyStop",
             "Mixer", "Fusion", "Gate", "LoRA", "LoRA_r",
             "AdapterDim", "Modalities", "RawAV", "PromptStyle", "PretrainLM",
+            "BiLSTM", "ModalDropout", "Oversampling", "OS_Alpha",
+            "LabelFormat", "ClsHead",
         ]
         columns = ["Model", "ModelType", "Dataset", "Seed", "Timestamp", "PTH Path",
                     "ConfusionMatrix", "tSNE"] \
@@ -257,6 +259,12 @@ def run_normal(args):
             getattr(args, 'raw_av_mode', 'none'),
             getattr(args, 'prompt_style', 'default'),
             os.path.basename(getattr(args, 'pretrain_LM', '')),
+            getattr(args, 'use_bilstm', False),
+            getattr(args, 'modality_dropout_p', 0.0),
+            getattr(args, 'use_oversampling', False),
+            getattr(args, 'oversampling_alpha', 0.5) if getattr(args, 'use_oversampling', False) else '',
+            getattr(args, 'label_format', 'index'),
+            getattr(args, 'use_cls_head', False),
         ]
 
         for k, test_results in enumerate(model_results):
@@ -447,6 +455,29 @@ def parse_args():
     # ── Modality Ablation ──
     parser.add_argument('--modalities', type=str, default='tav',
                         help='enabled modalities for ablation: any subset of t(ext)/a(udio)/v(ideo), e.g. tav/ta/tv/av/t/a/v')
+
+    # ── BiLSTM (temporal encoder upgrade) ──
+    parser.add_argument('--use_bilstm', action='store_true', default=False,
+                        help='use BiLSTM + attention pooling instead of unidirectional LSTM for audio/video encoding')
+
+    # ── Modality Dropout (anti-modality-laziness) ──
+    parser.add_argument('--modality_dropout_p', type=float, default=0.0,
+                        help='probability of randomly dropping one AV modality per batch during training (0.0=off, recommend 0.1~0.15)')
+
+    # ── Class-Balanced Oversampling ──
+    parser.add_argument('--use_oversampling', action='store_true', default=False,
+                        help='use WeightedRandomSampler to oversample minority emotion classes in training set')
+    parser.add_argument('--oversampling_alpha', type=float, default=0.5,
+                        help='smoothing exponent for oversampling weights: w=(N/n)^α. '
+                             '0.0=no rebalance, 0.5=sqrt smoothing (recommended), 1.0=pure inverse-frequency (aggressive)')
+
+    # ── Label Output Format ──
+    parser.add_argument('--label_format', type=str, default='index', choices=['index', 'text'],
+                        help='LLM output label format: index (default, output "3") or text (output "sadness")')
+
+    # ── Classification Head (方案 B) ──
+    parser.add_argument('--use_cls_head', action='store_true', default=False,
+                        help='use classification head on LLM hidden states instead of generative decoding')
 
     # ── Context Ablation ──
     parser.add_argument('--use_context', action='store_true', default=False,

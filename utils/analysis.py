@@ -5,14 +5,14 @@ Provides:
   - Per-class Precision / Recall / F1 / Support
   - WA (Weighted Accuracy), UA (Unweighted Accuracy), WF1, Macro-F1
   - Confusion matrix heatmap (PNG)
-  - t-SNE feature clustering scatter plot (PNG) — with KDE density contours
-    and confidence ellipses (inspired by ATGFB-MFF Figure 4 style)
+  - t-SNE emotion clustering scatter plot (PNG)
+  - t-SNE modality separation scatter plot (PNG) — paper Figure 4 style
 
 Usage:
     from utils.analysis import detailed_classification_analysis
     result = detailed_classification_analysis(
-        y_true, y_pred, features, label_names, save_dir, tag, logger, timestamp)
-    # result now contains 'cm_path' and 'tsne_path' keys
+        y_true, y_pred, features, modality_features, label_names,
+        save_dir, tag, logger, timestamp)
 """
 
 import os
@@ -22,17 +22,16 @@ import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend for server environments
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
-from matplotlib.patches import Ellipse
 from sklearn.metrics import (
     accuracy_score, recall_score, f1_score,
-    precision_recall_fscore_support, confusion_matrix, classification_report
+    precision_recall_fscore_support, confusion_matrix
 )
 from sklearn.manifold import TSNE
 
 logger = logging.getLogger('MSA')
 
-# ── Aesthetic color palette for emotion categories ──
-# High-contrast, colorblind-friendly palette with good separation
+# ── Color palettes ──
+# Emotion classes: high-contrast, distinguishable
 EMOTION_COLORS = [
     '#E74C3C',  # Red       — angry / anger
     '#F39C12',  # Orange    — surprise / excited
@@ -44,11 +43,17 @@ EMOTION_COLORS = [
     '#34495E',  # Dark Gray  — other
 ]
 
-# Softer fill colors (with alpha) for density contours
-EMOTION_FILL_COLORS = [
-    '#E74C3C30', '#F39C1230', '#2ECC7130', '#3498DB30',
-    '#9B59B630', '#1ABC9C30', '#E67E2230', '#34495E30',
-]
+# Modality colors (matching paper Figure 4: red=text, blue=audio, green=video)
+MODALITY_COLORS = {
+    'fusion': '#E74C3C',  # Red
+    'audio':  '#3498DB',  # Blue
+    'video':  '#2ECC71',  # Green
+}
+MODALITY_LABELS = {
+    'fusion': 'Text (Fusion)',
+    'audio':  'Audio',
+    'video':  'Video',
+}
 
 
 def _try_chinese_font():
@@ -65,7 +70,8 @@ def _try_chinese_font():
 
 
 def detailed_classification_analysis(
-    y_true, y_pred, features, label_names, save_dir, tag, log=None, timestamp=None
+    y_true, y_pred, features, label_names, save_dir, tag,
+    modality_features=None, log=None, timestamp=None
 ):
     """
     Run full classification analysis and save results.
@@ -73,18 +79,19 @@ def detailed_classification_analysis(
     Args:
         y_true: list/array of ground-truth label indices (int)
         y_pred: list/array of predicted label indices (int)
-        features: np.ndarray of shape (N, D) — fusion features for t-SNE
-                  Can be None to skip clustering visualization.
+        features: np.ndarray (N, D) — fusion features for emotion t-SNE.
+                  Can be None to skip.
         label_names: list of str — emotion class names in index order
         save_dir: str — directory to save output PNGs
-        tag: str — prefix for output filenames (e.g. 'hmmem-chatglm3-meld-TEST')
-        log: logger instance (optional, defaults to module logger)
-        timestamp: str — timestamp string to add to filename (e.g. '20260428_101530').
-                   If None, files will be saved without timestamp (overwrite mode).
+        tag: str — prefix for filenames (e.g. 'hmmem-chatglm3-meld-TEST')
+        modality_features: dict with keys 'audio', 'video', 'fusion',
+                           each np.ndarray (N, 256). For modality separation
+                           t-SNE (Figure 4 style). Can be None to skip.
+        log: logger instance (optional)
+        timestamp: str — timestamp suffix for filenames (optional)
 
     Returns:
-        dict with keys: WA, UA, WF1, Macro_F1, per_class (list of dicts),
-                        cm_path (str), tsne_path (str or None)
+        dict with keys: WA, UA, WF1, Macro_F1, per_class, cm_path, tsne_path
     """
     if log is None:
         log = logger
@@ -94,7 +101,6 @@ def detailed_classification_analysis(
     y_true = np.array(y_true, dtype=int)
     y_pred = np.array(y_pred, dtype=int)
 
-    # Build filename suffix
     ts_suffix = f'-{timestamp}' if timestamp else ''
 
     # ── 1. Summary metrics ──
@@ -139,12 +145,19 @@ def detailed_classification_analysis(
     _plot_confusion_matrix(y_true, y_pred, label_names, cm_path, tag)
     log.info(f"Confusion matrix saved → {cm_path}")
 
-    # ── 5. t-SNE clustering ──
+    # ── 5. Emotion t-SNE clustering ──
     tsne_path = None
     if features is not None and len(features) > 0:
-        tsne_path = os.path.join(save_dir, f'{tag}-tsne_clusters{ts_suffix}.png')
-        _plot_tsne_clusters(features, y_true, label_names, tsne_path, tag)
-        log.info(f"t-SNE cluster plot saved → {tsne_path}")
+        tsne_path = os.path.join(save_dir, f'{tag}-tsne_emotion{ts_suffix}.png')
+        _plot_emotion_tsne(features, y_true, label_names, tsne_path, tag)
+        log.info(f"Emotion t-SNE saved → {tsne_path}")
+
+    # ── 6. Modality separation t-SNE (Figure 4 style) ──
+    modality_tsne_path = None
+    if modality_features is not None:
+        modality_tsne_path = os.path.join(save_dir, f'{tag}-tsne_modality{ts_suffix}.png')
+        _plot_modality_tsne(modality_features, modality_tsne_path, tag)
+        log.info(f"Modality t-SNE saved → {modality_tsne_path}")
 
     return {
         'WA': wa,
@@ -167,17 +180,14 @@ def _plot_confusion_matrix(y_true, y_pred, label_names, save_path, tag):
     fig, ax = plt.subplots(figsize=(max(6, len(label_names) * 1.2),
                                      max(5, len(label_names) * 1.0)))
 
-    # Check if labels need Chinese font
     chinese_font = _try_chinese_font()
     font_props = {}
     if chinese_font:
         font_props = {'fontfamily': chinese_font}
 
-    # Draw heatmap manually (avoid seaborn dependency)
     cax = ax.imshow(cm_norm, interpolation='nearest', cmap='Blues', vmin=0, vmax=1)
     fig.colorbar(cax, ax=ax, fraction=0.046, pad=0.04)
 
-    # Annotate cells with percentage + count
     thresh = cm_norm.max() / 2.0
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
@@ -199,68 +209,15 @@ def _plot_confusion_matrix(y_true, y_pred, label_names, save_path, tag):
     plt.close(fig)
 
 
-def _confidence_ellipse(x, y, ax, n_std=2.0, facecolor='none', **kwargs):
-    """
-    Draw a confidence ellipse (covariance ellipse) for 2D point cloud.
-    
-    Args:
-        x, y: 1D arrays of coordinates
-        ax: matplotlib Axes
-        n_std: number of standard deviations for ellipse radius
-        facecolor: fill color for ellipse
-        **kwargs: passed to matplotlib.patches.Ellipse
-    """
-    if len(x) < 3:
-        return None
-    
-    cov = np.cov(x, y)
-    if np.any(np.isnan(cov)) or np.any(np.isinf(cov)):
-        return None
-    
-    # Eigenvalue decomposition
-    eigenvalues, eigenvectors = np.linalg.eigh(cov)
-    # Ensure non-negative eigenvalues
-    eigenvalues = np.maximum(eigenvalues, 0)
-    
-    # Sort by eigenvalue (largest first)
-    order = eigenvalues.argsort()[::-1]
-    eigenvalues = eigenvalues[order]
-    eigenvectors = eigenvectors[:, order]
-    
-    # Angle of the first eigenvector
-    angle = np.degrees(np.arctan2(eigenvectors[1, 0], eigenvectors[0, 0]))
-    
-    # Width and height (2 * n_std * sqrt(eigenvalue))
-    width = 2 * n_std * np.sqrt(eigenvalues[0])
-    height = 2 * n_std * np.sqrt(eigenvalues[1])
-    
-    ellipse = Ellipse(
-        xy=(np.mean(x), np.mean(y)),
-        width=width, height=height,
-        angle=angle,
-        facecolor=facecolor,
-        **kwargs
-    )
-    ax.add_patch(ellipse)
-    return ellipse
+# ═══════════════════════════════════════════════════════════
+#  Emotion Clustering t-SNE (colored by emotion label)
+# ═══════════════════════════════════════════════════════════
 
-
-def _plot_tsne_clusters(features, labels, label_names, save_path, tag,
-                        perplexity=30, max_samples=5000):
+def _plot_emotion_tsne(features, labels, label_names, save_path, tag,
+                       perplexity=30, max_samples=5000):
     """
-    t-SNE 2D visualization of fusion features colored by emotion label.
-    
-    Inspired by ATGFB-MFF (Figure 4): clean cluster separation with
-    confidence ellipses, KDE density contours, and publication-quality styling.
-
-    Args:
-        features: np.ndarray (N, D) — feature vectors
-        labels: np.ndarray (N,) — integer labels
-        label_names: list of str
-        save_path: str
-        tag: str
-        perplexity: int — t-SNE perplexity
-        max_samples: int — subsample if dataset is too large
+    Clean t-SNE scatter plot colored by emotion class.
+    Publication-quality: no grid, no contours, minimal axes.
     """
     features = np.array(features, dtype=np.float32)
     labels = np.array(labels, dtype=int)
@@ -271,181 +228,193 @@ def _plot_tsne_clusters(features, labels, label_names, save_path, tag,
         features = features[indices]
         labels = labels[indices]
 
-    # Handle NaN/Inf in features
+    # Handle NaN/Inf
     valid_mask = np.all(np.isfinite(features), axis=1)
     if not np.all(valid_mask):
         features = features[valid_mask]
         labels = labels[valid_mask]
 
     if len(features) < 10:
-        logger.warning("Too few valid samples for t-SNE visualization, skipping.")
+        logger.warning("Too few valid samples for t-SNE, skipping.")
         return
 
-    # Adjust perplexity if sample count is too small
     effective_perplexity = min(perplexity, max(5, len(features) // 4))
 
-    # t-SNE with tuned parameters for better cluster separation
     tsne = TSNE(
         n_components=2,
         perplexity=effective_perplexity,
         random_state=42,
         init='pca',
         learning_rate='auto',
-        max_iter=1000,
-        metric='cosine',  # cosine distance often works better for high-dim embeddings
+        max_iter=1500,
     )
     embeddings = tsne.fit_transform(features)
 
-    # Normalize embeddings to [-1, 1] for cleaner plot
-    emb_min = embeddings.min(axis=0)
-    emb_max = embeddings.max(axis=0)
-    emb_range = emb_max - emb_min
-    emb_range[emb_range == 0] = 1
-    embeddings = 2 * (embeddings - emb_min) / emb_range - 1
+    # ── Plot ──
+    fig, ax = plt.subplots(figsize=(8, 7))
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
 
-    # ── Plot setup with dark background for better contrast ──
-    fig, ax = plt.subplots(figsize=(10, 8), facecolor='#FAFAFA')
-    ax.set_facecolor('#FAFAFA')
-
-    # Check if labels need Chinese font
     chinese_font = _try_chinese_font()
-    font_props = {}
+    legend_prop = {}
     if chinese_font:
-        font_props = {'fontfamily': chinese_font}
+        legend_prop = {'family': chinese_font}
 
     colors = EMOTION_COLORS[:len(label_names)]
     unique_labels = sorted(set(labels))
 
-    # ── Layer 1: Confidence ellipses (2σ and 1σ) ──
+    # Adaptive point size: larger for fewer points
+    n_total = len(features)
+    point_size = max(6, min(50, 3000 / max(n_total, 1)))
+
     for idx in unique_labels:
         if idx >= len(label_names):
             continue
         mask = labels == idx
-        if mask.sum() < 3:
-            continue
-        color = colors[idx % len(colors)]
-        ex = embeddings[mask, 0]
-        ey = embeddings[mask, 1]
-        
-        # 2σ ellipse (outer, very light)
-        _confidence_ellipse(
-            ex, ey, ax, n_std=2.0,
-            facecolor=color, alpha=0.08,
-            edgecolor=color, linewidth=1.0, linestyle='--'
-        )
-        # 1σ ellipse (inner, slightly more visible)
-        _confidence_ellipse(
-            ex, ey, ax, n_std=1.0,
-            facecolor=color, alpha=0.15,
-            edgecolor=color, linewidth=1.5, linestyle='-'
+        n_pts = mask.sum()
+        ax.scatter(
+            embeddings[mask, 0], embeddings[mask, 1],
+            c=colors[idx % len(colors)],
+            label=f'{label_names[idx]} ({n_pts})',
+            alpha=0.7,
+            s=point_size,
+            edgecolors='none',
+            rasterized=True,  # faster rendering for many points
         )
 
-    # ── Layer 2: KDE density contours (if scipy available) ──
-    try:
-        from scipy.stats import gaussian_kde
-        for idx in unique_labels:
-            if idx >= len(label_names):
-                continue
-            mask = labels == idx
-            if mask.sum() < 10:
-                continue
-            color = colors[idx % len(colors)]
-            ex = embeddings[mask, 0]
-            ey = embeddings[mask, 1]
-            
-            try:
-                kde = gaussian_kde(np.vstack([ex, ey]), bw_method=0.3)
-                # Create grid
-                x_grid = np.linspace(ex.min() - 0.3, ex.max() + 0.3, 80)
-                y_grid = np.linspace(ey.min() - 0.3, ey.max() + 0.3, 80)
-                X, Y = np.meshgrid(x_grid, y_grid)
-                Z = kde(np.vstack([X.ravel(), Y.ravel()])).reshape(X.shape)
-                
-                # Draw contour lines only (no fill to keep it clean)
-                ax.contour(X, Y, Z, levels=3, colors=[color], alpha=0.4, linewidths=0.8)
-            except Exception:
-                pass  # KDE can fail on degenerate data
-    except ImportError:
-        pass  # scipy not available, skip KDE
+    ax.legend(
+        loc='best', fontsize=9, framealpha=0.9,
+        markerscale=max(1, 8 / point_size),
+        prop=legend_prop if legend_prop else None,
+        title='Emotion', title_fontsize=10,
+    )
+    ax.set_title(f't-SNE Emotion Clusters — {tag}',
+                 fontsize=13, fontweight='bold')
 
-    # ── Layer 3: Scatter points ──
-    for idx in unique_labels:
-        if idx >= len(label_names):
+    # Clean minimal style — no ticks, no grid
+    ax.set_xticks([])
+    ax.set_yticks([])
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+
+    plt.tight_layout()
+    fig.savefig(save_path, dpi=200, bbox_inches='tight', facecolor='white')
+    plt.close(fig)
+
+
+# ═══════════════════════════════════════════════════════════
+#  Modality Separation t-SNE (paper Figure 4 style)
+#  Red = Fusion/Text, Blue = Audio, Green = Video
+# ═══════════════════════════════════════════════════════════
+
+def _plot_modality_tsne(modality_features, save_path, tag,
+                        perplexity=30, max_samples_per_modality=3000):
+    """
+    t-SNE visualization showing separation of text/audio/video modality
+    features in learned representation space.
+
+    Mimics ATGFB-MFF Figure 4: dense clusters, 3 colors (red/blue/green),
+    clean white background, no grid, no axes labels.
+
+    Args:
+        modality_features: dict with keys 'fusion', 'audio', 'video',
+                           each np.ndarray (N, D).
+        save_path: str
+        tag: str
+        perplexity: int
+        max_samples_per_modality: int — cap per modality for performance
+    """
+    # Collect and label each modality
+    all_feats = []
+    all_labels = []  # 0=fusion, 1=audio, 2=video
+    modality_order = ['fusion', 'audio', 'video']
+    modality_counts = {}
+
+    for mod_idx, mod_name in enumerate(modality_order):
+        feats = modality_features.get(mod_name)
+        if feats is None or len(feats) == 0:
             continue
-        mask = labels == idx
-        color = colors[idx % len(colors)]
-        n_points = mask.sum()
-        
-        # Adaptive point size based on sample count
-        point_size = max(8, min(40, 2000 / max(len(features), 1)))
-        
+        feats = np.array(feats, dtype=np.float32)
+
+        # Handle NaN/Inf
+        valid = np.all(np.isfinite(feats), axis=1)
+        feats = feats[valid]
+
+        # Subsample
+        if len(feats) > max_samples_per_modality:
+            idx = np.random.choice(len(feats), max_samples_per_modality, replace=False)
+            feats = feats[idx]
+
+        modality_counts[mod_name] = len(feats)
+        all_feats.append(feats)
+        all_labels.append(np.full(len(feats), mod_idx, dtype=int))
+
+    if len(all_feats) < 2:
+        logger.warning("Need at least 2 modalities for modality t-SNE, skipping.")
+        return
+
+    all_feats = np.concatenate(all_feats, axis=0)
+    all_labels = np.concatenate(all_labels, axis=0)
+
+    if len(all_feats) < 20:
+        logger.warning("Too few samples for modality t-SNE, skipping.")
+        return
+
+    effective_perplexity = min(perplexity, max(5, len(all_feats) // 4))
+
+    tsne = TSNE(
+        n_components=2,
+        perplexity=effective_perplexity,
+        random_state=42,
+        init='pca',
+        learning_rate='auto',
+        max_iter=1500,
+    )
+    embeddings = tsne.fit_transform(all_feats)
+
+    # ── Publication-quality plot (Figure 4 style) ──
+    fig, ax = plt.subplots(figsize=(8, 7))
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
+
+    n_total = len(all_feats)
+    point_size = max(4, min(30, 5000 / max(n_total, 1)))
+
+    for mod_idx, mod_name in enumerate(modality_order):
+        if mod_name not in modality_counts:
+            continue
+        mask = all_labels == mod_idx
+        color = MODALITY_COLORS[mod_name]
+        label = MODALITY_LABELS[mod_name]
+        n_pts = mask.sum()
+
         ax.scatter(
             embeddings[mask, 0], embeddings[mask, 1],
             c=color,
-            label=f'{label_names[idx]} ({n_points})',
-            alpha=0.65,
+            label=f'{label} ({n_pts})',
+            alpha=0.6,
             s=point_size,
-            edgecolors='white',
-            linewidths=0.3,
-            zorder=5,
+            edgecolors='none',
+            rasterized=True,
         )
 
-    # ── Layer 4: Cluster centroids with label ──
-    for idx in unique_labels:
-        if idx >= len(label_names):
-            continue
-        mask = labels == idx
-        if mask.sum() == 0:
-            continue
-        color = colors[idx % len(colors)]
-        centroid = embeddings[mask].mean(axis=0)
-        
-        # Centroid marker
-        ax.scatter(
-            centroid[0], centroid[1],
-            c=color, marker='D', s=120,
-            edgecolors='black', linewidths=1.5,
-            zorder=10
-        )
-        # Centroid label
-        ax.annotate(
-            label_names[idx],
-            xy=(centroid[0], centroid[1]),
-            xytext=(8, 8), textcoords='offset points',
-            fontsize=9, fontweight='bold',
-            color=color,
-            bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.8, edgecolor=color, linewidth=0.5),
-            zorder=11,
-        )
-
-    # ── Legend and styling ──
-    legend = ax.legend(
-        loc='upper right', fontsize=9, framealpha=0.9,
-        fancybox=True, shadow=True,
-        prop=font_props if font_props else None,
-        title='Emotion (count)', title_fontsize=10,
-        borderpad=0.8, labelspacing=0.6,
+    ax.legend(
+        loc='best', fontsize=11, framealpha=0.9,
+        markerscale=max(1, 10 / point_size),
+        title='Modality', title_fontsize=12,
     )
-    legend.get_frame().set_edgecolor('#CCCCCC')
-    
-    ax.set_title(f't-SNE Emotion Feature Clusters — {tag}',
-                 fontsize=14, fontweight='bold', pad=15)
-    ax.set_xlabel('t-SNE Dim 1', fontsize=11, labelpad=8)
-    ax.set_ylabel('t-SNE Dim 2', fontsize=11, labelpad=8)
-    
-    # Light grid
-    ax.grid(True, alpha=0.15, linestyle='-', linewidth=0.5)
-    ax.tick_params(axis='both', which='both', length=0)  # hide tick marks
-    
-    # Remove axis values (t-SNE dimensions are not meaningful)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    
-    # Add subtle border
+
+    # Dataset name extraction for clean title
+    dataset_short = tag.split('-')[-2] if '-' in tag else tag
+    ax.set_title(f't-SNE Modality Separation — {dataset_short.upper()}',
+                 fontsize=14, fontweight='bold')
+
+    # Clean style: no ticks, no grid, no spines
+    ax.set_xticks([])
+    ax.set_yticks([])
     for spine in ax.spines.values():
-        spine.set_edgecolor('#DDDDDD')
-        spine.set_linewidth(0.8)
+        spine.set_visible(False)
 
     plt.tight_layout()
-    fig.savefig(save_path, dpi=200, bbox_inches='tight', facecolor=fig.get_facecolor())
+    fig.savefig(save_path, dpi=200, bbox_inches='tight', facecolor='white')
     plt.close(fig)

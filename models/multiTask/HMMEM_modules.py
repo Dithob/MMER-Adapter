@@ -35,21 +35,77 @@ class FeatureAdapter(nn.Module):
         return self.adapter(x)
 
 class TVA_LSTM(nn.Module):
-    def __init__(self, in_size, hidden_size, num_layers=1, dropout=0.2, bidirectional=False):
+    """Temporal encoder for audio/video features.
+
+    Supports two modes controlled by `use_bilstm`:
+      - sLSTM (default): unidirectional LSTM, pools via final hidden state.
+      - BiLSTM: bidirectional LSTM + learned attention pooling over all
+        timesteps, preserving richer temporal information.
+    """
+    def __init__(self, in_size, hidden_size, num_layers=1, dropout=0.2,
+                 bidirectional=False, use_bilstm=False):
         super(TVA_LSTM, self).__init__()
-        self.rnn = nn.LSTM(in_size, hidden_size, num_layers=num_layers, dropout=dropout, bidirectional=bidirectional, batch_first=True)
-        self.dropout = nn.Dropout(dropout)
-        self.linear = nn.Linear(hidden_size, 256)
+        self.use_bilstm = use_bilstm or bidirectional
         self.hidden_size = hidden_size
+
+        self.rnn = nn.LSTM(
+            in_size, hidden_size,
+            num_layers=num_layers,
+            dropout=dropout if num_layers > 1 else 0.0,
+            bidirectional=self.use_bilstm,
+            batch_first=True,
+        )
+        self.dropout = nn.Dropout(dropout)
+
+        if self.use_bilstm:
+            # BiLSTM output dim = hidden_size * 2 (forward + backward)
+            rnn_out_dim = hidden_size * 2
+            # Learned attention pooling: query vector + projection
+            self.attn_query = nn.Parameter(torch.randn(rnn_out_dim) * 0.02)
+            self.attn_proj = nn.Linear(rnn_out_dim, rnn_out_dim)
+            self.linear = nn.Linear(rnn_out_dim, 256)
+        else:
+            self.linear = nn.Linear(hidden_size, 256)
+
+    def _attention_pool(self, output_padded, lengths):
+        """Learned attention pooling over BiLSTM sequence outputs.
+
+        Args:
+            output_padded: [B, T_max, rnn_out_dim]
+            lengths:       [B] actual sequence lengths
+        Returns:
+            pooled: [B, rnn_out_dim]
+        """
+        # Project and compute attention scores: [B, T_max]
+        projected = torch.tanh(self.attn_proj(output_padded))  # [B, T, D]
+        scores = torch.matmul(projected, self.attn_query)       # [B, T]
+
+        # Mask padding positions with -inf before softmax
+        max_len = output_padded.size(1)
+        mask = torch.arange(max_len, device=output_padded.device).unsqueeze(0)  # [1, T]
+        mask = mask >= lengths.unsqueeze(1)  # [B, T], True = pad
+        scores = scores.masked_fill(mask, float('-inf'))
+
+        attn_weights = torch.softmax(scores, dim=1).unsqueeze(-1)  # [B, T, 1]
+        pooled = (attn_weights * output_padded).sum(dim=1)          # [B, D]
+        return pooled
 
     def forward(self, x, lengths, return_sequence=False):
         packed_sequence = pack_padded_sequence(x, lengths.to('cpu'), batch_first=True, enforce_sorted=False)
         output, final_states = self.rnn(packed_sequence)
-        h = self.dropout(final_states[0].squeeze(0))
+        output_padded, _ = pad_packed_sequence(output, batch_first=True)  # [B, T, D]
+
+        if self.use_bilstm:
+            # Attention pooling over full BiLSTM output
+            h = self._attention_pool(output_padded, lengths.to(output_padded.device))
+            h = self.dropout(h)
+        else:
+            # Original sLSTM path: use final hidden state
+            h = self.dropout(final_states[0].squeeze(0))
+
         h = self.linear(h)  # [B, 256]
 
         if return_sequence:
-            output_padded, _ = pad_packed_sequence(output, batch_first=True)  # [B, T, hidden_size]
             return h, output_padded
         return h
 

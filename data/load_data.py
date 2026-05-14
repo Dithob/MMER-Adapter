@@ -680,16 +680,68 @@ def MMDataLoader(args):
         args.seq_lens = datasets['train'].get_seq_len() 
 
     _nw = args.num_workers
-    dataLoader = {
-        ds: DataLoader(datasets[ds],
-                       batch_size=args.batch_size,
-                       num_workers=_nw,
-                       shuffle=(ds == 'train'),
-                       pin_memory=True,
-                       persistent_workers=(_nw > 0),
-                       prefetch_factor=2 if _nw > 0 else None,
-                       drop_last=(ds == 'train'))
-        for ds in datasets.keys()
-    }
+
+    # ── Oversampling for class imbalance (training set only) ──
+    # Uses smoothed inverse-frequency weighting: w_c = (N / n_c) ^ α
+    #   α=0.0 → no rebalancing (original distribution)
+    #   α=0.5 → square-root smoothing (recommended, gentle rebalancing)
+    #   α=1.0 → pure inverse-frequency (aggressive, may hurt majority class)
+    use_oversampling = getattr(args, 'use_oversampling', False)
+    train_sampler = None
+    train_shuffle = True
+
+    if use_oversampling and args.train_mode == 'classification':
+        from torch.utils.data import WeightedRandomSampler
+        from collections import Counter
+
+        oversampling_alpha = getattr(args, 'oversampling_alpha', 0.5)
+
+        train_labels = datasets['train'].labels['M']
+        label_counts = Counter(train_labels)
+        num_samples = len(train_labels)
+        # Smoothed inverse frequency weight per class
+        class_weights = {cls: (num_samples / count) ** oversampling_alpha
+                         for cls, count in label_counts.items()}
+        # Per-sample weight
+        sample_weights = [class_weights[label] for label in train_labels]
+        sample_weights = torch.DoubleTensor(sample_weights)
+
+        train_sampler = WeightedRandomSampler(
+            weights=sample_weights,
+            num_samples=num_samples,
+            replacement=True,
+        )
+        train_shuffle = False  # sampler and shuffle are mutually exclusive
+
+        # Log class distribution and weights
+        logger.info(f"Oversampling enabled (α={oversampling_alpha:.2f}) — class distribution and weights:")
+        for cls in sorted(label_counts.keys()):
+            logger.info(f"  class {cls}: count={label_counts[cls]}, weight={class_weights[cls]:.3f}")
+
+    dataLoader = {}
+    for ds in datasets.keys():
+        if ds == 'train':
+            dataLoader[ds] = DataLoader(
+                datasets[ds],
+                batch_size=args.batch_size,
+                num_workers=_nw,
+                shuffle=train_shuffle,
+                sampler=train_sampler,
+                pin_memory=True,
+                persistent_workers=(_nw > 0),
+                prefetch_factor=2 if _nw > 0 else None,
+                drop_last=True,
+            )
+        else:
+            dataLoader[ds] = DataLoader(
+                datasets[ds],
+                batch_size=args.batch_size,
+                num_workers=_nw,
+                shuffle=False,
+                pin_memory=True,
+                persistent_workers=(_nw > 0),
+                prefetch_factor=2 if _nw > 0 else None,
+                drop_last=False,
+            )
     
     return dataLoader

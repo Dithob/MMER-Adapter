@@ -31,6 +31,16 @@ class Language_model(nn.Module):
         self._wrap_prefix_len = 0
         self._wrap_suffix_len = 0
 
+        # ── Label format: index (default) or text ──
+        self.label_format = getattr(args, 'label_format', 'index')
+        self.label_index_mapping = getattr(args, 'label_index_mapping', {})
+        # Build reverse mapping: idx → label name
+        self._idx_to_name = {v: k for k, v in self.label_index_mapping.items()}
+        # Auto-adjust max_new_tokens for text label format
+        # Emotion words like 'surprise', 'frustrated' may need 2-3 tokens
+        if self.label_format == 'text' and self.train_mode == 'classification':
+            self.max_new_tokens = max(self.max_new_tokens, 3)
+
         self.backend = build_llm_backend(args)
         self._gemma_ple_dim = getattr(self.backend, '_gemma_ple_dim', 0)
         self._gemma_num_layers = getattr(self.backend, '_gemma_num_layers', 0)
@@ -80,6 +90,58 @@ class Language_model(nn.Module):
         total = sum(p.numel() for p in self.model.parameters())
         logger.info(f"LoRA enabled: r={args.lora_r}, alpha={args.lora_alpha}, targets={target_modules}")
         logger.info(f"LoRA trainable params: {trainable:,} / {total:,} ({100 * trainable / total:.2f}%)")
+
+    def forward_encode(self, fusion_embedding, input_attn_mask=None, context_text=None):
+        """Get LLM hidden states without generative loss (for cls_head mode).
+        Returns the hidden state at the last position: [batch, hidden_dim].
+        """
+        fusion_embedding = self.multimodal_prompt_wrap(fusion_embedding, context_text=context_text)
+
+        if self.model_type == 'chatglm3':
+            opt_tokens, _ = self.input_processing(fusion_embedding, mode='generate')
+            with torch.amp.autocast(device_type='cuda'):
+                outputs = self.model(input_ids=opt_tokens, input_fusion=fusion_embedding,
+                                     output_hidden_states=True, return_dict=True)
+            last_hidden = outputs.hidden_states[-1][:, -1, :]
+            return last_hidden
+
+        # qwen / qwen3.5 / llama2 / deepseek / gemma
+        opt_tokens, atts_bos, atts_fusion, _, _, opt_input_ids = self.input_processing(
+            fusion_embedding, mode='generate', input_attn_mask=input_attn_mask)
+        if atts_bos is not None:
+            attention_mask = torch.cat([atts_bos, atts_fusion], dim=1)
+        else:
+            attention_mask = atts_fusion
+
+        if self.model_type == 'gemma' and self._gemma_ple_dim > 0:
+            inner_text_model = getattr(self.model.model, 'language_model', self.model.model)
+            if opt_input_ids is not None and hasattr(inner_text_model, 'get_per_layer_inputs'):
+                per_layer_inputs = inner_text_model.get_per_layer_inputs(
+                    input_ids=opt_input_ids.to(self.device), inputs_embeds=None)
+            else:
+                per_layer_inputs = torch.zeros(
+                    opt_tokens.shape[0], opt_tokens.shape[1],
+                    self._gemma_num_layers, self._gemma_ple_dim,
+                    dtype=opt_tokens.dtype, device=opt_tokens.device)
+            with torch.amp.autocast(device_type='cuda'):
+                base_outputs = inner_text_model(
+                    inputs_embeds=opt_tokens, attention_mask=attention_mask,
+                    per_layer_inputs=per_layer_inputs,
+                    output_hidden_states=True, return_dict=True)
+            last_hidden = base_outputs.hidden_states[-1][:, -1, :]
+            return last_hidden
+
+        model_to_call = self.model
+        if self._lora_enabled:
+            # LoRA-wrapped model still supports output_hidden_states
+            pass
+
+        with torch.amp.autocast(device_type='cuda'):
+            outputs = model_to_call(
+                inputs_embeds=opt_tokens, attention_mask=attention_mask,
+                output_hidden_states=True, return_dict=True)
+        last_hidden = outputs.hidden_states[-1][:, -1, :]
+        return last_hidden
 
     def forward(self, fusion_embedding, labels, input_attn_mask=None, context_text=None):
         fusion_embedding = self.multimodal_prompt_wrap(fusion_embedding, context_text=context_text)
@@ -174,10 +236,7 @@ class Language_model(nn.Module):
                 except ValueError:
                     value = 0.0
             else:
-                try:
-                    value = float(x)
-                except ValueError:
-                    value = 0.0
+                value = self._parse_classification_output(x)
             all_responses.append(value)
         return all_responses
 
@@ -237,10 +296,7 @@ class Language_model(nn.Module):
                 except ValueError:
                     value = 0.0
             else:
-                try:
-                    value = float(response)
-                except ValueError:
-                    value = 0.0
+                value = self._parse_classification_output(response)
             all_responses.append(value)
         return all_responses
 
@@ -304,7 +360,10 @@ class Language_model(nn.Module):
                 eos_suffix = ''
                 if self.model_type in ['qwen', 'qwen3.5'] and hasattr(self.tokenizer, 'eos_token') and self.tokenizer.eos_token:
                     eos_suffix = self.tokenizer.eos_token
-                label_template = [f"{label.item()}{eos_suffix}" for label in labels]
+                if self.label_format == 'text' and self._idx_to_name:
+                    label_template = [f"{self._idx_to_name.get(int(label.item()), str(int(label.item())))}{eos_suffix}" for label in labels]
+                else:
+                    label_template = [f"{label.item()}{eos_suffix}" for label in labels]
 
             if self.model_type == 'chatglm3':
                 labels_id = self.tokenizer(label_template, padding=True, return_tensors="pt", add_special_tokens=False)["input_ids"].to(self.device)
@@ -337,8 +396,29 @@ class Language_model(nn.Module):
                     return opt_tokens, None, None, opt_input_ids
                 return opt_tokens, None, None
 
+    def _parse_classification_output(self, response):
+        """Parse classification output for both index and text label formats."""
+        response = response.strip()
+        # First try direct numeric parse (works for index mode and numeric outputs)
+        try:
+            return float(response)
+        except ValueError:
+            pass
+        # Text label mode: fuzzy match against known label names
+        response_lower = response.lower()
+        for name, idx in self.label_index_mapping.items():
+            if response_lower.startswith(name.lower()):
+                return float(idx)
+        # Fallback: return 0 (first class)
+        return 0.0
+
     def get_task_prompt(self):
+        import re
         prompt_text = self.task_specific_prompt
+        # For text label format, strip ":N" from prompt labels
+        # e.g. "<neutral:0, surprise:1, ...>" → "<neutral, surprise, ...>"
+        if self.label_format == 'text' and self.train_mode == 'classification':
+            prompt_text = re.sub(r':(\d+)', '', prompt_text)
         return self.tokenizer(prompt_text, padding=True, return_tensors="pt", add_special_tokens=False)["input_ids"].to(self.device)
 
     def multimodal_prompt_wrap(self, fusion_embeddings, context_text=None):

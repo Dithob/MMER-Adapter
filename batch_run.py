@@ -238,6 +238,100 @@ EXPERIMENT_GROUPS['cross_dataset'] = {
     ]
 }
 
+# ── 14. 训练优化消融 (BiLSTM / Modality Dropout / Oversampling) ──
+EXPERIMENT_GROUPS['training_tricks_ablation'] = {
+    'description': '训练优化消融: BiLSTM × Modality Dropout × Oversampling',
+    'experiments': [
+        # T0: 纯基线
+        {'name': 'T0_baseline',
+         'use_tgm': True, 'use_msf': True},
+
+        # T1: BiLSTM only
+        {'name': 'T1_bilstm_only',
+         'use_tgm': True, 'use_msf': True, 'use_bilstm': True},
+
+        # T2~T4: Modality Dropout sweep
+        {'name': 'T2_md_010',
+         'use_tgm': True, 'use_msf': True, 'modality_dropout_p': 0.10},
+        {'name': 'T3_md_015',
+         'use_tgm': True, 'use_msf': True, 'modality_dropout_p': 0.15},
+        {'name': 'T4_md_020',
+         'use_tgm': True, 'use_msf': True, 'modality_dropout_p': 0.20},
+
+        # T5a~T5c: Oversampling α sweep
+        {'name': 'T5a_os_a05',
+         'use_tgm': True, 'use_msf': True,
+         'use_oversampling': True, 'oversampling_alpha': 0.5},
+        {'name': 'T5b_os_a07',
+         'use_tgm': True, 'use_msf': True,
+         'use_oversampling': True, 'oversampling_alpha': 0.7},
+        {'name': 'T5c_os_a10',
+         'use_tgm': True, 'use_msf': True,
+         'use_oversampling': True, 'oversampling_alpha': 1.0},
+
+        # T6~T8: 两两组合 (oversampling 使用推荐 α=0.5)
+        {'name': 'T6_md010_os',
+         'use_tgm': True, 'use_msf': True,
+         'modality_dropout_p': 0.10, 'use_oversampling': True, 'oversampling_alpha': 0.5},
+        {'name': 'T7_bilstm_md010',
+         'use_tgm': True, 'use_msf': True,
+         'use_bilstm': True, 'modality_dropout_p': 0.10},
+        {'name': 'T8_bilstm_os',
+         'use_tgm': True, 'use_msf': True,
+         'use_bilstm': True, 'use_oversampling': True, 'oversampling_alpha': 0.5},
+
+        # T9: 全部组合
+        {'name': 'T9_all_combined',
+         'use_tgm': True, 'use_msf': True,
+         'use_bilstm': True, 'modality_dropout_p': 0.10,
+         'use_oversampling': True, 'oversampling_alpha': 0.5},
+    ]
+}
+
+# ── 15. 训练优化 × Mixer 交叉验证 ──
+EXPERIMENT_GROUPS['training_tricks_x_mixer'] = {
+    'description': '训练优化最优组合 × Mixer 交叉验证',
+    'experiments': [
+        # TGM baseline vs best
+        {'name': 'X0_tgm_baseline',
+         'use_tgm': True, 'use_msf': True},
+        {'name': 'X1_tgm_best',
+         'use_tgm': True, 'use_msf': True,
+         'use_bilstm': True, 'modality_dropout_p': 0.10, 'use_oversampling': True},
+
+        # AMM baseline vs best
+        {'name': 'X2_amm_baseline',
+         'use_amm': True, 'use_msf': True},
+        {'name': 'X3_amm_best',
+         'use_amm': True, 'use_msf': True,
+         'use_bilstm': True, 'modality_dropout_p': 0.10, 'use_oversampling': True},
+
+        # ATGFBFF baseline vs best
+        {'name': 'X4_atgfbff_baseline',
+         'use_atgfbff': True, 'use_mslaf': True},
+        {'name': 'X5_atgfbff_best',
+         'use_atgfbff': True, 'use_mslaf': True,
+         'use_bilstm': True, 'modality_dropout_p': 0.10, 'use_oversampling': True},
+    ]
+}
+
+# ── 16. LLM 输出方式消融 (label_format + cls_head) ──
+EXPERIMENT_GROUPS['label_mode_ablation'] = {
+    'description': 'LLM输出方式消融: gen+index vs gen+text vs cls_head',
+    'experiments': [
+        # L0: 基线 (生成式 + 数字索引)
+        {'name': 'L0_gen_index',
+         'use_tgm': True, 'use_msf': True, 'label_format': 'index'},
+
+        # L1: 生成式 + 文本标签
+        {'name': 'L1_gen_text',
+         'use_tgm': True, 'use_msf': True, 'label_format': 'text'},
+
+        # L2: 分类头
+        {'name': 'L2_cls_head',
+         'use_tgm': True, 'use_msf': True, 'use_cls_head': True},
+    ]
+}
 
 # ═══════════════════════════════════════════════════════════════════
 # 命令构建
@@ -252,6 +346,8 @@ BOOLEAN_FLAGS = {
     'use_diff_loss', 'use_expert_diff_loss',
     'use_nce_loss',
     'use_lora',
+    'use_bilstm', 'use_oversampling',
+    'use_cls_head',
     'eval_only',
 }
 

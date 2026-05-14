@@ -72,8 +72,14 @@ class HMMEM(nn.Module):
             self.video_adapter = None
             lstm_video_in = video_in
 
-        self.audio_LSTM = TVA_LSTM(lstm_audio_in, args.a_lstm_hidden_size, num_layers=args.a_lstm_layers, dropout=args.a_lstm_dropout)
-        self.video_LSTM = TVA_LSTM(lstm_video_in, args.v_lstm_hidden_size, num_layers=args.v_lstm_layers, dropout=args.v_lstm_dropout)
+        _use_bilstm = getattr(args, 'use_bilstm', False)
+        self.audio_LSTM = TVA_LSTM(lstm_audio_in, args.a_lstm_hidden_size, num_layers=args.a_lstm_layers, dropout=args.a_lstm_dropout, use_bilstm=_use_bilstm)
+        self.video_LSTM = TVA_LSTM(lstm_video_in, args.v_lstm_hidden_size, num_layers=args.v_lstm_layers, dropout=args.v_lstm_dropout, use_bilstm=_use_bilstm)
+
+        # ── Modality Dropout (training only) ──
+        # Randomly zero audio_h or video_h with probability modality_dropout_p
+        # to prevent the model from over-relying on a single modality.
+        self.modality_dropout_p = getattr(args, 'modality_dropout_p', 0.0)
 
         # ══════════════════════════════════════════════
         # Modality Ablation: parse --modalities flag
@@ -290,13 +296,28 @@ class HMMEM(nn.Module):
         if self.use_nce_loss:
             nce_hidden_dim = getattr(args, 'nce_hidden_dim', 32)
             nce_pred_steps = getattr(args, 'nce_pred_steps', 2)
+            # BiLSTM doubles the sequence output dimension
+            _a_seq_dim = args.a_lstm_hidden_size * 2 if _use_bilstm else args.a_lstm_hidden_size
+            _v_seq_dim = args.v_lstm_hidden_size * 2 if _use_bilstm else args.v_lstm_hidden_size
             self.cpc_text_audio = LightweightCrossCPC(
-                text_dim=text_in, other_dim=args.a_lstm_hidden_size,
+                text_dim=text_in, other_dim=_a_seq_dim,
                 nce_hidden_dim=nce_hidden_dim, n_prediction_steps=nce_pred_steps
             )
             self.cpc_text_video = LightweightCrossCPC(
-                text_dim=text_in, other_dim=args.v_lstm_hidden_size,
+                text_dim=text_in, other_dim=_v_seq_dim,
                 nce_hidden_dim=nce_hidden_dim, n_prediction_steps=nce_pred_steps
+            )
+
+        # ── Optional: Classification Head (方案 B) ──
+        # Instead of generative next-token prediction, extract LLM hidden state
+        # at the last position and classify directly with a small Linear head.
+        self.use_cls_head = getattr(args, 'use_cls_head', False)
+        if self.use_cls_head:
+            num_classes = len(getattr(args, 'label_index_mapping', {}))
+            assert num_classes > 0, "use_cls_head requires label_index_mapping in config"
+            self.cls_head = nn.Sequential(
+                nn.Dropout(0.1),
+                nn.Linear(text_in, num_classes)  # text_in = llm_hidden_dim
             )
 
     # ──────────────────────────────────────────────
@@ -533,6 +554,26 @@ class HMMEM(nn.Module):
             else:
                 video_h = self.video_LSTM(video, video_len)
 
+        # ── Modality Dropout (training only) ──
+        # Randomly zero-out one AV modality per batch to force cross-modal robustness.
+        # Does NOT touch text (LLM backbone input must remain intact).
+        if self.training and self.modality_dropout_p > 0 and self.has_av:
+            if torch.rand(1).item() < self.modality_dropout_p:
+                if self.use_audio and self.use_video:
+                    # Randomly pick one modality to drop
+                    if torch.rand(1).item() < 0.5:
+                        audio_h = torch.zeros_like(audio_h)
+                        audio_raw = torch.zeros_like(audio_raw)  # sync bypass detection
+                    else:
+                        video_h = torch.zeros_like(video_h)
+                        video_raw = torch.zeros_like(video_raw)  # sync bypass detection
+                elif self.use_audio:
+                    audio_h = torch.zeros_like(audio_h)
+                    audio_raw = torch.zeros_like(audio_raw)
+                elif self.use_video:
+                    video_h = torch.zeros_like(video_h)
+                    video_raw = torch.zeros_like(video_raw)
+
         # ── Mixer → Fusion ──
         fusion_aux = None
         amm_aux = None
@@ -576,14 +617,29 @@ class HMMEM(nn.Module):
         # ── Build LLM input with optional AV token bypass ──
         LLM_input, input_attn_mask = self._build_llm_input(
             fusion_h, text_embed, audio_h, video_h, audio_raw, video_raw)
-        LLM_output = self.LLM(LLM_input, labels, input_attn_mask=input_attn_mask, context_text=context_text)
 
-        res = {
-            'Loss': LLM_output.loss,
-            'Feature_a': audio_h,
-            'Feature_v': video_h,
-            'Feature_f': feature_f,
-        }
+        if self.use_cls_head:
+            # ── Classification Head mode (方案 B) ──
+            # Get LLM hidden state at last position, classify with linear head
+            hidden = self.LLM.forward_encode(LLM_input, input_attn_mask=input_attn_mask, context_text=context_text)
+            cls_logits = self.cls_head(hidden)  # [B, num_classes]
+            cls_loss = F.cross_entropy(cls_logits, labels.long())
+            res = {
+                'Loss': cls_loss,
+                'cls_logits': cls_logits,
+                'Feature_a': audio_h,
+                'Feature_v': video_h,
+                'Feature_f': feature_f,
+            }
+        else:
+            # ── Generative mode (方案 A, default) ──
+            LLM_output = self.LLM(LLM_input, labels, input_attn_mask=input_attn_mask, context_text=context_text)
+            res = {
+                'Loss': LLM_output.loss,
+                'Feature_a': audio_h,
+                'Feature_v': video_h,
+                'Feature_f': feature_f,
+            }
         if fusion_aux is not None:
             if 'align_loss' in fusion_aux:
                 res['ATGFBFF_align'] = fusion_aux['align_loss']
@@ -682,6 +738,20 @@ class HMMEM(nn.Module):
         # ── Build LLM input with optional AV token bypass ──
         LLM_input, input_attn_mask = self._build_llm_input(
             fusion_h, text_embed, audio_h, video_h, audio_raw, video_raw)
-        LLM_output = self.LLM.generate(LLM_input, input_attn_mask=input_attn_mask, context_text=context_text)
+        # Collect all intermediate features for analysis (t-SNE, etc.)
+        features_dict = {
+            'fusion': feature_f.detach(),
+            'audio': audio_h.detach(),
+            'video': video_h.detach(),
+        }
 
-        return LLM_output, feature_f.detach()
+        if self.use_cls_head:
+            # ── Classification Head mode: forward_encode → cls_head → argmax ──
+            hidden = self.LLM.forward_encode(LLM_input, input_attn_mask=input_attn_mask, context_text=context_text)
+            cls_logits = self.cls_head(hidden)  # [B, num_classes]
+            preds = cls_logits.argmax(dim=-1).float().tolist()  # [B] as float list
+            return preds, features_dict
+        else:
+            # ── Generative mode (default) ──
+            LLM_output = self.LLM.generate(LLM_input, input_attn_mask=input_attn_mask, context_text=context_text)
+            return LLM_output, features_dict

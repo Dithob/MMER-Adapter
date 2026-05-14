@@ -207,12 +207,12 @@ class ConfigClassification():
                     'v_lstm_layers': 1,
                     'a_lstm_dropout': 0.0,
                     'v_lstm_dropout': 0.0,
-                    'warm_up_epochs': 50,
+                    'warm_up_epochs': 25,
                     #loss weight   best：1
                     'gamma': 1,
                     'update_epochs': 1,
-                    # 'early_stop': 8,
-                    'early_stop': 6,
+                    'early_stop': 8,
+                    'max_epochs': 50,
                     # res
                     'H': 3.0
                 },
@@ -236,6 +236,7 @@ class ConfigClassification():
                     'warm_up_epochs': 30,
                     'update_epochs': 1,
                     'early_stop': 8,
+                    'max_epochs': 50,
                     # loss weight
                     'gamma': 0,
                     # res
@@ -252,18 +253,18 @@ class ConfigClassification():
                     'label_index_mapping_6class': {'angry': 0, 'happy': 1, 'excited': 2, 'sad': 3, 'neutral': 4, 'frustrated': 5},
                     'batch_size': 24,
                     'gradient_accumulation_steps': 2,
-                    'learning_rate': 5e-5,
+                    'learning_rate': 1e-4,
                     'a_lstm_hidden_size': 64,
                     'v_lstm_hidden_size': 32,
                     'a_lstm_layers': 1,
                     'v_lstm_layers': 1,
                     'a_lstm_dropout': 0.0,
                     'v_lstm_dropout': 0.0,
-                    'warm_up_epochs': 90,
+                    'warm_up_epochs': 30,
                     'gamma':1,
                     'update_epochs': 1,
-                    # 'early_stop': 8,
-                    'early_stop': 6,
+                    'early_stop': 8,
+                    'max_epochs': 50,
                     'H': 3.0
                 },
             },

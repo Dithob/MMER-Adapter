@@ -158,9 +158,19 @@ class HMMEM():
         CPC_Losses = []
         # valid_F1 = []
         lr = []
-        # loop util earlystop
+        # loop util earlystop or max_epochs
+        max_epochs = getattr(self.args, 'max_epochs', None)
         while True: 
             epochs += 1
+            # ── Max epochs hard limit ──
+            if max_epochs is not None and epochs > max_epochs:
+                logger.info(f"Reached max_epochs ({max_epochs}), stopping training. "
+                            f"Best epoch: {best_epoch}, best valid: {best_valid:.4f}")
+                if not best_model_saved and not os.path.exists(self.args.model_save_path):
+                    logger.info(f"No new best found. Saving current best model to {self.args.model_save_path}")
+                    self.save_model(model, best_epoch, self.args.model_save_path)
+                    model.to(self.args.device)
+                return
             # train
             y_pred = {'M': []}
             y_true = {'M': []}

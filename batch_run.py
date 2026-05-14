@@ -551,6 +551,8 @@ def main():
                         help='DataLoader workers (default: 4)')
     parser.add_argument('--gpu_ids', type=str, default='',
                         help='GPU ID (default: 自动选择)')
+    parser.add_argument('--meld_feature_mode', type=str, default=None,
+                        help='MELD 特征模式: raw / processed (默认使用 run.py 配置)')
 
     args = parser.parse_args()
 
@@ -569,6 +571,8 @@ def main():
         base_args['batch_size'] = args.batch_size
     if args.learning_rate:
         base_args['learning_rate'] = args.learning_rate
+    if args.meld_feature_mode:
+        base_args['meld_feature_mode'] = args.meld_feature_mode
 
     # 获取实验组
     group = EXPERIMENT_GROUPS[args.group]

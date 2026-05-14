@@ -333,41 +333,14 @@ EXPERIMENT_GROUPS['label_mode_ablation'] = {
     ]
 }
 
-# ── 17. SD-MoE vs Origin MoE 消融 ──
-# 固定 Mixer (OriginAMM)，单独验证 Fusion 层改进
-EXPERIMENT_GROUPS['sdmoe_ablation'] = {
-    'description': 'SD-MoE 消融: Direct vs MSF vs Origin-MoE vs SD-MoE (Mixer 固定为 OriginAMM)',
-    'experiments': [
-        # S0: 基线 — OriginAMM + Direct (无 Fusion)
-        {'name': 'S0_oamm_direct',
-         'use_origin_amm': True, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': False},
-
-        # S1: OriginAMM + MSF
-        {'name': 'S1_oamm_msf',
-         'use_origin_amm': True, 'use_msf': True, 'use_moe_fusion': False, 'use_sd_moe': False},
-
-        # S2: OriginAMM + Origin Dual-Branch MoE
-        {'name': 'S2_oamm_origin_moe',
-         'use_origin_amm': True, 'use_msf': False, 'use_moe_fusion': True, 'use_sd_moe': False},
-
-        # S3: OriginAMM + SD-MoE ★
-        {'name': 'S3_oamm_sdmoe',
-         'use_origin_amm': True, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True},
-
-        # S4: OriginAMM + SD-MoE + Gate
-        {'name': 'S4_oamm_sdmoe_gate',
-         'use_origin_amm': True, 'use_sd_moe': True, 'use_gate': True},
-    ]
-}
-
-# ── 18. AMM 模式消融 ──
+# ── 17. SD-MoE / AMM 模式消融 ──
 # 固定 Fusion (SD-MoE)，验证 Mixer 层改进
-EXPERIMENT_GROUPS['amm_mode_ablation'] = {
-    'description': 'AMM 模式消融: OriginAMM vs AMM-base vs H-AMM vs EP-AMM (Fusion 固定为 SD-MoE)',
+EXPERIMENT_GROUPS['fusion_ablation'] = {
+    'description': 'Mixer 消融: OriginAMM vs AMM-base vs H-AMM vs EP-AMM (Fusion 固定为 SD-MoE)',
     'experiments': [
-        # M0: OriginAMM + SD-MoE (Mixer 对照)
+        # M0: OriginAMM + SD-MoE ★
         {'name': 'M0_oamm_sdmoe',
-         'use_origin_amm': True, 'use_sd_moe': True},
+         'use_origin_amm': True, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True},
 
         # M1: 改进 AMM (base 模式) + SD-MoE
         {'name': 'M1_amm_base_sdmoe',
@@ -381,12 +354,8 @@ EXPERIMENT_GROUPS['amm_mode_ablation'] = {
         {'name': 'M3_epamm4_sdmoe',
          'use_amm': True, 'amm_mode': 'prototype', 'num_emotion_prototypes': 4, 'use_sd_moe': True},
 
-        # M4: EP-AMM (8 proto) + SD-MoE
-        {'name': 'M4_epamm8_sdmoe',
-         'use_amm': True, 'amm_mode': 'prototype', 'num_emotion_prototypes': 8, 'use_sd_moe': True},
-
-        # M5: H-AMM + SD-MoE + TCAP 关闭 (验证 TCAP 必要性)
-        {'name': 'M5_hamm_sdmoe_notcap',
+        # M4: H-AMM + SD-MoE + TCAP 关闭 (验证 TCAP 必要性)
+        {'name': 'M4_hamm_sdmoe_notcap',
          'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False},
     ]
 }

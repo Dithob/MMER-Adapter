@@ -333,18 +333,175 @@ EXPERIMENT_GROUPS['label_mode_ablation'] = {
     ]
 }
 
+# ── 17. SD-MoE vs Origin MoE 消融 ──
+# 固定 Mixer (OriginAMM)，单独验证 Fusion 层改进
+EXPERIMENT_GROUPS['sdmoe_ablation'] = {
+    'description': 'SD-MoE 消融: Direct vs MSF vs Origin-MoE vs SD-MoE (Mixer 固定为 OriginAMM)',
+    'experiments': [
+        # S0: 基线 — OriginAMM + Direct (无 Fusion)
+        {'name': 'S0_oamm_direct',
+         'use_origin_amm': True, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': False},
+
+        # S1: OriginAMM + MSF
+        {'name': 'S1_oamm_msf',
+         'use_origin_amm': True, 'use_msf': True, 'use_moe_fusion': False, 'use_sd_moe': False},
+
+        # S2: OriginAMM + Origin Dual-Branch MoE
+        {'name': 'S2_oamm_origin_moe',
+         'use_origin_amm': True, 'use_msf': False, 'use_moe_fusion': True, 'use_sd_moe': False},
+
+        # S3: OriginAMM + SD-MoE ★
+        {'name': 'S3_oamm_sdmoe',
+         'use_origin_amm': True, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True},
+
+        # S4: OriginAMM + SD-MoE + Gate
+        {'name': 'S4_oamm_sdmoe_gate',
+         'use_origin_amm': True, 'use_sd_moe': True, 'use_gate': True},
+    ]
+}
+
+# ── 18. AMM 模式消融 ──
+# 固定 Fusion (SD-MoE)，验证 Mixer 层改进
+EXPERIMENT_GROUPS['amm_mode_ablation'] = {
+    'description': 'AMM 模式消融: OriginAMM vs AMM-base vs H-AMM vs EP-AMM (Fusion 固定为 SD-MoE)',
+    'experiments': [
+        # M0: OriginAMM + SD-MoE (Mixer 对照)
+        {'name': 'M0_oamm_sdmoe',
+         'use_origin_amm': True, 'use_sd_moe': True},
+
+        # M1: 改进 AMM (base 模式) + SD-MoE
+        {'name': 'M1_amm_base_sdmoe',
+         'use_amm': True, 'amm_mode': 'base', 'use_sd_moe': True},
+
+        # M2: H-AMM + SD-MoE ★ 推荐
+        {'name': 'M2_hamm_sdmoe',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True},
+
+        # M3: EP-AMM (4 proto) + SD-MoE
+        {'name': 'M3_epamm4_sdmoe',
+         'use_amm': True, 'amm_mode': 'prototype', 'num_emotion_prototypes': 4, 'use_sd_moe': True},
+
+        # M4: EP-AMM (8 proto) + SD-MoE
+        {'name': 'M4_epamm8_sdmoe',
+         'use_amm': True, 'amm_mode': 'prototype', 'num_emotion_prototypes': 8, 'use_sd_moe': True},
+
+        # M5: H-AMM + SD-MoE + TCAP 关闭 (验证 TCAP 必要性)
+        {'name': 'M5_hamm_sdmoe_notcap',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False},
+    ]
+}
+
+# ── 19. v3 辅助 Loss 消融 ──
+# 固定架构为 H-AMM + SD-MoE，逐项验证各辅助 Loss 的贡献
+EXPERIMENT_GROUPS['v3_loss_ablation'] = {
+    'description': 'v3 辅助 Loss 消融: H-AMM + SD-MoE 下逐项添加辅助损失',
+    'experiments': [
+        # L0: 纯 CE (关闭所有辅助 loss)
+        {'name': 'L0_ce_only',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'use_amm_align_loss': False},
+
+        # L1: CE + AMM Align Loss (默认 α=0.5)
+        {'name': 'L1_ce_align',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'use_amm_align_loss': True, 'alpha_amm': 0.5},
+
+        # L2: CE + AMM Align (α=0.3, 较弱)
+        {'name': 'L2_ce_align_a03',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'use_amm_align_loss': True, 'alpha_amm': 0.3},
+
+        # L3: CE + AMM Align (α=0.8, 较强)
+        {'name': 'L3_ce_align_a08',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'use_amm_align_loss': True, 'alpha_amm': 0.8},
+
+        # L4: CE + Align + MoE LB Loss
+        {'name': 'L4_align_lb',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'use_amm_align_loss': True, 'use_moe_lb_loss': True},
+
+        # L5: CE + Align + DiffLoss (Global/Local 正交)
+        {'name': 'L5_align_diff',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'use_amm_align_loss': True, 'use_diff_loss': True},
+
+        # L6: CE + Align + ExpertDiffLoss (Expert 分化)
+        {'name': 'L6_align_expert_diff',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'use_amm_align_loss': True, 'use_expert_diff_loss': True},
+
+        # L7: CE + Align + NCE (跨模态对比)
+        {'name': 'L7_align_nce',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'use_amm_align_loss': True, 'use_nce_loss': True},
+
+        # L8: CE + Align + LB + Diff (组合)
+        {'name': 'L8_align_lb_diff',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'use_amm_align_loss': True, 'use_moe_lb_loss': True, 'use_diff_loss': True},
+
+        # L9: 全部辅助 Loss
+        {'name': 'L9_all_aux',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'use_amm_align_loss': True, 'use_moe_lb_loss': True,
+         'use_diff_loss': True, 'use_expert_diff_loss': True, 'use_nce_loss': True},
+    ]
+}
+
+# ── 20. v3 完整交叉验证 (Mixer × Fusion × Loss) ──
+# 最终论文级结果: 最佳配置 + 各关键 baseline
+EXPERIMENT_GROUPS['v3_final'] = {
+    'description': 'v3 完整对比: 新旧架构 × Loss 最优组合 (建议配合 --seeds 1234,2314,3124)',
+    'experiments': [
+        # F0: 旧基线 — TGM + MSF
+        {'name': 'F0_tgm_msf',
+         'use_tgm': True, 'use_msf': True},
+
+        # F1: 旧最佳 — OriginAMM + MSF
+        {'name': 'F1_oamm_msf',
+         'use_origin_amm': True, 'use_msf': True},
+
+        # F2: OriginAMM + Origin MoE (旧 MoE 对照)
+        {'name': 'F2_oamm_origin_moe',
+         'use_origin_amm': True, 'use_moe_fusion': True},
+
+        # F3: OriginAMM + SD-MoE (仅 Fusion 改进)
+        {'name': 'F3_oamm_sdmoe',
+         'use_origin_amm': True, 'use_sd_moe': True},
+
+        # F4: H-AMM + MSF (仅 Mixer 改进)
+        {'name': 'F4_hamm_msf',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_msf': True},
+
+        # F5: H-AMM + SD-MoE (完整 v3) ★
+        {'name': 'F5_hamm_sdmoe',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True},
+
+        # F6: EP-AMM + SD-MoE
+        {'name': 'F6_epamm_sdmoe',
+         'use_amm': True, 'amm_mode': 'prototype', 'use_sd_moe': True},
+
+        # F7: H-AMM + SD-MoE + Gate
+        {'name': 'F7_hamm_sdmoe_gate',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_gate': True},
+    ]
+}
+
 # ═══════════════════════════════════════════════════════════════════
 # 命令构建
 # ═══════════════════════════════════════════════════════════════════
 
 # run.py 中 action='store_true' 的参数列表
 BOOLEAN_FLAGS = {
-    'use_tgm', 'use_amm', 'use_atgfbff', 'use_atgfbff_loss', 'use_shared_offset', 'use_shared_offset_loss',
+    'use_tgm', 'use_amm', 'use_origin_amm',
+    'use_atgfbff', 'use_atgfbff_loss', 'use_shared_offset', 'use_shared_offset_loss',
     'use_mslaf',
-    'use_msf', 'use_moe_fusion',
+    'use_msf', 'use_moe_fusion', 'use_sd_moe',
     'use_gate', 'use_moe_lb_loss',
     'use_diff_loss', 'use_expert_diff_loss',
     'use_nce_loss',
+    'use_amm_align_loss', 'use_tcap',
     'use_lora',
     'use_bilstm', 'use_oversampling',
     'use_cls_head',

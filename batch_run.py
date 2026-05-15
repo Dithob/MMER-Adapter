@@ -85,6 +85,36 @@ EXPERIMENT_GROUPS['lora_ablation'] = {
     ]
 }
 
+# ── 4b. LoRA target_modules 消融 ──
+EXPERIMENT_GROUPS['lora_targets_ablation'] = {
+    'description': 'LoRA target_modules扩展消融: qv / qkv / qkvo / qkvo+ffn',
+    'experiments': [
+        {'name': 'qv_only',    'use_lora': True, 'lora_r': 16, 'lora_alpha': 32,
+         'lora_target_modules': 'q_proj,v_proj'},
+        {'name': 'qkv',        'use_lora': True, 'lora_r': 16, 'lora_alpha': 32,
+         'lora_target_modules': 'q_proj,k_proj,v_proj'},
+        {'name': 'qkvo',       'use_lora': True, 'lora_r': 16, 'lora_alpha': 32,
+         'lora_target_modules': 'q_proj,k_proj,v_proj,o_proj'},
+        {'name': 'qkvo_ffn',   'use_lora': True, 'lora_r': 8,  'lora_alpha': 16,
+         'lora_target_modules': 'q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj'},
+    ]
+}
+
+# ── 4c. 两阶段训练消融 (LoRA warmup) ──
+EXPERIMENT_GROUPS['two_stage_ablation'] = {
+    'description': '两阶段训练 vs 单阶段 (LoRA warmup)',
+    'experiments': [
+        {'name': 'single_stage',  'use_lora': True, 'lora_r': 16, 'lora_alpha': 32,
+         'lora_warmup_epochs': 0},
+        {'name': 'warmup_3ep',    'use_lora': True, 'lora_r': 16, 'lora_alpha': 32,
+         'lora_warmup_epochs': 3},
+        {'name': 'warmup_5ep',    'use_lora': True, 'lora_r': 16, 'lora_alpha': 32,
+         'lora_warmup_epochs': 5},
+        {'name': 'warmup_8ep',    'use_lora': True, 'lora_r': 16, 'lora_alpha': 32,
+         'lora_warmup_epochs': 8},
+    ]
+}
+
 # ── 5. Raw AV Token Bypass 消融 ──
 EXPERIMENT_GROUPS['raw_av_ablation'] = {
     'description': 'AV Token旁路消融: none vs audio vs video vs both',
@@ -471,7 +501,7 @@ BOOLEAN_FLAGS = {
     'use_diff_loss', 'use_expert_diff_loss',
     'use_nce_loss',
     'use_amm_align_loss', 'use_tcap',
-    'use_lora',
+    'use_lora', 'use_int8',
     'use_bilstm', 'use_oversampling',
     'use_cls_head',
     'eval_only',

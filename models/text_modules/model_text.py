@@ -57,6 +57,9 @@ class Language_model(nn.Module):
         else:
             print('please use PLM')
 
+        # Track warmup state for two-stage training
+        self._lora_warmup_active = False
+
     def text_embedding(self, text_ids):
         if self._lora_enabled:
             base_model = self.model.base_model.model
@@ -90,6 +93,34 @@ class Language_model(nn.Module):
         total = sum(p.numel() for p in self.model.parameters())
         logger.info(f"LoRA enabled: r={args.lora_r}, alpha={args.lora_alpha}, targets={target_modules}")
         logger.info(f"LoRA trainable params: {trainable:,} / {total:,} ({100 * trainable / total:.2f}%)")
+
+    def enable_lora(self):
+        """Enable LoRA adapters (Stage 2 of two-stage training).
+        Re-enables gradient computation on all LoRA parameters.
+        """
+        if not self._lora_enabled:
+            return
+        count = 0
+        for name, param in self.model.named_parameters():
+            if 'lora_' in name:
+                param.requires_grad = True
+                count += 1
+        self._lora_warmup_active = False
+        logger.info(f"LoRA enabled: {count} parameter tensors unfrozen")
+
+    def disable_lora(self):
+        """Disable LoRA adapters (Stage 1 warmup: train only external modules).
+        Freezes all LoRA parameters while keeping adapter/mixer/MoE trainable.
+        """
+        if not self._lora_enabled:
+            return
+        count = 0
+        for name, param in self.model.named_parameters():
+            if 'lora_' in name:
+                param.requires_grad = False
+                count += 1
+        self._lora_warmup_active = True
+        logger.info(f"LoRA disabled (warmup): {count} parameter tensors frozen")
 
     def forward_encode(self, fusion_embedding, input_attn_mask=None, context_text=None):
         """Get LLM hidden states without generative loss (for cls_head mode).

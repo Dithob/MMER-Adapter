@@ -116,6 +116,16 @@ class HMMEM():
         # Without LoRA: Adapter + LSTM + Mixer + Fusion (~2M params)
         # With LoRA: above + LoRA injected params (~2M + ~3-7M)
         # This also avoids wasting optimizer state memory on frozen LLM params.
+
+        # ── Two-stage LoRA warmup ──
+        # Stage 1: freeze LoRA, train only external modules (LSTM/Mixer/MoE/MSF)
+        # Stage 2: enable LoRA for joint fine-tuning
+        lora_warmup_epochs = getattr(self.args, 'lora_warmup_epochs', 0)
+        use_lora = getattr(self.args, 'use_lora', False)
+        if lora_warmup_epochs > 0 and use_lora:
+            logger.info(f"Two-stage training: LoRA frozen for first {lora_warmup_epochs} epochs (alignment warmup)")
+            model.Model.LLM.disable_lora()
+
         trainable_params = [p for p in model.Model.parameters() if p.requires_grad]
         optimizer = optim.AdamW(trainable_params, lr=self.args.learning_rate, eps=1e-4)
         total_steps = len(dataloader['train'])*self.args.warm_up_epochs   #大致的一个训练step数
@@ -172,6 +182,24 @@ class HMMEM():
                     model.to(self.args.device)
                 return
             # train
+            # ── Stage transition: enable LoRA after warmup ──
+            if (lora_warmup_epochs > 0 and use_lora
+                    and epochs == lora_warmup_epochs + 1
+                    and getattr(model.Model.LLM, '_lora_warmup_active', False)):
+                logger.info(f"Stage 2: Enabling LoRA at epoch {epochs}")
+                model.Model.LLM.enable_lora()
+                # Rebuild optimizer to include newly unfrozen LoRA parameters
+                trainable_params = [p for p in model.Model.parameters() if p.requires_grad]
+                optimizer = optim.AdamW(trainable_params, lr=self.args.learning_rate, eps=1e-4)
+                # Recompute scheduler for remaining epochs
+                remaining_epochs = (max_epochs - epochs + 1) if max_epochs else self.args.warm_up_epochs
+                remaining_steps = len(dataloader['train']) * remaining_epochs // grad_accum_steps
+                scheduler = get_cosine_schedule_with_warmup(
+                    optimizer, num_warmup_steps=int(0.1 * remaining_steps),
+                    num_training_steps=remaining_steps)
+                logger.info(f"Optimizer rebuilt with {len(trainable_params)} param groups, "
+                            f"scheduler reset for ~{remaining_steps} steps")
+
             y_pred = {'M': []}
             y_true = {'M': []}
             model.train()

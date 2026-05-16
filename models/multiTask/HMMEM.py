@@ -21,6 +21,7 @@ from .HMMEM_modules import (
     SharedOffsetFusion,
 )
 from .HMMEM_mixer import OriginAMM, AdaptiveModalMixer
+from .HMMEM_qformer import QFormerBridge
 
 __all__ = ['HMMEM']
 
@@ -118,6 +119,12 @@ class HMMEM(nn.Module):
             self.use_msf = False
         elif self.use_moe_fusion:
             self.use_msf = False  # MoE overrides MSF
+
+        # ── QFormer Bridge (plugin, replaces MSF when enabled) ──
+        self.use_qformer = getattr(args, 'use_qformer', False) and self.has_av
+        if self.use_qformer:
+            # QFormer overrides MSF (but not MoE/ATGFBFF/SharedOffset)
+            self.use_msf = False
 
         # Auxiliary losses (only meaningful with AV)
         self.use_gate = getattr(args, 'use_gate', False) and self.has_av
@@ -252,6 +259,17 @@ class HMMEM(nn.Module):
             # ATGFBFF already produces pseudo-tokens via token_offset,
             # so no separate fusion module is needed here.
             pass
+        elif self.use_qformer:
+            # ── QFormer Bridge (plugin: replaces MSF) ──
+            self.fusion = QFormerBridge(
+                input_dim=fusion_input_size,
+                output_dim=text_in,
+                num_queries=args.pseudo_tokens,
+                d_model=getattr(args, 'qformer_d_model', 256),
+                num_layers=getattr(args, 'qformer_layers', 2),
+                num_heads=getattr(args, 'qformer_heads', 4),
+                dropout=0.1,
+            )
         elif self.use_msf:
             # ── Original multi_scale_fusion (baseline) ──
             self.fusion = mutli_scale_fusion(
@@ -421,10 +439,12 @@ class HMMEM(nn.Module):
         return fusion_h, aux
 
     def _apply_fusion(self, feature_f):
-        """Apply the non-MoE fusion path (MSF or direct projection).
+        """Apply the non-MoE fusion path (QFormer, MSF, or direct projection).
         Note: ATGFBFF and SharedOffset have their own dedicated path and
         never reach this method.
         """
+        if self.use_qformer:
+            return self.fusion(feature_f)
         if self.use_msf:
             return self.fusion(feature_f)
         projected = self.direct_proj(feature_f)

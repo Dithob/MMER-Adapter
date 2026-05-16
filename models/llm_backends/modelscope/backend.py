@@ -1,6 +1,10 @@
+import logging
+
 import torch
 
 from ..base import BaseLLMBackend
+
+logger = logging.getLogger('MSA')
 
 
 class ModelScopeBackend(BaseLLMBackend):
@@ -12,10 +16,27 @@ class ModelScopeBackend(BaseLLMBackend):
             padding_side='left',
             trust_remote_code=True,
         )
-        model = AutoModelForCausalLM.from_pretrained(
-            pretrained_model,
+
+        # ── INT8 quantization support ──
+        use_int8 = getattr(self.args, 'use_int8', False)
+        load_kwargs = dict(
             trust_remote_code=True,
             torch_dtype=torch.bfloat16,
+        )
+        if use_int8:
+            try:
+                from transformers import BitsAndBytesConfig
+                bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+                load_kwargs['quantization_config'] = bnb_config
+                # INT8 models must be loaded with device_map for proper placement
+                load_kwargs['device_map'] = 'auto'
+                logger.info("INT8 quantization enabled for LLM loading")
+            except ImportError:
+                logger.warning("bitsandbytes not installed, falling back to full-precision loading")
+
+        model = AutoModelForCausalLM.from_pretrained(
+            pretrained_model,
+            **load_kwargs,
         )
 
         if hasattr(model, 'gradient_checkpointing_enable'):

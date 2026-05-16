@@ -223,7 +223,7 @@ def run_normal(args):
         # ── 关键训练参数列（方便实验对比） ──
         param_columns = [
             "LR", "BatchSize", "EffBatch", "WarmupEpochs", "EarlyStop",
-            "Mixer", "Fusion", "Gate", "LoRA", "LoRA_r",
+            "Mixer", "Fusion", "Gate", "LoRA", "LoRA_r", "LoRA_targets", "LoRA_warmup", "INT8",
             "AdapterDim", "Modalities", "RawAV", "PromptStyle", "PretrainLM",
             "BiLSTM", "ModalDropout", "Oversampling", "OS_Alpha",
             "LabelFormat", "ClsHead",
@@ -250,10 +250,13 @@ def run_normal(args):
             getattr(args, 'warm_up_epochs', ''),
             getattr(args, 'early_stop', ''),
             'ATGFBFF' if getattr(args, 'use_atgfbff', False) else ('SharedOffset' if getattr(args, 'use_shared_offset', False) else ('AMM-' + getattr(args, 'amm_mode', 'base') if getattr(args, 'use_amm', False) else ('OriginAMM' if getattr(args, 'use_origin_amm', False) else ('TGM' if getattr(args, 'use_tgm', False) else 'None')))),
-            ('MSLAF' if getattr(args, 'use_mslaf', False) else '') + ('|' if getattr(args, 'use_mslaf', False) and (getattr(args, 'use_sd_moe', False) or getattr(args, 'use_moe_fusion', False) or getattr(args, 'use_msf', False)) else '') + ('SD-MoE' if getattr(args, 'use_sd_moe', False) else ('MoE' if getattr(args, 'use_moe_fusion', False) else ('MSF' if getattr(args, 'use_msf', False) else ('None' if not getattr(args, 'use_mslaf', False) else '')))),
+            ('MSLAF' if getattr(args, 'use_mslaf', False) else '') + ('|' if getattr(args, 'use_mslaf', False) and (getattr(args, 'use_sd_moe', False) or getattr(args, 'use_moe_fusion', False) or getattr(args, 'use_qformer', False) or getattr(args, 'use_msf', False)) else '') + ('SD-MoE' if getattr(args, 'use_sd_moe', False) else ('MoE' if getattr(args, 'use_moe_fusion', False) else ('QFormer' if getattr(args, 'use_qformer', False) else ('MSF' if getattr(args, 'use_msf', False) else ('None' if not getattr(args, 'use_mslaf', False) else ''))))),
             getattr(args, 'use_gate', False),
             getattr(args, 'use_lora', False),
             getattr(args, 'lora_r', '') if getattr(args, 'use_lora', False) else '',
+            getattr(args, 'lora_target_modules', 'q_proj,v_proj') if getattr(args, 'use_lora', False) else '',
+            getattr(args, 'lora_warmup_epochs', 0) if getattr(args, 'use_lora', False) else '',
+            getattr(args, 'use_int8', False),
             getattr(args, 'adapter_dim', ''),
             getattr(args, 'modalities', 'tav'),
             getattr(args, 'raw_av_mode', 'none'),
@@ -410,6 +413,16 @@ def parse_args():
     parser.add_argument('--expert_bottleneck', type=int, default=64,
                         help='bottleneck dim for Local MoE experts')
     
+    # ── QFormer Bridge (plugin, replaces MSF) ──
+    parser.add_argument('--use_qformer', action='store_true', default=False,
+                        help='use QFormer bridge instead of MSF for pseudo-token generation (cross-attention with learnable queries)')
+    parser.add_argument('--qformer_layers', type=int, default=2,
+                        help='number of cross-attention layers in QFormer (default: 2)')
+    parser.add_argument('--qformer_heads', type=int, default=4,
+                        help='number of attention heads in QFormer (default: 4)')
+    parser.add_argument('--qformer_d_model', type=int, default=256,
+                        help='internal dimension of QFormer (default: 256)')
+    
     # ── DiffLoss ──
     parser.add_argument('--use_diff_loss', action='store_true',
                         help='enable DiffLoss between Global and Local branches')
@@ -451,6 +464,11 @@ def parse_args():
                         help='LoRA dropout (default: 0.05)')
     parser.add_argument('--lora_target_modules', type=str, default='q_proj,v_proj',
                         help='comma-separated LoRA target modules (Qwen/Llama: q_proj,v_proj; ChatGLM3: query_key_value)')
+    parser.add_argument('--lora_warmup_epochs', type=int, default=0,
+                        help='two-stage training: freeze LoRA for first N epochs, train only external modules '
+                             '(LSTM/Mixer/MoE), then enable LoRA for joint fine-tuning (default: 0 = single-stage)')
+    parser.add_argument('--use_int8', action='store_true', default=False,
+                        help='load LLM with INT8 quantization (requires bitsandbytes, reduces VRAM ~50%%)')
     
     # ── Modality Ablation ──
     parser.add_argument('--modalities', type=str, default='tav',

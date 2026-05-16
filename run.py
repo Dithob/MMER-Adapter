@@ -250,7 +250,7 @@ def run_normal(args):
             getattr(args, 'warm_up_epochs', ''),
             getattr(args, 'early_stop', ''),
             'ATGFBFF' if getattr(args, 'use_atgfbff', False) else ('SharedOffset' if getattr(args, 'use_shared_offset', False) else ('AMM-' + getattr(args, 'amm_mode', 'base') if getattr(args, 'use_amm', False) else ('OriginAMM' if getattr(args, 'use_origin_amm', False) else ('TGM' if getattr(args, 'use_tgm', False) else 'None')))),
-            ('MSLAF' if getattr(args, 'use_mslaf', False) else '') + ('|' if getattr(args, 'use_mslaf', False) and (getattr(args, 'use_sd_moe', False) or getattr(args, 'use_moe_fusion', False) or getattr(args, 'use_msf', False)) else '') + ('SD-MoE' if getattr(args, 'use_sd_moe', False) else ('MoE' if getattr(args, 'use_moe_fusion', False) else ('MSF' if getattr(args, 'use_msf', False) else ('None' if not getattr(args, 'use_mslaf', False) else '')))),
+            ('MSLAF' if getattr(args, 'use_mslaf', False) else '') + ('|' if getattr(args, 'use_mslaf', False) and (getattr(args, 'use_sd_moe', False) or getattr(args, 'use_moe_fusion', False) or getattr(args, 'use_qformer', False) or getattr(args, 'use_msf', False)) else '') + ('SD-MoE' if getattr(args, 'use_sd_moe', False) else ('MoE' if getattr(args, 'use_moe_fusion', False) else ('QFormer' if getattr(args, 'use_qformer', False) else ('MSF' if getattr(args, 'use_msf', False) else ('None' if not getattr(args, 'use_mslaf', False) else ''))))),
             getattr(args, 'use_gate', False),
             getattr(args, 'use_lora', False),
             getattr(args, 'lora_r', '') if getattr(args, 'use_lora', False) else '',
@@ -412,6 +412,16 @@ def parse_args():
                         help='number of Local MoE experts')
     parser.add_argument('--expert_bottleneck', type=int, default=64,
                         help='bottleneck dim for Local MoE experts')
+    
+    # ── QFormer Bridge (plugin, replaces MSF) ──
+    parser.add_argument('--use_qformer', action='store_true', default=False,
+                        help='use QFormer bridge instead of MSF for pseudo-token generation (cross-attention with learnable queries)')
+    parser.add_argument('--qformer_layers', type=int, default=2,
+                        help='number of cross-attention layers in QFormer (default: 2)')
+    parser.add_argument('--qformer_heads', type=int, default=4,
+                        help='number of attention heads in QFormer (default: 4)')
+    parser.add_argument('--qformer_d_model', type=int, default=256,
+                        help='internal dimension of QFormer (default: 256)')
     
     # ── DiffLoss ──
     parser.add_argument('--use_diff_loss', action='store_true',

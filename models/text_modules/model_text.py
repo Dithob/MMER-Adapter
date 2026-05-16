@@ -133,7 +133,13 @@ class Language_model(nn.Module):
             with torch.amp.autocast(device_type='cuda'):
                 outputs = self.model(input_ids=opt_tokens, input_fusion=fusion_embedding,
                                      output_hidden_states=True, return_dict=True)
-            last_hidden = outputs.hidden_states[-1][:, -1, :]
+            # ChatGLM3 hidden_states shape: [seq_len, batch, hidden] (not [batch, seq_len, hidden])
+            last_layer_hs = outputs.hidden_states[-1]  # [seq_len, batch, hidden]
+            if last_layer_hs.shape[0] != fusion_embedding.shape[0]:
+                # Transpose to [batch, seq_len, hidden] then take last position
+                last_hidden = last_layer_hs.permute(1, 0, 2)[:, -1, :]  # [batch, hidden]
+            else:
+                last_hidden = last_layer_hs[:, -1, :]  # already [batch, seq_len, hidden]
             return last_hidden
 
         # qwen / qwen3.5 / llama2 / deepseek / gemma

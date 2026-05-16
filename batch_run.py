@@ -315,21 +315,47 @@ EXPERIMENT_GROUPS['training_tricks_x_mixer'] = {
     ]
 }
 
+# # ── 16. LLM 输出方式消融 (label_format + cls_head) ──
+# EXPERIMENT_GROUPS['label_mode_ablation'] = {
+#     'description': 'LLM输出方式消融: gen+index vs gen+text vs cls_head',
+#     'experiments': [
+#         # L0: 基线 (生成式 + 数字索引)
+#         {'name': 'L0_gen_index',
+#          'use_tgm': True, 'use_msf': True, 'label_format': 'index'},
+
+#         # L1: 生成式 + 文本标签
+#         {'name': 'L1_gen_text',
+#          'use_tgm': True, 'use_msf': True, 'label_format': 'text'},
+
+#         # L2: 分类头
+#         {'name': 'L2_cls_head',
+#          'use_tgm': True, 'use_msf': True, 'use_cls_head': True},
+#     ]
+# }
+
 # ── 16. LLM 输出方式消融 (label_format + cls_head) ──
 EXPERIMENT_GROUPS['label_mode_ablation'] = {
     'description': 'LLM输出方式消融: gen+index vs gen+text vs cls_head',
     'experiments': [
         # L0: 基线 (生成式 + 数字索引)
-        {'name': 'L0_gen_index',
-         'use_tgm': True, 'use_msf': True, 'label_format': 'index'},
+        # {'name': 'L0_gen_index',
+        # 'use_tgm': True, 'use_msf': True, 'label_format': 'index'},
 
         # L1: 生成式 + 文本标签
         {'name': 'L1_gen_text',
          'use_tgm': True, 'use_msf': True, 'label_format': 'text'},
 
-        # L2: 分类头
+        # L2: 分类头 
         {'name': 'L2_cls_head',
          'use_tgm': True, 'use_msf': True, 'use_cls_head': True},
+        
+        # L3: 生成式 + 文本标签 amm+SDMoe
+        {'name': 'M4_hamm_sdmoe_notcap_gen_text',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False, 'label_format': 'text'},
+         
+        # L4: 分类头 
+        {'name': 'M4_hamm_sdmoe_notcap_cls_head',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False, 'use_cls_head': True},
     ]
 }
 

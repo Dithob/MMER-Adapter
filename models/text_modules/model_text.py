@@ -77,6 +77,30 @@ class Language_model(nn.Module):
 
         target_modules = [m.strip() for m in args.lora_target_modules.split(',')]
 
+        # ── ChatGLM3 module name remapping ──
+        # ChatGLM3 uses different naming conventions:
+        #   q_proj/k_proj/v_proj → query_key_value  (merged QKV)
+        #   o_proj              → dense             (attention output)
+        #   gate_proj/up_proj   → dense_h_to_4h     (FFN up, merged)
+        #   down_proj           → dense_4h_to_h     (FFN down)
+        if self.model_type == 'chatglm3':
+            _CHATGLM3_MAP = {
+                'q_proj': 'query_key_value',
+                'k_proj': 'query_key_value',
+                'v_proj': 'query_key_value',
+                'o_proj': 'dense',
+                'gate_proj': 'dense_h_to_4h',
+                'up_proj': 'dense_h_to_4h',
+                'down_proj': 'dense_4h_to_h',
+            }
+            remapped = []
+            for m in target_modules:
+                mapped = _CHATGLM3_MAP.get(m, m)
+                if mapped not in remapped:
+                    remapped.append(mapped)
+            logger.info(f"ChatGLM3 LoRA target remapping: {target_modules} → {remapped}")
+            target_modules = remapped
+
         lora_config = LoraConfig(
             r=args.lora_r,
             lora_alpha=args.lora_alpha,

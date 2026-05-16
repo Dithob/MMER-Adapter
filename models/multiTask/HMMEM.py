@@ -643,7 +643,10 @@ class HMMEM(nn.Module):
             # Get LLM hidden state at last position, classify with linear head
             hidden = self.LLM.forward_encode(LLM_input, input_attn_mask=input_attn_mask, context_text=context_text)
             cls_logits = self.cls_head(hidden)  # [B, num_classes]
-            cls_loss = F.cross_entropy(cls_logits, labels.long())
+            # labels may be on CPU (classification mode doesn't move them to device
+            # because the generative path only uses label values as tokenizer strings)
+            cls_labels = labels.long().view(-1).to(cls_logits.device)
+            cls_loss = F.cross_entropy(cls_logits, cls_labels)
             res = {
                 'Loss': cls_loss,
                 'cls_logits': cls_logits,

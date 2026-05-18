@@ -297,46 +297,46 @@ EXPERIMENT_GROUPS['training_tricks_ablation'] = {
     'description': '训练优化消融: BiLSTM × Modality Dropout × Oversampling',
     'experiments': [
         # T0: 纯基线
-        {'name': 'T0_baseline',
-         'use_tgm': True, 'use_msf': True},
+        # {'name': 'T0_baseline',
+        #  'use_tgm': True, 'use_msf': True},
 
         # T1: BiLSTM only
         {'name': 'T1_bilstm_only',
-         'use_tgm': True, 'use_msf': True, 'use_bilstm': True},
+         'use_amm': True,'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False, 'use_bilstm': True},
 
         # T2~T4: Modality Dropout sweep
         {'name': 'T2_md_010',
-         'use_tgm': True, 'use_msf': True, 'modality_dropout_p': 0.10},
+         'use_amm': True,'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False, 'modality_dropout_p': 0.10},
         {'name': 'T3_md_015',
-         'use_tgm': True, 'use_msf': True, 'modality_dropout_p': 0.15},
-        {'name': 'T4_md_020',
-         'use_tgm': True, 'use_msf': True, 'modality_dropout_p': 0.20},
+         'use_amm': True,'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False, 'modality_dropout_p': 0.15},
+        # {'name': 'T4_md_020',
+        #  'use_tgm': True, 'use_msf': True, 'modality_dropout_p': 0.20},
 
         # T5a~T5c: Oversampling α sweep
         {'name': 'T5a_os_a05',
-         'use_tgm': True, 'use_msf': True,
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
          'use_oversampling': True, 'oversampling_alpha': 0.5},
         {'name': 'T5b_os_a07',
-         'use_tgm': True, 'use_msf': True,
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
          'use_oversampling': True, 'oversampling_alpha': 0.7},
-        {'name': 'T5c_os_a10',
-         'use_tgm': True, 'use_msf': True,
-         'use_oversampling': True, 'oversampling_alpha': 1.0},
+        # {'name': 'T5c_os_a10',
+        #  'use_tgm': True, 'use_msf': True,
+        #  'use_oversampling': True, 'oversampling_alpha': 1.0},
 
         # T6~T8: 两两组合 (oversampling 使用推荐 α=0.5)
-        {'name': 'T6_md010_os',
-         'use_tgm': True, 'use_msf': True,
-         'modality_dropout_p': 0.10, 'use_oversampling': True, 'oversampling_alpha': 0.5},
-        {'name': 'T7_bilstm_md010',
-         'use_tgm': True, 'use_msf': True,
-         'use_bilstm': True, 'modality_dropout_p': 0.10},
-        {'name': 'T8_bilstm_os',
-         'use_tgm': True, 'use_msf': True,
-         'use_bilstm': True, 'use_oversampling': True, 'oversampling_alpha': 0.5},
+        # {'name': 'T6_md010_os',
+        #  'use_tgm': True, 'use_msf': True,
+        #  'modality_dropout_p': 0.10, 'use_oversampling': True, 'oversampling_alpha': 0.5},
+        # {'name': 'T7_bilstm_md010',
+        #  'use_tgm': True, 'use_msf': True,
+        #  'use_bilstm': True, 'modality_dropout_p': 0.10},
+        # {'name': 'T8_bilstm_os',
+        #  'use_tgm': True, 'use_msf': True,
+        #  'use_bilstm': True, 'use_oversampling': True, 'oversampling_alpha': 0.5},
 
         # T9: 全部组合
         {'name': 'T9_all_combined',
-         'use_tgm': True, 'use_msf': True,
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
          'use_bilstm': True, 'modality_dropout_p': 0.10,
          'use_oversampling': True, 'oversampling_alpha': 0.5},
     ]

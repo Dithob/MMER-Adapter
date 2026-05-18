@@ -99,6 +99,44 @@ class HMMEM():
         logger.info(f"Resumed from checkpoint: {ckpt_path} (epoch={start_epoch}, best_valid={best_valid:.4f})")
         return start_epoch, best_valid, best_epoch
 
+    def _build_optimizer(self, model, base_lr, lora_lr, use_lora):
+        """Build AdamW optimizer with separate learning rate groups for LoRA and adapter params.
+
+        When use_lora=True:
+          - Group 'adapter': all trainable non-LoRA params → lr=base_lr  (e.g. 5e-4)
+          - Group 'lora':    LoRA-injected params          → lr=lora_lr  (e.g. 2e-5)
+        When use_lora=False:
+          - Single group with all trainable params → lr=base_lr
+
+        This prevents catastrophic forgetting of LLM pretrained representations
+        while allowing adapter modules to converge quickly from random init.
+        """
+        if use_lora:
+            lora_params = []
+            adapter_params = []
+            for name, param in model.Model.named_parameters():
+                if not param.requires_grad:
+                    continue
+                if 'lora_' in name:
+                    lora_params.append(param)
+                else:
+                    adapter_params.append(param)
+
+            param_groups = [
+                {'params': adapter_params, 'lr': base_lr, 'name': 'adapter'},
+            ]
+            if lora_params:
+                param_groups.append(
+                    {'params': lora_params, 'lr': lora_lr, 'name': 'lora'},
+                )
+            logger.info(f"Dual-LR optimizer: adapter({len(adapter_params)} tensors, lr={base_lr}) "
+                        f"+ LoRA({len(lora_params)} tensors, lr={lora_lr})")
+            return optim.AdamW(param_groups, eps=1e-4)
+        else:
+            trainable_params = [p for p in model.Model.parameters() if p.requires_grad]
+            logger.info(f"Single-LR optimizer: {len(trainable_params)} tensors, lr={base_lr}")
+            return optim.AdamW(trainable_params, lr=base_lr, eps=1e-4)
+
     def do_train(self, model, dataloader, resume_checkpoint=None):
 
         # ── Precision strategy: prefer bf16 on supported hardware ──
@@ -126,8 +164,11 @@ class HMMEM():
             logger.info(f"Two-stage training: LoRA frozen for first {lora_warmup_epochs} epochs (alignment warmup)")
             model.Model.LLM.disable_lora()
 
-        trainable_params = [p for p in model.Model.parameters() if p.requires_grad]
-        optimizer = optim.AdamW(trainable_params, lr=self.args.learning_rate, eps=1e-4)
+        # ── Build optimizer with dual learning rate groups ──
+        # When LoRA is enabled, separate LoRA params (low lr) from adapter params (high lr)
+        # to prevent catastrophic forgetting of LLM pretrained representations.
+        lora_lr = getattr(self.args, 'lora_lr', 2e-5)
+        optimizer = self._build_optimizer(model, self.args.learning_rate, lora_lr, use_lora)
         total_steps = len(dataloader['train'])*self.args.warm_up_epochs   #大致的一个训练step数
         # Adjust total_steps for gradient accumulation (optimizer steps, not forward steps)
         optimizer_steps = total_steps // grad_accum_steps
@@ -188,16 +229,17 @@ class HMMEM():
                     and getattr(model.Model.LLM, '_lora_warmup_active', False)):
                 logger.info(f"Stage 2: Enabling LoRA at epoch {epochs}")
                 model.Model.LLM.enable_lora()
-                # Rebuild optimizer to include newly unfrozen LoRA parameters
-                trainable_params = [p for p in model.Model.parameters() if p.requires_grad]
-                optimizer = optim.AdamW(trainable_params, lr=self.args.learning_rate, eps=1e-4)
+                # Rebuild optimizer with dual learning rate groups for newly unfrozen LoRA parameters
+                optimizer = self._build_optimizer(model, self.args.learning_rate, lora_lr, use_lora)
                 # Recompute scheduler for remaining epochs
                 remaining_epochs = (max_epochs - epochs + 1) if max_epochs else self.args.warm_up_epochs
                 remaining_steps = len(dataloader['train']) * remaining_epochs // grad_accum_steps
                 scheduler = get_cosine_schedule_with_warmup(
                     optimizer, num_warmup_steps=int(0.1 * remaining_steps),
                     num_training_steps=remaining_steps)
-                logger.info(f"Optimizer rebuilt with {len(trainable_params)} param groups, "
+                n_groups = len(optimizer.param_groups)
+                total_params = sum(len(g['params']) for g in optimizer.param_groups)
+                logger.info(f"Optimizer rebuilt with {n_groups} param groups ({total_params} tensors), "
                             f"scheduler reset for ~{remaining_steps} steps")
 
             y_pred = {'M': []}

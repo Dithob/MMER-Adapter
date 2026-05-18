@@ -223,7 +223,7 @@ def run_normal(args):
         # ── 关键训练参数列（方便实验对比） ──
         param_columns = [
             "LR", "BatchSize", "EffBatch", "WarmupEpochs", "EarlyStop",
-            "Mixer", "Fusion", "Gate", "LoRA", "LoRA_r", "LoRA_targets", "LoRA_warmup", "INT8",
+            "Mixer", "Fusion", "Gate", "LoRA", "LoRA_r", "LoRA_LR", "LoRA_targets", "LoRA_warmup", "INT8",
             "AdapterDim", "Modalities", "RawAV", "PromptStyle", "PretrainLM",
             "BiLSTM", "ModalDropout", "Oversampling", "OS_Alpha",
             "LabelFormat", "ClsHead",
@@ -254,6 +254,7 @@ def run_normal(args):
             getattr(args, 'use_gate', False),
             getattr(args, 'use_lora', False),
             getattr(args, 'lora_r', '') if getattr(args, 'use_lora', False) else '',
+            getattr(args, 'lora_lr', '') if getattr(args, 'use_lora', False) else '',
             getattr(args, 'lora_target_modules', 'q_proj,v_proj') if getattr(args, 'use_lora', False) else '',
             getattr(args, 'lora_warmup_epochs', 0) if getattr(args, 'use_lora', False) else '',
             getattr(args, 'use_int8', False),
@@ -467,6 +468,9 @@ def parse_args():
     parser.add_argument('--lora_warmup_epochs', type=int, default=0,
                         help='two-stage training: freeze LoRA for first N epochs, train only external modules '
                              '(LSTM/Mixer/MoE), then enable LoRA for joint fine-tuning (default: 0 = single-stage)')
+    parser.add_argument('--lora_lr', type=float, default=2e-5,
+                        help='separate learning rate for LoRA parameters (default: 2e-5). '
+                             'Only used when --use_lora is set. Adapter/LSTM/MoE params use --learning_rate.')
     parser.add_argument('--use_int8', action='store_true', default=False,
                         help='load LLM with INT8 quantization (requires bitsandbytes, reduces VRAM ~50%%)')
     

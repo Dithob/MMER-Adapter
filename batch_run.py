@@ -81,7 +81,7 @@ EXPERIMENT_GROUPS['lora_ablation_baseline'] = {
     'experiments': [
         {'name': 'lora_r8',     'use_lora': True, 'lora_r': 8,  'lora_alpha': 16,  'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False},
         {'name': 'lora_r16',    'use_lora': True, 'lora_r': 16, 'lora_alpha': 32, 'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False},
-        {'name': 'lora_r16_qkv',     'use_lora': True, 'lora_r': 16,  'lora_alpha': 32,  'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False, 'lora_target_modules': 'q_proj,k_proj,v_proj'},
+        # {'name': 'lora_r16_qkv',     'use_lora': True, 'lora_r': 16,  'lora_alpha': 32,  'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False, 'lora_target_modules': 'q_proj,k_proj,v_proj'},
         {'name': 'lora_r16_qkvo',     'use_lora': True, 'lora_r': 16, 'lora_alpha': 32,  'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False, 'lora_target_modules': 'q_proj,k_proj,v_proj,o_proj'},
         {'name': 'lora_r16_warmup_5ep',     'use_lora': True, 'lora_r': 16, 'lora_alpha': 32,  'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False, 'lora_warmup_epochs': 5},
     ]

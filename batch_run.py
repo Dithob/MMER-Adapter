@@ -128,14 +128,17 @@ EXPERIMENT_GROUPS['two_stage_ablation'] = {
     ]
 }
 
-# ── 4d. QFormer vs MSF 消融 ──
+# ── 4d. QFormer / CrossAttnExpander / MSF 消融 ──
 EXPERIMENT_GROUPS['qformer_ablation'] = {
-    'description': 'QFormer Bridge vs MSF vs SD-MoE 伪词token生成器对比',
+    'description': 'Full QFormer vs CrossAttnExpander vs MSF vs SD-MoE 伪词生成器对比',
     'experiments': [
-        {'name': 'msf_baseline',   'use_msf': True,  'use_qformer': False, 'use_sd_moe': False},
-        {'name': 'qformer_2L',     'use_msf': False, 'use_qformer': True,  'use_sd_moe': False, 'qformer_layers': 2},
-        {'name': 'qformer_4L',     'use_msf': False, 'use_qformer': True,  'use_sd_moe': False, 'qformer_layers': 4},
-        {'name': 'sd_moe',         'use_msf': False, 'use_qformer': False, 'use_sd_moe': True},
+        {'name': 'msf_baseline',   'use_msf': True,  'use_qformer': False, 'use_sd_moe': False, 'use_cross_attn_expander': False},
+        {'name': 'xattn_exp',      'use_msf': False, 'use_qformer': False, 'use_sd_moe': False, 'use_cross_attn_expander': True},
+        {'name': 'qformer_4L_8q',  'use_qformer': True, 'qformer_layers': 4, 'qformer_num_queries': 8},
+        {'name': 'qformer_4L_16q', 'use_qformer': True, 'qformer_layers': 4, 'qformer_num_queries': 16},
+        {'name': 'qformer_6L_8q',  'use_qformer': True, 'qformer_layers': 6, 'qformer_num_queries': 8},
+        {'name': 'qformer_4L_32q', 'use_qformer': True, 'qformer_layers': 4, 'qformer_num_queries': 32},
+        {'name': 'sd_moe',         'use_msf': False, 'use_qformer': False, 'use_sd_moe': True, 'use_cross_attn_expander': False},
     ]
 }
 
@@ -551,7 +554,7 @@ BOOLEAN_FLAGS = {
     'use_diff_loss', 'use_expert_diff_loss',
     'use_nce_loss',
     'use_amm_align_loss', 'use_tcap',
-    'use_lora', 'use_int8', 'use_qformer',
+    'use_lora', 'use_int8', 'use_qformer', 'use_cross_attn_expander',
     'use_bilstm', 'use_oversampling',
     'use_cls_head',
     'eval_only',

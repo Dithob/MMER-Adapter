@@ -87,7 +87,7 @@ def run(args):
     # ── torch.compile 加速可训练小模块（不编译冻结的 LLM）──
     if hasattr(torch, 'compile'):
         _compile_targets = [
-            'audio_LSTM', 'video_LSTM', 'mixer', 'fusion',
+            'audio_LSTM', 'video_LSTM', 'mixer', 'fusion', 'qformer',
             'audio_adapter', 'video_adapter',
             'text_proj_for_mixer', 'mixer_out_proj', 'mslaf',
             'shared_proj', 'global_moe', 'local_moe', 'moe_msf',
@@ -250,7 +250,7 @@ def run_normal(args):
             getattr(args, 'warm_up_epochs', ''),
             getattr(args, 'early_stop', ''),
             'ATGFBFF' if getattr(args, 'use_atgfbff', False) else ('SharedOffset' if getattr(args, 'use_shared_offset', False) else ('AMM-' + getattr(args, 'amm_mode', 'base') if getattr(args, 'use_amm', False) else ('OriginAMM' if getattr(args, 'use_origin_amm', False) else ('TGM' if getattr(args, 'use_tgm', False) else 'None')))),
-            ('MSLAF' if getattr(args, 'use_mslaf', False) else '') + ('|' if getattr(args, 'use_mslaf', False) and (getattr(args, 'use_sd_moe', False) or getattr(args, 'use_moe_fusion', False) or getattr(args, 'use_qformer', False) or getattr(args, 'use_msf', False)) else '') + ('SD-MoE' if getattr(args, 'use_sd_moe', False) else ('MoE' if getattr(args, 'use_moe_fusion', False) else ('QFormer' if getattr(args, 'use_qformer', False) else ('MSF' if getattr(args, 'use_msf', False) else ('None' if not getattr(args, 'use_mslaf', False) else ''))))),
+            ('MSLAF' if getattr(args, 'use_mslaf', False) else '') + ('|' if getattr(args, 'use_mslaf', False) and (getattr(args, 'use_sd_moe', False) or getattr(args, 'use_moe_fusion', False) or getattr(args, 'use_qformer', False) or getattr(args, 'use_cross_attn_expander', False) or getattr(args, 'use_msf', False)) else '') + ('SD-MoE' if getattr(args, 'use_sd_moe', False) else ('MoE' if getattr(args, 'use_moe_fusion', False) else ('QFormer' if getattr(args, 'use_qformer', False) else ('XAttnExp' if getattr(args, 'use_cross_attn_expander', False) else ('MSF' if getattr(args, 'use_msf', False) else ('None' if not getattr(args, 'use_mslaf', False) else '')))))),
             getattr(args, 'use_gate', False),
             getattr(args, 'use_lora', False),
             getattr(args, 'lora_r', '') if getattr(args, 'use_lora', False) else '',
@@ -414,15 +414,21 @@ def parse_args():
     parser.add_argument('--expert_bottleneck', type=int, default=64,
                         help='bottleneck dim for Local MoE experts')
     
-    # ── QFormer Bridge (plugin, replaces MSF) ──
+    # ── QFormer Bridge (full, replaces Mixer + Fusion) ──
     parser.add_argument('--use_qformer', action='store_true', default=False,
-                        help='use QFormer bridge instead of MSF for pseudo-token generation (cross-attention with learnable queries)')
-    parser.add_argument('--qformer_layers', type=int, default=2,
-                        help='number of cross-attention layers in QFormer (default: 2)')
-    parser.add_argument('--qformer_heads', type=int, default=4,
-                        help='number of attention heads in QFormer (default: 4)')
+                        help='use full QFormer bridge: cross-attention on LSTM temporal sequences, replaces both Mixer and Fusion')
+    parser.add_argument('--qformer_num_queries', type=int, default=8,
+                        help='number of learnable query tokens in QFormer (default: 8)')
+    parser.add_argument('--qformer_layers', type=int, default=4,
+                        help='number of cross-attention layers in QFormer (default: 4)')
+    parser.add_argument('--qformer_heads', type=int, default=8,
+                        help='number of attention heads in QFormer (default: 8)')
     parser.add_argument('--qformer_d_model', type=int, default=256,
                         help='internal dimension of QFormer (default: 256)')
+
+    # ── CrossAttnExpander (lightweight ablation, Fusion layer) ──
+    parser.add_argument('--use_cross_attn_expander', action='store_true', default=False,
+                        help='use CrossAttnExpander (lightweight cross-attention token expander in Fusion layer, parallel to MSF/MoE)')
     
     # ── DiffLoss ──
     parser.add_argument('--use_diff_loss', action='store_true',
@@ -561,6 +567,17 @@ if __name__ == '__main__':
         args.use_msf = False
     elif args.use_moe_fusion:
         args.use_msf = False
+    # QFormer replaces both Mixer and Fusion
+    if args.use_qformer:
+        args.use_tgm = False
+        args.use_amm = False
+        args.use_origin_amm = False
+        args.use_atgfbff = False
+        args.use_shared_offset = False
+        args.use_msf = False
+        args.use_moe_fusion = False
+        args.use_sd_moe = False
+        args.use_cross_attn_expander = False
         
     logger = set_log(args)
     

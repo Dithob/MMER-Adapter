@@ -21,7 +21,7 @@ from .HMMEM_modules import (
     SharedOffsetFusion,
 )
 from .HMMEM_mixer import OriginAMM, AdaptiveModalMixer
-from .HMMEM_qformer import QFormerBridge
+from .HMMEM_qformer import QFormerBridge, CrossAttnExpander
 
 __all__ = ['HMMEM']
 
@@ -120,11 +120,24 @@ class HMMEM(nn.Module):
         elif self.use_moe_fusion:
             self.use_msf = False  # MoE overrides MSF
 
-        # ── QFormer Bridge (plugin, replaces MSF when enabled) ──
+        # ── QFormer Bridge (full, replaces Mixer + Fusion when enabled) ──
         self.use_qformer = getattr(args, 'use_qformer', False) and self.has_av
         if self.use_qformer:
-            # QFormer overrides MSF (but not MoE/ATGFBFF/SharedOffset)
+            # QFormer replaces everything: Mixer + Fusion
+            self.use_tgm = False
+            self.use_amm = False
+            self.use_origin_amm = False
+            self.use_atgfbff = False
+            self.use_shared_offset = False
             self.use_msf = False
+            self.use_moe_fusion = False
+            self.use_sd_moe = False
+            self.use_mslaf = False
+
+        # ── CrossAttnExpander (lightweight ablation, sits in Fusion layer like MSF) ──
+        self.use_cross_attn_expander = getattr(args, 'use_cross_attn_expander', False) and self.has_av
+        if self.use_cross_attn_expander:
+            self.use_msf = False  # overrides MSF
 
         # Auxiliary losses (only meaningful with AV)
         self.use_gate = getattr(args, 'use_gate', False) and self.has_av
@@ -179,7 +192,7 @@ class HMMEM(nn.Module):
             )
         elif self.use_tgm:
             self.mixer = Text_guide_mixer(text_in)
-        elif self.has_av:
+        elif self.has_av and not self.use_qformer:
             # Fallback: simple audio + video (no text guidance)
             self.mixer = Lightweight_mixer()
 
@@ -193,7 +206,22 @@ class HMMEM(nn.Module):
         # ══════════════════════════════════════════════
         # Fusion Layer (only built when AV present)
         # ══════════════════════════════════════════════
-        if self.use_sd_moe:
+        if self.use_qformer:
+            # ── Full QFormer Bridge (replaces Mixer + Fusion) ──
+            _a_seq_dim = args.a_lstm_hidden_size * 2 if _use_bilstm else args.a_lstm_hidden_size
+            _v_seq_dim = args.v_lstm_hidden_size * 2 if _use_bilstm else args.v_lstm_hidden_size
+            self.qformer = QFormerBridge(
+                audio_dim=_a_seq_dim if self.use_audio else _v_seq_dim,
+                video_dim=_v_seq_dim if self.use_video else _a_seq_dim,
+                output_dim=text_in,
+                num_queries=getattr(args, 'qformer_num_queries', 8),
+                d_model=getattr(args, 'qformer_d_model', 256),
+                num_layers=getattr(args, 'qformer_layers', 4),
+                num_heads=getattr(args, 'qformer_heads', 8),
+                dropout=0.1,
+            )
+
+        elif self.use_sd_moe:
             # ── SD-MoE: Semantic-Decomposed MoE (improved v3) ──
             self.pseudo_tokens = args.pseudo_tokens
             num_local = getattr(args, 'num_local_experts', 3)
@@ -259,9 +287,9 @@ class HMMEM(nn.Module):
             # ATGFBFF already produces pseudo-tokens via token_offset,
             # so no separate fusion module is needed here.
             pass
-        elif self.use_qformer:
-            # ── QFormer Bridge (plugin: replaces MSF) ──
-            self.fusion = QFormerBridge(
+        elif self.use_cross_attn_expander:
+            # ── CrossAttnExpander (lightweight ablation, parallel to MSF) ──
+            self.fusion = CrossAttnExpander(
                 input_dim=fusion_input_size,
                 output_dim=text_in,
                 num_queries=args.pseudo_tokens,
@@ -439,11 +467,11 @@ class HMMEM(nn.Module):
         return fusion_h, aux
 
     def _apply_fusion(self, feature_f):
-        """Apply the non-MoE fusion path (QFormer, MSF, or direct projection).
-        Note: ATGFBFF and SharedOffset have their own dedicated path and
-        never reach this method.
+        """Apply the non-MoE fusion path (CrossAttnExpander, MSF, or direct projection).
+        Note: ATGFBFF, SharedOffset, and full QFormer have their own dedicated
+        paths and never reach this method.
         """
-        if self.use_qformer:
+        if self.use_cross_attn_expander:
             return self.fusion(feature_f)
         if self.use_msf:
             return self.fusion(feature_f)
@@ -563,13 +591,14 @@ class HMMEM(nn.Module):
         video_h = text_embed.new_zeros(batch_size, 256)
         audio_seq, video_seq = None, None
 
+        _need_seq = self.use_nce_loss or self.use_qformer
         if self.use_audio:
-            if self.use_nce_loss:
+            if _need_seq:
                 audio_h, audio_seq = self.audio_LSTM(audio, audio_len, return_sequence=True)
             else:
                 audio_h = self.audio_LSTM(audio, audio_len)
         if self.use_video:
-            if self.use_nce_loss:
+            if _need_seq:
                 video_h, video_seq = self.video_LSTM(video, video_len, return_sequence=True)
             else:
                 video_h = self.video_LSTM(video, video_len)
@@ -606,6 +635,13 @@ class HMMEM(nn.Module):
             else:
                 fusion_h = mix_result
             feature_f = text_embed.new_zeros(batch_size, 256)
+        elif self.use_qformer:
+            # ── Full QFormer: LSTM sequences → QFormer → fusion_h (skip Mixer) ──
+            fusion_h = self.qformer(
+                audio_seq=audio_seq if self.use_audio else None,
+                video_seq=video_seq if self.use_video else None,
+            )
+            feature_f = (audio_h + video_h) / 2.0  # lightweight proxy for logging
         elif self.use_sd_moe:
             mix_result = self._mix_modalities(audio_h, video_h, text_embed)
             if self._amm_active:
@@ -729,16 +765,30 @@ class HMMEM(nn.Module):
 
         audio_h = text_embed.new_zeros(batch_size, 256)
         video_h = text_embed.new_zeros(batch_size, 256)
+        audio_seq, video_seq = None, None
         if self.use_audio:
-            audio_h = self.audio_LSTM(audio, audio_len)
+            if self.use_qformer:
+                audio_h, audio_seq = self.audio_LSTM(audio, audio_len, return_sequence=True)
+            else:
+                audio_h = self.audio_LSTM(audio, audio_len)
         if self.use_video:
-            video_h = self.video_LSTM(video, video_len)
+            if self.use_qformer:
+                video_h, video_seq = self.video_LSTM(video, video_len, return_sequence=True)
+            else:
+                video_h = self.video_LSTM(video, video_len)
 
         # Mixer → Fusion (mirrors forward, discards aux)
         if self.text_only:
             mix_result = self._mix_modalities(audio_h, video_h, text_embed)
             fusion_h = mix_result[0] if self._amm_active else mix_result
             feature_f = text_embed.new_zeros(batch_size, 256)
+        elif self.use_qformer:
+            # ── Full QFormer: LSTM sequences → QFormer → fusion_h ──
+            fusion_h = self.qformer(
+                audio_seq=audio_seq if self.use_audio else None,
+                video_seq=video_seq if self.use_video else None,
+            )
+            feature_f = (audio_h + video_h) / 2.0
         elif self.use_sd_moe:
             mix_result = self._mix_modalities(audio_h, video_h, text_embed)
             feature_f = mix_result[0] if self._amm_active else mix_result

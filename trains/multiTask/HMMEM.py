@@ -89,10 +89,19 @@ class HMMEM():
         # 恢复模型参数（只恢复可训练部分，strict=False 跳过冻结权重）
         model.load_state_dict(checkpoint['model_state_dict'], strict=False)
         model.to(self.args.device)
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-        if scaler is not None and checkpoint.get('scaler_state_dict') is not None:
-            scaler.load_state_dict(checkpoint['scaler_state_dict'])
+        # 恢复 optimizer / scheduler / scaler（容错：torch.compile 可能改变参数结构）
+        try:
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+            if scaler is not None and checkpoint.get('scaler_state_dict') is not None:
+                scaler.load_state_dict(checkpoint['scaler_state_dict'])
+            logger.info("Optimizer/scheduler state restored successfully.")
+        except (ValueError, RuntimeError) as e:
+            logger.warning(
+                f"Failed to restore optimizer/scheduler state: {e}. "
+                f"This is expected when torch.compile changes parameter structure. "
+                f"Continuing with fresh optimizer state (model weights ARE restored)."
+            )
         start_epoch = checkpoint['epoch']
         best_valid  = checkpoint['best_valid']
         best_epoch  = checkpoint['best_epoch']

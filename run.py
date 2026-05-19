@@ -140,7 +140,14 @@ def run(args):
             raise FileNotFoundError(f"Model file not found: {load_path}")
         logger.info(f"[Eval-Only] Loading model from: {load_path}")
         checkpoint = torch.load(load_path, map_location=device)
-        model.load_state_dict(checkpoint, strict=False)
+        # 自动兼容 .ckpt（checkpoint dict）和 .pth（纯 state_dict）两种格式
+        if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+            logger.info(f"[Eval-Only] Detected .ckpt format (epoch={checkpoint.get('epoch', '?')}, "
+                        f"best_valid={checkpoint.get('best_valid', '?')})")
+            state_dict = checkpoint['model_state_dict']
+        else:
+            state_dict = checkpoint
+        model.load_state_dict(state_dict, strict=False)
         model.to(device)
 
         # 在 valid 和 test 上都跑一遍，方便对比

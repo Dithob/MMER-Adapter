@@ -498,7 +498,18 @@ class Language_model(nn.Module):
             p_before_embeds = self.text_embedding(p_before_tokens.input_ids).expand(batch_size, -1, -1)
             p_after_embeds = self.text_embedding(p_after_tokens.input_ids).expand(batch_size, -1, -1)
         else:
-            if self.prompt_style == 'enhanced':
+            if self.prompt_style == 'instructerc':
+                # InstructERC-style prompt: role preamble + multimodal wrap
+                # Matches the "Now you are expert..." pattern from SpeechCueLLM
+                if self.language == "en":
+                    prompt = ('Now you are an expert of sentiment and emotional analysis. '
+                              'Analyze the following multimodal content: '
+                              '<Multimodal><MultimodalHere></Multimodal>')
+                else:
+                    prompt = ('你现在是情感分析专家。'
+                              '请分析以下多模态内容：'
+                              '<多模态><MultimodalHere></多模态>')
+            elif self.prompt_style == 'enhanced':
                 if self.language == "en":
                     prompt = 'Based on the following multimodal signals: <Multimodal><MultimodalHere></Multimodal>'
                 else:

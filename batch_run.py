@@ -552,6 +552,82 @@ EXPERIMENT_GROUPS['v3_final'] = {
     ]
 }
 
+# ── 21. SpeechCueLLM 对标对比 ──
+# 验证 "长上下文 + LoRA" 是否是 SpeechCueLLM 高性能的真正来源
+# SpeechCueLLM 使用 InstructERC 范式 (完整对话上下文 + LLaMA3-8B LoRA)
+# 在 IEMOCAP-6 上 text-only 达到 70%+, 加语音描述达到 72.6%
+# 设计思路:
+#   S0: 无上下文基线 → S1/S2: 逐步加长上下文 → S3: +LoRA
+#   S4/S5: Text-only 对标 (最公平对比) → S6/S7: 全模态增强版
+EXPERIMENT_GROUPS['speechcue_comparison'] = {
+    'description': 'SpeechCueLLM 对标对比: 验证长上下文+LoRA在MMER框架下的效果 (建议在 iemocap6/meld 上运行)',
+    'experiments': [
+        # S0: 基线 (无上下文, 冻结 LLM, 现有最优架构)
+        {'name': 'S0_baseline_no_ctx',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False},
+
+        # S1: 短上下文 (text_seq_len=256, 冻结 LLM)
+        {'name': 'S1_ctx256_frozen',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
+         'use_context': True, 'text_seq_len': 256},
+
+        # S2: 长上下文 (text_seq_len=512, 冻结 LLM)
+        {'name': 'S2_ctx512_frozen',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
+         'use_context': True, 'text_seq_len': 512},
+
+        # S3: 长上下文 + LoRA (对标 SpeechCueLLM 核心设置: r=16, alpha=16, lr=3e-4)
+        {'name': 'S3_ctx512_lora',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
+         'use_context': True, 'text_seq_len': 512,
+         'use_lora': True, 'lora_r': 16, 'lora_alpha': 16,
+         'lora_lr': 3e-4, 'learning_rate': 3e-4,
+         'lora_target_modules': 'q_proj,k_proj,v_proj'},
+
+        # S4: Text-only + 长上下文 + LoRA (★ 直接对标 SpeechCueLLM text-only)
+        {'name': 'S4_textonly_ctx512_lora',
+         'modalities': 't',
+         'use_context': True, 'text_seq_len': 512,
+         'use_lora': True, 'lora_r': 16, 'lora_alpha': 16,
+         'lora_lr': 3e-4, 'learning_rate': 3e-4,
+         'lora_target_modules': 'q_proj,k_proj,v_proj'},
+
+        # S5: Text-only + 超长上下文 + LoRA (最大化上下文, 接近 SpeechCueLLM 的 2500 tokens)
+        {'name': 'S5_textonly_ctx1024_lora',
+         'modalities': 't',
+         'use_context': True, 'text_seq_len': 1024,
+         'use_lora': True, 'lora_r': 16, 'lora_alpha': 16,
+         'lora_lr': 3e-4, 'learning_rate': 3e-4,
+         'lora_target_modules': 'q_proj,k_proj,v_proj'},
+
+        # S6: 全模态 + 超长上下文 + LoRA (MMER 完整能力 + SpeechCueLLM 设置)
+        {'name': 'S6_full_ctx1024_lora',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
+         'use_context': True, 'text_seq_len': 1024,
+         'use_lora': True, 'lora_r': 16, 'lora_alpha': 16,
+         'lora_lr': 3e-4, 'learning_rate': 3e-4,
+         'lora_target_modules': 'q_proj,k_proj,v_proj'},
+
+        # S7: InstructERC prompt + 长上下文 + LoRA (prompt 模板也对齐 SpeechCueLLM)
+        {'name': 'S7_instructerc_ctx1024_lora',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
+         'use_context': True, 'text_seq_len': 1024,
+         'prompt_style': 'instructerc',
+         'use_lora': True, 'lora_r': 16, 'lora_alpha': 16,
+         'lora_lr': 3e-4, 'learning_rate': 3e-4,
+         'lora_target_modules': 'q_proj,k_proj,v_proj'},
+
+        # S8: prompt_context 双注入 + 长上下文 + LoRA (数据层+prompt层双上下文)
+        {'name': 'S8_dual_ctx_lora',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
+         'use_context': True, 'text_seq_len': 512,
+         'prompt_context': True, 'context_max_tokens': 256,
+         'use_lora': True, 'lora_r': 16, 'lora_alpha': 16,
+         'lora_lr': 3e-4, 'learning_rate': 3e-4,
+         'lora_target_modules': 'q_proj,k_proj,v_proj'},
+    ]
+}
+
 # ═══════════════════════════════════════════════════════════════════
 # 命令构建
 # ═══════════════════════════════════════════════════════════════════
@@ -569,6 +645,7 @@ BOOLEAN_FLAGS = {
     'use_lora', 'use_int8', 'use_qformer', 'use_cross_attn_expander',
     'use_bilstm', 'use_oversampling',
     'use_cls_head',
+    'use_context', 'prompt_context',
     'eval_only',
 }
 
@@ -648,6 +725,14 @@ def main():
                         help='GPU ID (default: 自动选择)')
     parser.add_argument('--meld_feature_mode', type=str, default=None,
                         help='MELD 特征模式: raw / processed (默认使用 run.py 配置)')
+    parser.add_argument('--max_epochs', type=int, default=None,
+                        help='覆盖 config 中的 max_epochs (默认使用 config 值)')
+    parser.add_argument('--warm_up_epochs', type=int, default=None,
+                        help='覆盖 config 中的 warm_up_epochs (默认使用 config 值)')
+    parser.add_argument('--early_stop', type=int, default=None,
+                        help='覆盖 config 中的 early_stop (默认使用 config 值)')
+    parser.add_argument('--gradient_accumulation_steps', type=int, default=None,
+                        help='覆盖 config 中的 gradient_accumulation_steps (默认使用 config 值)')
 
     args = parser.parse_args()
 
@@ -668,6 +753,14 @@ def main():
         base_args['learning_rate'] = args.learning_rate
     if args.meld_feature_mode:
         base_args['meld_feature_mode'] = args.meld_feature_mode
+    if args.max_epochs is not None:
+        base_args['max_epochs'] = args.max_epochs
+    if args.warm_up_epochs is not None:
+        base_args['warm_up_epochs'] = args.warm_up_epochs
+    if args.early_stop is not None:
+        base_args['early_stop'] = args.early_stop
+    if args.gradient_accumulation_steps is not None:
+        base_args['gradient_accumulation_steps'] = args.gradient_accumulation_steps
 
     # 获取实验组
     group = EXPERIMENT_GROUPS[args.group]

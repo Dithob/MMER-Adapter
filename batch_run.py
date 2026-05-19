@@ -75,6 +75,18 @@ EXPERIMENT_GROUPS['modality_ablation'] = {
 }
 
 
+# ── 4.0.0. LoRA 消融 ──
+EXPERIMENT_GROUPS['lora_ablation_supplement'] = {
+    'description': 'LoRA消融: 冻结LLM vs LoRA r=8/16/32 基线为HAMM+SDMoE',
+    'experiments': [
+        {'name': 'lora_r16_qkvo',     'use_lora': True, 'lora_r': 16, 'lora_alpha': 32,  'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': True, 'lora_target_modules': 'q_proj,k_proj,v_proj,o_proj'},
+        {'name': 'lora_r16_qkvo',     'use_lora': True, 'lora_r': 16, 'lora_alpha': 32,  'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': True, 'lora_target_modules': 'q_proj,k_proj,v_proj,o_proj', 'lora_warmup_epochs': 5},
+        {'name': 'lora_r16_qkvo_ffn',     'use_lora': True, 'lora_r': 16, 'lora_alpha': 32,  'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False, 'lora_target_modules': 'q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj'},
+        {'name': 'lora_r16_qkvo_ffn',     'use_lora': True, 'lora_r': 16, 'lora_alpha': 32,  'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False, 'lora_target_modules': 'q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj', 'lora_warmup_epochs': 5},
+    ]
+}
+
+
 # ── 4.0. LoRA 消融 ──
 EXPERIMENT_GROUPS['lora_ablation_baseline'] = {
     'description': 'LoRA消融: 冻结LLM vs LoRA r=8/16/32 基线为HAMM+SDMoE',

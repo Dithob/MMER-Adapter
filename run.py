@@ -387,7 +387,7 @@ def parse_args():
                         help='enable Multi-Scale Latent Attention Fusion (MSLAF) after ATGFBFF/SharedOffset mixer')
     
     # ── AMM v3 enhancements ──
-    parser.add_argument('--use_tcap', action='store_true', default=True,
+    parser.add_argument('--use_tcap', action='store_true', default=False,
                         help='enable TCAP (Text Confidence-Aware Attention Prior) in AMM (default: True)')
     parser.add_argument('--use_amm_align_loss', action='store_true', default=True,
                         help='enable AMM modal alignment loss L_amm (default: True)')

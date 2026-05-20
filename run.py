@@ -208,6 +208,18 @@ def run_normal(args):
             config = ConfigClassification(args)
         args = config.get_config()
 
+        # ── CLI overrides (take precedence over config file values) ──
+        _CLI_OVERRIDE_KEYS = (
+            'max_epochs', 'batch_size', 'gradient_accumulation_steps',
+            'early_stop', 'learning_rate', 'warm_up_epochs',
+        )
+        for _key in _CLI_OVERRIDE_KEYS:
+            _cli_val = getattr(init_args, _key, None)
+            if _cli_val is not None:
+                old_val = getattr(args, _key, None)
+                setattr(args, _key, _cli_val)
+                logger.info(f"CLI override: {_key} = {_cli_val} (config default: {old_val})")
+
         setup_seed(seed)
         args.seed = seed
         # args.warm_up_epochs = warm_up_epoch
@@ -531,8 +543,22 @@ def parse_args():
     parser.add_argument('--av_pseudo_tokens', type=int, default=4,
                         help='number of pseudo tokens per AV modality when raw_av_mode != none (default: 4)')
     parser.add_argument('--prompt_style', type=str, default='default',
-                        choices=['default', 'enhanced'],
-                        help='multimodal prompt template style: default or enhanced (default: default)')
+                        choices=['default', 'enhanced', 'instructerc'],
+                        help='multimodal prompt template style: default / enhanced / instructerc (InstructERC-style for SpeechCueLLM comparison)')
+
+    # ── Training Hyperparameter Overrides (override config defaults from CLI) ──
+    parser.add_argument('--batch_size', type=int, default=None,
+                        help='override batch_size from config (default: use config value)')
+    parser.add_argument('--learning_rate', type=float, default=None,
+                        help='override learning_rate from config (default: use config value)')
+    parser.add_argument('--max_epochs', type=int, default=None,
+                        help='override max_epochs from config (default: use config value, typically 50)')
+    parser.add_argument('--warm_up_epochs', type=int, default=None,
+                        help='override warm_up_epochs from config (default: use config value)')
+    parser.add_argument('--early_stop', type=int, default=None,
+                        help='override early_stop from config (default: use config value, typically 8)')
+    parser.add_argument('--gradient_accumulation_steps', type=int, default=None,
+                        help='override gradient_accumulation_steps from config (default: use config value)')
 
     # ── Checkpoint / Resume ──
     parser.add_argument('--resume_checkpoint', type=str, default=None,

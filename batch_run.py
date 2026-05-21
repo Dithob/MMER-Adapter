@@ -155,6 +155,44 @@ EXPERIMENT_GROUPS['qformer_ablation'] = {
     ]
 }
 
+# ── 4e. QFormer × LSTM Hidden Size 消融 ──
+# LSTM hidden 决定了 QFormer KV 每个 token 的信息密度
+# SEmoLLM 参考: WavLM 1024 → proj 256, 即 KV dim=256
+EXPERIMENT_GROUPS['qformer_lstm_ablation'] = {
+    'description': 'QFormer × LSTM hidden size: KV信息密度对QFormer性能的影响',
+    'experiments': [
+        # ── 基线: 当前默认 LSTM hidden (a=32, v=16) ──
+        {'name': 'Q0_lstm_32_16',
+         'use_qformer': True, 'qformer_layers': 4, 'qformer_num_queries': 16,
+         'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16},
+
+        # ── 中等: LSTM hidden (a=64, v=32) ──
+        {'name': 'Q1_lstm_64_32',
+         'use_qformer': True, 'qformer_layers': 4, 'qformer_num_queries': 16,
+         'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32},
+
+        # ── 较大: LSTM hidden (a=128, v=64) ──
+        {'name': 'Q2_lstm_128_64',
+         'use_qformer': True, 'qformer_layers': 4, 'qformer_num_queries': 16,
+         'a_lstm_hidden_size': 128, 'v_lstm_hidden_size': 64},
+
+        # ── 对齐 SEmoLLM: LSTM hidden (a=256, v=128) ──
+        {'name': 'Q3_lstm_256_128',
+         'use_qformer': True, 'qformer_layers': 4, 'qformer_num_queries': 16,
+         'a_lstm_hidden_size': 256, 'v_lstm_hidden_size': 128},
+
+        # ── 对齐 SEmoLLM + 更深 QFormer (6层) ──
+        {'name': 'Q4_lstm_256_128_6L',
+         'use_qformer': True, 'qformer_layers': 6, 'qformer_num_queries': 16,
+         'a_lstm_hidden_size': 256, 'v_lstm_hidden_size': 128},
+
+        # ── 对齐 SEmoLLM + 更多 queries (32) ──
+        {'name': 'Q5_lstm_256_128_32q',
+         'use_qformer': True, 'qformer_layers': 4, 'qformer_num_queries': 32,
+         'a_lstm_hidden_size': 256, 'v_lstm_hidden_size': 128},
+    ]
+}
+
 # ── 5. Raw AV Token Bypass 消融 ──
 EXPERIMENT_GROUPS['raw_av_ablation'] = {
     'description': 'AV Token旁路消融: none vs audio vs video vs both',

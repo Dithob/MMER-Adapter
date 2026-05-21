@@ -144,13 +144,14 @@ EXPERIMENT_GROUPS['two_stage_ablation'] = {
 EXPERIMENT_GROUPS['qformer_ablation'] = {
     'description': 'Full QFormer vs CrossAttnExpander vs MSF vs SD-MoE 伪词生成器对比',
     'experiments': [
-        {'name': 'msf_baseline',   'use_msf': True,  'use_qformer': False, 'use_sd_moe': False, 'use_cross_attn_expander': False},
-        {'name': 'xattn_exp',      'use_msf': False, 'use_qformer': False, 'use_sd_moe': False, 'use_cross_attn_expander': True},
+        # {'name': 'msf_baseline',   'use_msf': True,  'use_qformer': False, 'use_sd_moe': False, 'use_cross_attn_expander': False},
+        {'name': 'xattn_exp_amm',      'use_amm': True, 'use_qformer': False, 'use_sd_moe': False, 'use_cross_attn_expander': True},
+        {'name': 'xattn_exp_tgm',      'use_tgm': True, 'use_qformer': False, 'use_sd_moe': False, 'use_cross_attn_expander': True},
         {'name': 'qformer_4L_8q',  'use_qformer': True, 'qformer_layers': 4, 'qformer_num_queries': 8},
         {'name': 'qformer_4L_16q', 'use_qformer': True, 'qformer_layers': 4, 'qformer_num_queries': 16},
-        {'name': 'qformer_6L_8q',  'use_qformer': True, 'qformer_layers': 6, 'qformer_num_queries': 8},
-        {'name': 'qformer_4L_32q', 'use_qformer': True, 'qformer_layers': 4, 'qformer_num_queries': 32},
-        {'name': 'sd_moe',         'use_msf': False, 'use_qformer': False, 'use_sd_moe': True, 'use_cross_attn_expander': False},
+        # {'name': 'qformer_6L_8q',  'use_qformer': True, 'qformer_layers': 6, 'qformer_num_queries': 8},
+        # {'name': 'qformer_4L_32q', 'use_qformer': True, 'qformer_layers': 4, 'qformer_num_queries': 32},
+        # {'name': 'sd_moe',         'use_msf': False, 'use_qformer': False, 'use_sd_moe': True, 'use_cross_attn_expander': False},
     ]
 }
 

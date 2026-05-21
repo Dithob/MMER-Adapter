@@ -199,7 +199,7 @@ class ConfigClassification():
                     # 'batch_size': 8,
                     'batch_size': 24,
                     'gradient_accumulation_steps': 1,
-                    'learning_rate': 2e-4,
+                    'learning_rate': 3e-4,
                     # feature modules
                     'a_lstm_hidden_size': 32,
                     'v_lstm_hidden_size': 16,

@@ -212,6 +212,7 @@ def run_normal(args):
         _CLI_OVERRIDE_KEYS = (
             'max_epochs', 'batch_size', 'gradient_accumulation_steps',
             'early_stop', 'learning_rate', 'warm_up_epochs',
+            'a_lstm_hidden_size', 'v_lstm_hidden_size',
         )
         for _key in _CLI_OVERRIDE_KEYS:
             _cli_val = getattr(init_args, _key, None)
@@ -478,6 +479,10 @@ def parse_args():
                         help='IEMOCAP feature preset: raw(64x1280/64x1408) or compressed(157x64/32x64)')
     parser.add_argument('--meld_feature_mode', type=str, default='raw', choices=['raw', 'compressed'],
                         help='MELD feature preset: raw(64x1280/64x1408) or compressed(157x64/32x64)')
+    parser.add_argument('--a_lstm_hidden_size', type=int, default=None,
+                        help='override audio LSTM hidden size from config (default: use config value, e.g. 32 for MELD)')
+    parser.add_argument('--v_lstm_hidden_size', type=int, default=None,
+                        help='override video LSTM hidden size from config (default: use config value, e.g. 16 for MELD)')
     
     # ── LoRA Fine-tuning for LLM ──
     parser.add_argument('--use_lora', action='store_true', default=False,

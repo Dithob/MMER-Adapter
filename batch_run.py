@@ -764,6 +764,8 @@ def main():
                         help='GPU ID (default: 自动选择)')
     parser.add_argument('--meld_feature_mode', type=str, default=None,
                         help='MELD 特征模式: raw / processed (默认使用 run.py 配置)')
+    parser.add_argument('--iemocap_feature_mode', type=str, default=None,
+                        help='IEMOCAP 特征模式: raw / processed (默认使用 run.py 配置)')
     parser.add_argument('--max_epochs', type=int, default=None,
                         help='覆盖 config 中的 max_epochs (默认使用 config 值)')
     parser.add_argument('--warm_up_epochs', type=int, default=None,

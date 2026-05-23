@@ -473,10 +473,15 @@ def speaker_tag_map(utts: List[Utterance]) -> Dict[str, str]:
     return mapping
 
 def build_context_for_dialog(dialog_utts: List[Utterance]) -> Dict[str, str]:
+    """Build per-utterance context: only PRECEDING utterances (no future leakage)."""
     sp_map = speaker_tag_map(dialog_utts)
-    seq = [f"<{sp_map.get(u.utt_id.split('_')[-1][0], 'a')}>{u.text}" for u in dialog_utts]
-    ctx_json = json.dumps(seq, ensure_ascii=False)
-    return {u.utt_id: ctx_json for u in dialog_utts}
+    all_entries = [f"<{sp_map.get(u.utt_id.split('_')[-1][0], 'a')}>{u.text}" for u in dialog_utts]
+    result = {}
+    for i, u in enumerate(dialog_utts):
+        # Only include utterances BEFORE this one
+        preceding = all_entries[:i]
+        result[u.utt_id] = json.dumps(preceding, ensure_ascii=False)
+    return result
 
 def write_split_csv(path: str, rows: List[Dict[str, str]]):
     os.makedirs(os.path.dirname(path), exist_ok=True)

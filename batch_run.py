@@ -608,17 +608,17 @@ EXPERIMENT_GROUPS['speechcue_comparison'] = {
         # S1: 短上下文 (text_seq_len=256, 冻结 LLM)
         {'name': 'S1_ctx256_frozen',
          'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
-         'use_context': True, 'text_seq_len': 256},
+         'use_context': True, 'context_window': 12, 'text_seq_len': 256},
 
         # S2: 长上下文 (text_seq_len=512, 冻结 LLM)
         {'name': 'S2_ctx512_frozen',
          'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
-         'use_context': True, 'text_seq_len': 512},
+         'use_context': True, 'context_window': 12, 'text_seq_len': 512},
 
         # S3: 长上下文 + LoRA (对标 SpeechCueLLM 核心设置: r=16, alpha=16, lr=3e-4)
         {'name': 'S3_ctx512_lora',
          'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
-         'use_context': True, 'text_seq_len': 512,
+         'use_context': True, 'context_window': 12, 'text_seq_len': 512,
          'use_lora': True, 'lora_r': 16, 'lora_alpha': 16,
          'lora_lr': 3e-4, 'learning_rate': 3e-4,
          'lora_target_modules': 'q_proj,k_proj,v_proj'},
@@ -626,7 +626,7 @@ EXPERIMENT_GROUPS['speechcue_comparison'] = {
         # S4: Text-only + 长上下文 + LoRA (★ 直接对标 SpeechCueLLM text-only)
         {'name': 'S4_textonly_ctx512_lora',
          'modalities': 't',
-         'use_context': True, 'text_seq_len': 512,
+         'use_context': True, 'context_window': 12, 'text_seq_len': 512,
          'use_lora': True, 'lora_r': 16, 'lora_alpha': 16,
          'lora_lr': 3e-4, 'learning_rate': 3e-4,
          'lora_target_modules': 'q_proj,k_proj,v_proj'},
@@ -634,7 +634,7 @@ EXPERIMENT_GROUPS['speechcue_comparison'] = {
         # S5: Text-only + 超长上下文 + LoRA (最大化上下文, 接近 SpeechCueLLM 的 2500 tokens)
         {'name': 'S5_textonly_ctx1024_lora',
          'modalities': 't',
-         'use_context': True, 'text_seq_len': 1024,
+         'use_context': True, 'context_window': 12, 'text_seq_len': 1024,
          'use_lora': True, 'lora_r': 16, 'lora_alpha': 16,
          'lora_lr': 3e-4, 'learning_rate': 3e-4,
          'lora_target_modules': 'q_proj,k_proj,v_proj'},
@@ -642,7 +642,7 @@ EXPERIMENT_GROUPS['speechcue_comparison'] = {
         # S6: 全模态 + 超长上下文 + LoRA (MMER 完整能力 + SpeechCueLLM 设置)
         {'name': 'S6_full_ctx1024_lora',
          'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
-         'use_context': True, 'text_seq_len': 1024,
+         'use_context': True, 'context_window': 12, 'text_seq_len': 1024,
          'use_lora': True, 'lora_r': 16, 'lora_alpha': 16,
          'lora_lr': 3e-4, 'learning_rate': 3e-4,
          'lora_target_modules': 'q_proj,k_proj,v_proj'},
@@ -650,7 +650,7 @@ EXPERIMENT_GROUPS['speechcue_comparison'] = {
         # S7: InstructERC prompt + 长上下文 + LoRA (prompt 模板也对齐 SpeechCueLLM)
         {'name': 'S7_instructerc_ctx1024_lora',
          'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
-         'use_context': True, 'text_seq_len': 1024,
+         'use_context': True, 'context_window': 12, 'text_seq_len': 1024,
          'prompt_style': 'instructerc',
          'use_lora': True, 'lora_r': 16, 'lora_alpha': 16,
          'lora_lr': 3e-4, 'learning_rate': 3e-4,
@@ -659,7 +659,7 @@ EXPERIMENT_GROUPS['speechcue_comparison'] = {
         # S8: prompt_context 双注入 + 长上下文 + LoRA (数据层+prompt层双上下文)
         {'name': 'S8_dual_ctx_lora',
          'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True, 'use_tcap': False,
-         'use_context': True, 'text_seq_len': 512,
+         'use_context': True, 'context_window': 12, 'text_seq_len': 512,
          'prompt_context': True, 'context_max_tokens': 256,
          'use_lora': True, 'lora_r': 16, 'lora_alpha': 16,
          'lora_lr': 3e-4, 'learning_rate': 3e-4,

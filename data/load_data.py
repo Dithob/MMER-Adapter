@@ -1,4 +1,5 @@
 import os
+import re
 import logging
 import pickle
 import json
@@ -15,6 +16,63 @@ from torch.nn.utils.rnn import pad_sequence
 __all__ = ['MMDataLoader']
 
 logger = logging.getLogger('MSA')
+
+
+def _build_context_text(context_raw, target_text, context_window=0):
+    """Parse dialogue context, keep only PRECEDING utterances, apply window, reverse for recent-first.
+
+    The reversal ensures that when the tokenizer applies right-truncation,
+    the OLDEST (least important) context is cut first, preserving recent turns.
+
+    Args:
+        context_raw: Raw context string (JSON list like '["<a>text1", "<b>text2", ...]')
+        target_text: Target utterance text (to locate position & exclude future turns)
+        context_window: Max preceding turns to keep (0 = unlimited, 12 = SpeechCueLLM default)
+
+    Returns:
+        Context string with most-recent utterances first, or '' if no valid context.
+    """
+    if not context_raw:
+        return ''
+    context_raw = str(context_raw).strip()
+    if not context_raw or context_raw == '[]':
+        return ''
+
+    # Try to parse as JSON list
+    parsed = None
+    if context_raw.startswith('['):
+        try:
+            parsed = json.loads(context_raw)
+            if not isinstance(parsed, list):
+                parsed = None
+        except (json.JSONDecodeError, ValueError):
+            parsed = None
+
+    if parsed is None or len(parsed) == 0:
+        return context_raw  # plain text fallback
+
+    # Find target utterance position to exclude it and all future turns
+    target_clean = target_text.strip().lower()
+    target_idx = len(parsed)  # default: target is after all entries
+    for i, entry in enumerate(parsed):
+        # Strip speaker tags: "<a>text" → "text", "[Speaker_0] text" → "text"
+        entry_text = re.sub(r'^<[^>]*>|^\[[^\]]*\]\s*', '', str(entry)).strip()
+        if entry_text.lower() == target_clean:
+            target_idx = i
+            break
+
+    # Only keep entries BEFORE target (prevents future information leakage)
+    preceding = parsed[:target_idx]
+    if not preceding:
+        return ''
+
+    # Apply window limit (keep most recent N turns)
+    if context_window > 0 and len(preceding) > context_window:
+        preceding = preceding[-context_window:]
+
+    # Reverse: most recent first → protected from right-truncation
+    preceding = list(reversed(preceding))
+    return ' '.join(str(t).strip() for t in preceding if str(t).strip())
 
 class MMDataset(Dataset):
     def __init__(self, args, mode='train'):
@@ -89,31 +147,24 @@ class MMDataset(Dataset):
 
         def build_multimodal_text(meta):
             """Build text: utterance-first ordering ensures utterance is never truncated.
-            
-            If --use_context: "utterance [speaker] Context: ..."
+
+            If --use_context: "utterance [speaker] Context: recent_ctx ... older_ctx"
             If no context:    "utterance"  (matching UniMSE's proven approach)
-            
-            Truncation is right-side, so only context tail gets clipped.
+
+            Context is reversed (most-recent first) so right-truncation
+            cuts the OLDEST context, preserving the most informative recent turns.
             """
             text = str(meta.get('text', '')).strip()
             if not getattr(self.args, 'use_context', False):
                 return text
-            # Utterance-first: truncation only cuts context tail
             parts = [text]
             speaker = str(meta.get('speaker', '')).strip()
             if speaker:
                 parts.append(f'[{speaker}]')
-            context = str(meta.get('context', '')).strip()
-            if context and context != '[]':
-                # Parse JSON list format if present
-                if context.startswith('['):
-                    try:
-                        parsed = json.loads(context)
-                        if isinstance(parsed, list):
-                            context = ' '.join(str(t).strip() for t in parsed if str(t).strip())
-                    except json.JSONDecodeError:
-                        pass
-                parts.append(f'Context: {context}')
+            ctx_window = getattr(self.args, 'context_window', 0)
+            context_text = _build_context_text(meta.get('context', ''), text, ctx_window)
+            if context_text:
+                parts.append(f'Context: {context_text}')
             return ' '.join(parts)
 
         with open(data_path, 'rb') as f:
@@ -193,16 +244,10 @@ class MMDataset(Dataset):
 
             labels_m.append(label_index_mapping[mapped_label])
             raw_text.append(build_multimodal_text(meta))
-            # Collect context for prompt-level injection
-            ctx = str(meta.get('context', '')).strip()
-            if ctx.startswith('['):
-                try:
-                    parsed = json.loads(ctx)
-                    if isinstance(parsed, list):
-                        ctx = ' '.join(str(t).strip() for t in parsed if str(t).strip())
-                except json.JSONDecodeError:
-                    pass
-            raw_context.append(ctx if ctx and ctx != '[]' else '')
+            # Collect context for prompt-level injection (same windowing as text-level)
+            ctx_window = getattr(self.args, 'context_window', 0)
+            ctx_text = _build_context_text(meta.get('context', ''), str(meta.get('text', '')), ctx_window)
+            raw_context.append(ctx_text)
             raw_audio.append(aud_feat)
             raw_video.append(vid_feat)
             audio_lengths.append(max(1, min(aud_feat.shape[0], self.args.seq_lens[1])))
@@ -258,35 +303,22 @@ class MMDataset(Dataset):
 
         def build_multimodal_text(meta):
             """Build text: utterance-first ordering ensures utterance is never truncated.
-            
-            If --use_context: "utterance [speaker] Context: ..."
+
+            If --use_context: "utterance [speaker] Context: recent_ctx ... older_ctx"
             If no context:    "utterance"  (matching UniMSE's proven approach)
-            
-            Truncation is right-side, so only context tail gets clipped.
+
+            Context is reversed (most-recent first) so right-truncation
+            cuts the OLDEST context, preserving the most informative recent turns.
             """
             text = str(meta.get('text', '')).strip()
             if not getattr(self.args, 'use_context', False):
                 return text
-            # Utterance-first: truncation only cuts context tail
             parts = [text]
             speaker = str(meta.get('speaker', '')).strip()
             if speaker:
                 parts.append(f'[{speaker}]')
-            context_raw = meta.get('context', '')
-            context_text = ''
-            if isinstance(context_raw, str):
-                context_raw = context_raw.strip()
-                if context_raw and context_raw.startswith('['):
-                    try:
-                        parsed = json.loads(context_raw)
-                        if isinstance(parsed, list):
-                            context_text = ' '.join(str(t).strip() for t in parsed if str(t).strip())
-                        else:
-                            context_text = str(parsed).strip()
-                    except json.JSONDecodeError:
-                        context_text = context_raw
-                elif context_raw:
-                    context_text = context_raw
+            ctx_window = getattr(self.args, 'context_window', 0)
+            context_text = _build_context_text(meta.get('context', ''), text, ctx_window)
             if context_text:
                 parts.append(f'Context: {context_text}')
             return ' '.join(parts)

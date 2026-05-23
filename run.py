@@ -540,6 +540,10 @@ def parse_args():
                         help='inject dialogue context into LLM prompt layer (after multimodal wrap, before task prompt)')
     parser.add_argument('--context_max_tokens', type=int, default=64,
                         help='max tokens for context segment in prompt (default: 64)')
+    parser.add_argument('--context_window', type=int, default=0,
+                        help='max number of preceding dialogue turns to include as context. '
+                             '0 = unlimited (use all preceding turns, default). '
+                             '12 = SpeechCueLLM/InstructERC default window size.')
 
     # ── Raw AV Token Bypass (EmotionLLaMA-v2 style) ──
     parser.add_argument('--raw_av_mode', type=str, default='none',

@@ -310,7 +310,8 @@ class Language_model(nn.Module):
             gen_kwargs = {"num_beams": 1, "do_sample": False, "bos_token_id": self.tokenizer.bos_token_id, "eos_token_id": self.tokenizer.eos_token_id, "max_new_tokens": self.max_new_tokens}
         elif self.model_type == 'llama2':
             attention_mask = atts_fusion if atts_bos is None else torch.cat([atts_bos, atts_fusion], dim=1)
-            gen_kwargs = {"num_beams": 1, "do_sample": False, "top_p": None, "max_new_tokens": self.max_new_tokens}
+            gen_kwargs = {"num_beams": 1, "do_sample": False, "max_new_tokens": self.max_new_tokens,
+                          "min_new_tokens": self.max_new_tokens}  # force full generation, prevent early EOS
         else:
             attention_mask = atts_fusion
             gen_kwargs = {"num_beams": 1, "do_sample": False, "max_new_tokens": self.max_new_tokens}

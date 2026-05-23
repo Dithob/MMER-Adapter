@@ -346,8 +346,22 @@ class Language_model(nn.Module):
         else:
             outputs = self.model.generate(inputs_embeds=opt_tokens, attention_mask=attention_mask, pad_token_id=pad_id, **gen_kwargs)
 
+        # ── Diagnostic logging for generate output (helps debug text label failures) ──
+        if not hasattr(self, '_gen_debug_logged'):
+            self._gen_debug_logged = True
+            logger.info(f"[GenDebug] model_type={self.model_type}, max_new_tokens={self.max_new_tokens}")
+            logger.info(f"[GenDebug] inputs_embeds.shape={opt_tokens.shape}, outputs.shape={outputs.shape}")
+            logger.info(f"[GenDebug] outputs[0] token IDs: {outputs[0].tolist()}")
+            logger.info(f"[GenDebug] outputs[0] full decode: '{self.tokenizer.decode(outputs[0], skip_special_tokens=True)}'")
+            logger.info(f"[GenDebug] outputs[0][-{self.max_new_tokens}:] IDs: {outputs[0, -self.max_new_tokens:].tolist()}")
+
         new_tokens = outputs[:, -self.max_new_tokens:]
         responses = self.tokenizer.batch_decode(new_tokens, add_special_tokens=False, skip_special_tokens=True, clean_up_tokenization_spaces=False)
+        
+        # Log first batch parsed responses (once)
+        if not hasattr(self, '_resp_debug_logged'):
+            self._resp_debug_logged = True
+            logger.info(f"[GenDebug] decoded responses[:8]: {responses[:8]}")
 
         all_responses = []
         for response in responses:

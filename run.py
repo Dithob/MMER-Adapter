@@ -3,6 +3,7 @@ import os
 # 同时防止多 DataLoader worker 下 OpenMP 线程争抢 CPU
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 # Suppress PyTorch C++ level fake_tensor/baddbmm traces from torch.compile
 os.environ['TORCH_CPP_LOG_LEVEL'] = 'WARNING'
 os.environ.setdefault('TORCHDYNAMO_VERBOSE', '0')

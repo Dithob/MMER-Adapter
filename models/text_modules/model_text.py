@@ -348,7 +348,20 @@ class Language_model(nn.Module):
                     attention_mask = torch.cat([attention_mask, torch.ones(batch_size, 1, dtype=attention_mask.dtype, device=attention_mask.device)], dim=1)
                 outputs = torch.cat(generated_ids, dim=1)
         else:
+            # Temporarily restore use_cache and disable gradient checkpointing for generation
+            # (MSE-Adapter doesn't use gradient_checkpointing at all; it can interfere with generate())
+            _was_gc = getattr(self.model, 'is_gradient_checkpointing', False)
+            if _was_gc and hasattr(self.model, 'gradient_checkpointing_disable'):
+                self.model.gradient_checkpointing_disable()
+            _old_use_cache = getattr(self.model.config, 'use_cache', True)
+            self.model.config.use_cache = True
+
             outputs = self.model.generate(inputs_embeds=opt_tokens, attention_mask=attention_mask, pad_token_id=pad_id, **gen_kwargs)
+
+            # Restore original settings
+            self.model.config.use_cache = _old_use_cache
+            if _was_gc and hasattr(self.model, 'gradient_checkpointing_enable'):
+                self.model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
 
         # ── Diagnostic logging for generate output (helps debug text label failures) ──
         if not hasattr(self, '_gen_debug_logged'):

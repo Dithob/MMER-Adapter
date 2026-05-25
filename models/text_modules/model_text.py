@@ -310,8 +310,11 @@ class Language_model(nn.Module):
             gen_kwargs = {"num_beams": 1, "do_sample": False, "bos_token_id": self.tokenizer.bos_token_id, "eos_token_id": self.tokenizer.eos_token_id, "max_new_tokens": self.max_new_tokens}
         elif self.model_type == 'llama2':
             attention_mask = atts_fusion if atts_bos is None else torch.cat([atts_bos, atts_fusion], dim=1)
-            gen_kwargs = {"num_beams": 1, "do_sample": False, "max_new_tokens": self.max_new_tokens,
-                          "min_new_tokens": self.max_new_tokens}  # force full generation, prevent early EOS
+            # Llama2 SentencePiece tokenizer prepends "▁" (space, ID=29871) before content tokens,
+            # so we need at least 2 tokens to capture: [▁] + [digit/word]
+            effective_max = max(self.max_new_tokens, 2)
+            gen_kwargs = {"num_beams": 1, "do_sample": False, "max_new_tokens": effective_max,
+                          "min_new_tokens": effective_max}  # force full generation, prevent early EOS
         else:
             attention_mask = atts_fusion
             gen_kwargs = {"num_beams": 1, "do_sample": False, "max_new_tokens": self.max_new_tokens}
@@ -354,10 +357,10 @@ class Language_model(nn.Module):
             logger.info(f"[GenDebug] inputs_embeds.shape={opt_tokens.shape}, outputs.shape={outputs.shape}")
             logger.info(f"[GenDebug] outputs[0] token IDs: {outputs[0].tolist()}")
             logger.info(f"[GenDebug] outputs[0] full decode: '{self.tokenizer.decode(outputs[0], skip_special_tokens=True)}'")
-            logger.info(f"[GenDebug] outputs[0][-{self.max_new_tokens}:] IDs: {outputs[0, -self.max_new_tokens:].tolist()}")
 
-        new_tokens = outputs[:, -self.max_new_tokens:]
-        responses = self.tokenizer.batch_decode(new_tokens, add_special_tokens=False, skip_special_tokens=True, clean_up_tokenization_spaces=False)
+        # Decode all generated tokens (not sliced by max_new_tokens, since Llama2
+        # SentencePiece may prepend extra ▁ space tokens beyond the configured count)
+        responses = self.tokenizer.batch_decode(outputs, add_special_tokens=False, skip_special_tokens=True, clean_up_tokenization_spaces=False)
         
         # Log first batch parsed responses (once)
         if not hasattr(self, '_resp_debug_logged'):

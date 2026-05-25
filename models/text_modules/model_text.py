@@ -412,7 +412,7 @@ class Language_model(nn.Module):
         fusion_ids = torch.full(fusion_embedding.shape[:-1], pad_id, dtype=torch.long, device=self.device)
         opt_input_ids = torch.cat([fusion_ids, prompt_ids], dim=1)
 
-        if self.model_type in ['qwen', 'qwen3.5']:
+        if self.model_type in ['qwen', 'qwen3.5', 'llama2']:
             bos_ids = torch.ones([batch_size, 1], dtype=atts_fusion.dtype, device=self.device) * self.tokenizer.bos_token_id
             bos_embeds = self.text_embedding(bos_ids)
             atts_bos = atts_fusion[:, :1]
@@ -423,7 +423,7 @@ class Language_model(nn.Module):
 
         opt_tokens, labels, labels_atts, opt_input_ids = self.input_labels_construct(opt_tokens, labels, mode, opt_input_ids)
 
-        if self.model_type in ['qwen', 'qwen3.5']:
+        if self.model_type in ['qwen', 'qwen3.5', 'llama2']:
             return opt_tokens, atts_bos, atts_fusion, labels, labels_atts, opt_input_ids
         return opt_tokens, None, atts_fusion, labels, labels_atts, opt_input_ids
 

@@ -51,10 +51,10 @@ class ModelScopeBackend(BaseLLMBackend):
             # which causes transformers to fall back to the old checkpointing path (ignoring
             # gradient_checkpointing_kwargs and not passing use_reentrant to torch.checkpoint).
             # Removing it forces transformers to use the new API that correctly passes use_reentrant.
-            for module in model.modules():
-                if hasattr(type(module), '_set_gradient_checkpointing'):
-                    delattr(type(module), '_set_gradient_checkpointing')
-                    break  # only need to remove from the top-level model class
+            for cls in type(model).__mro__:
+                if '_set_gradient_checkpointing' in cls.__dict__:
+                    delattr(cls, '_set_gradient_checkpointing')
+                    break
             model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
             model.config.use_cache = False  # 避免 "use_cache=True incompatible with gradient checkpointing" 警告
 

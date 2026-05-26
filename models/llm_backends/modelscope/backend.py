@@ -43,16 +43,15 @@ class ModelScopeBackend(BaseLLMBackend):
             model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
             model.config.use_cache = False  # 避免 "use_cache=True incompatible with gradient checkpointing" 警告
 
-        # MSE-Adapter never modifies generation_config; skip for llama2 to match original behavior
-        if self.model_type != 'llama2' and hasattr(model, 'generation_config') and model.generation_config is not None:
+        # Normalize generation_config for all models: greedy decoding for classification
+        # Each model has different defaults (e.g., Llama2: temperature=0.6, do_sample=True)
+        # We override to consistent greedy settings to avoid warnings and ensure determinism
+        if hasattr(model, 'generation_config') and model.generation_config is not None:
             if getattr(model.generation_config, 'max_length', None) is not None:
                 model.generation_config.max_length = None
-            if getattr(model.generation_config, 'do_sample', None) is not None:
-                model.generation_config.do_sample = False
-            if getattr(model.generation_config, 'temperature', None) is not None:
-                model.generation_config.temperature = 1.0
-            if getattr(model.generation_config, 'top_p', None) is not None:
-                model.generation_config.top_p = 1.0
+            model.generation_config.do_sample = False
+            model.generation_config.temperature = 1.0
+            model.generation_config.top_p = 1.0
 
         if self.model_type in ['qwen', 'qwen3.5']:
             eos = tokenizer.convert_tokens_to_ids('<|endoftext|>')

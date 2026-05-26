@@ -357,9 +357,9 @@ class Language_model(nn.Module):
             self.model.config.use_cache = True
 
             if self.model_type == 'llama2':
-                # Match MSE-Adapter exactly: no attention_mask, no pad_token_id
+                # Match MSE-Adapter: no attention_mask, no pad_token_id
                 outputs = self.model.generate(inputs_embeds=opt_tokens,
-                                              num_beams=1, do_sample=False, top_p=None,
+                                              num_beams=1, do_sample=False,
                                               max_new_tokens=effective_max,
                                               min_new_tokens=effective_max)
             else:

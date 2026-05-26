@@ -47,30 +47,32 @@ class ModelScopeBackend(BaseLLMBackend):
         )
 
         if hasattr(model, 'gradient_checkpointing_enable'):
-            # Qwen-1.x's modeling_qwen.py defines the legacy `_set_gradient_checkpointing` method,
-            # which causes transformers to fall back to the old checkpointing path (ignoring
-            # gradient_checkpointing_kwargs and not passing use_reentrant to torch.checkpoint).
-            # Removing it forces transformers to use the new API that correctly passes use_reentrant.
+            # Qwen-1.x defines the legacy `_set_gradient_checkpointing` method,
+            # causing transformers to ignore gradient_checkpointing_kwargs.
+            # Removing it forces the new API path that passes use_reentrant correctly.
             for cls in type(model).__mro__:
                 if '_set_gradient_checkpointing' in cls.__dict__:
                     delattr(cls, '_set_gradient_checkpointing')
                     break
             model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
-            model.config.use_cache = False  # 避免 "use_cache=True incompatible with gradient checkpointing" 警告
+            model.config.use_cache = False
+
+            # Qwen's modeling_qwen.py internally calls torch.utils.checkpoint.checkpoint()
+            # without use_reentrant — this is baked into the cached model code and cannot be
+            # fixed without editing the file. Suppress this specific warning only.
+            import warnings
+            warnings.filterwarnings("ignore", message=".*use_reentrant.*")
 
         # Normalize generation_config for all models: greedy decoding for classification
-        # Each model has different defaults (e.g., Llama2: temperature=0.6, do_sample=True)
-        # We override to consistent greedy settings to avoid warnings and ensure determinism
         if hasattr(model, 'generation_config') and model.generation_config is not None:
             if getattr(model.generation_config, 'max_length', None) is not None:
                 model.generation_config.max_length = None
             model.generation_config.do_sample = False
             model.generation_config.temperature = 1.0
             model.generation_config.top_p = 1.0
-            # Qwen defaults top_k=0 which triggers a warning when do_sample=False;
-            # clear it since greedy decoding doesn't use top_k at all
-            if hasattr(model.generation_config, 'top_k'):
-                model.generation_config.top_k = None
+            # Qwen defaults top_k=0; reset to transformers default (50) to avoid
+            # "top_k is set but do_sample=False" warning. Greedy decoding ignores top_k anyway.
+            model.generation_config.top_k = 50
 
         if self.model_type in ['qwen', 'qwen3.5']:
             # Qwen-1.x base models use <|endoftext|> as EOS;

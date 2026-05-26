@@ -23,6 +23,13 @@ class ModelScopeBackend(BaseLLMBackend):
             trust_remote_code=True,
             torch_dtype=torch.bfloat16,
         )
+
+        # ── Qwen-1.x flash_attn compatibility ──
+        # Qwen-1.x's modeling code uses flash_attn rotary kernels that call
+        # torch.library.wrap_triton (only available in newer PyTorch builds).
+        # Disable flash attention to fall back to standard attention implementation.
+        if self.model_type in ['qwen', 'qwen3.5']:
+            load_kwargs['use_flash_attn'] = False
         if use_int8:
             try:
                 from transformers import BitsAndBytesConfig

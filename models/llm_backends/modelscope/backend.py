@@ -47,21 +47,20 @@ class ModelScopeBackend(BaseLLMBackend):
         )
 
         if hasattr(model, 'gradient_checkpointing_enable'):
-            # Qwen-1.x defines the legacy `_set_gradient_checkpointing` method,
+            # Qwen-1.x only: defines the legacy `_set_gradient_checkpointing` method,
             # causing transformers to ignore gradient_checkpointing_kwargs.
-            # Removing it forces the new API path that passes use_reentrant correctly.
-            for cls in type(model).__mro__:
-                if '_set_gradient_checkpointing' in cls.__dict__:
-                    delattr(cls, '_set_gradient_checkpointing')
-                    break
+            # Removing it forces the new API path. Other models (Llama2, etc.) don't need this.
+            if self.model_type in ['qwen', 'qwen3.5']:
+                for cls in type(model).__mro__:
+                    if '_set_gradient_checkpointing' in cls.__dict__:
+                        delattr(cls, '_set_gradient_checkpointing')
+                        break
+                # Qwen's modeling_qwen.py also hardcodes checkpoint() calls without
+                # use_reentrant — cannot fix without editing the cached file.
+                import warnings
+                warnings.filterwarnings("ignore", message=".*use_reentrant.*")
             model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
             model.config.use_cache = False
-
-            # Qwen's modeling_qwen.py internally calls torch.utils.checkpoint.checkpoint()
-            # without use_reentrant — this is baked into the cached model code and cannot be
-            # fixed without editing the file. Suppress this specific warning only.
-            import warnings
-            warnings.filterwarnings("ignore", message=".*use_reentrant.*")
 
         # Normalize generation_config for all models: greedy decoding for classification
         if hasattr(model, 'generation_config') and model.generation_config is not None:

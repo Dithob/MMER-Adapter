@@ -54,10 +54,28 @@ class ModelScopeBackend(BaseLLMBackend):
             model.generation_config.top_p = 1.0
 
         if self.model_type in ['qwen', 'qwen3.5']:
+            # Qwen-1.x base models use <|endoftext|> as EOS;
+            # Qwen-2/Chat models also define <|im_start|> as BOS, but
+            # Qwen-1.x base may not have it — fall back gracefully.
             eos = tokenizer.convert_tokens_to_ids('<|endoftext|>')
-            tokenizer.eos_token_id = eos
-            tokenizer.pad_token_id = eos
-            tokenizer.bos_token_id = tokenizer.convert_tokens_to_ids('<|im_start|>')
+            if eos is None or eos == getattr(tokenizer, 'unk_token_id', None):
+                # Fallback: use whatever eos_token_id the tokenizer already has
+                eos = getattr(tokenizer, 'eos_token_id', None)
+            if eos is not None:
+                tokenizer.eos_token_id = eos
+                tokenizer.pad_token_id = eos
+            else:
+                logger.warning("Qwen tokenizer: could not resolve eos_token_id, using 0 as pad_token_id")
+                tokenizer.pad_token_id = 0
+
+            # bos_token_id: <|im_start|> for Qwen-Chat/Qwen-2, may not exist in Qwen-1.x base
+            bos = tokenizer.convert_tokens_to_ids('<|im_start|>')
+            if bos is not None and bos != getattr(tokenizer, 'unk_token_id', None):
+                tokenizer.bos_token_id = bos
+            elif getattr(tokenizer, 'bos_token_id', None) is None:
+                # Qwen-1.x base: no dedicated BOS token, reuse EOS
+                tokenizer.bos_token_id = tokenizer.eos_token_id
+                logger.info("Qwen-1.x base: <|im_start|> not found, using eos_token_id as bos_token_id")
         elif self.model_type == 'llama2':
             eos = tokenizer.convert_tokens_to_ids('</s>')
             if eos is None:

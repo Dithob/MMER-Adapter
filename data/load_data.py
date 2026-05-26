@@ -625,12 +625,23 @@ class MMDataset(Dataset):
     def PLM_tokenizer (self, rawtexts):
         self.tokenizer = AutoTokenizer.from_pretrained(self.args.pretrain_LM, trust_remote_code=True)
 
-        # Decoder-only models (e.g., LLaMA) may not define pad_token by default.
+        # Decoder-only models (e.g., LLaMA, Qwen) may not define pad_token by default.
+        # Qwen-1.x's custom tokenizer forbids add_special_tokens, so we must reuse
+        # existing tokens rather than adding new ones.
         if self.tokenizer.pad_token is None:
             if self.tokenizer.eos_token is not None:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
+            elif getattr(self.tokenizer, 'eos_token_id', None) is not None:
+                # Qwen-1.x: has eos_token_id but no eos_token string attribute
+                self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
             else:
-                self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+                try:
+                    self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+                except (ValueError, NotImplementedError):
+                    # Qwen-style tokenizers forbid adding unknown special tokens;
+                    # use token id 0 as a safe fallback
+                    self.tokenizer.pad_token_id = 0
+                    logger.warning("Tokenizer forbids add_special_tokens; using pad_token_id=0 as fallback")
         if self.tokenizer.pad_token_id is None and self.tokenizer.pad_token is not None:
             self.tokenizer.pad_token_id = self.tokenizer.convert_tokens_to_ids(self.tokenizer.pad_token)
 

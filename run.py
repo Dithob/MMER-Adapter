@@ -627,7 +627,7 @@ if __name__ == '__main__':
     # 根据模型类型设置默认的预训练模型路径
     if args.pretrain_LM == '/root/autodl-tmp/models/chatglm3-6b-base/':
         if args.model_type == 'qwen':
-            args.pretrain_LM = '/root/autodl-tmp/models/Qwen/Qwen-1.8B/'
+            args.pretrain_LM = '/root/autodl-tmp/models/Qwen1_8B/'
         elif args.model_type == 'qwen3.5':
             args.pretrain_LM = '/root/autodl-tmp/models/Qwen/Qwen-3.5-25B/'
         elif args.model_type == 'llama2':

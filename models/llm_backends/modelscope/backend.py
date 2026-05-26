@@ -47,6 +47,14 @@ class ModelScopeBackend(BaseLLMBackend):
         )
 
         if hasattr(model, 'gradient_checkpointing_enable'):
+            # Qwen-1.x's modeling_qwen.py defines the legacy `_set_gradient_checkpointing` method,
+            # which causes transformers to fall back to the old checkpointing path (ignoring
+            # gradient_checkpointing_kwargs and not passing use_reentrant to torch.checkpoint).
+            # Removing it forces transformers to use the new API that correctly passes use_reentrant.
+            for module in model.modules():
+                if hasattr(type(module), '_set_gradient_checkpointing'):
+                    delattr(type(module), '_set_gradient_checkpointing')
+                    break  # only need to remove from the top-level model class
             model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
             model.config.use_cache = False  # 避免 "use_cache=True incompatible with gradient checkpointing" 警告
 
@@ -59,6 +67,10 @@ class ModelScopeBackend(BaseLLMBackend):
             model.generation_config.do_sample = False
             model.generation_config.temperature = 1.0
             model.generation_config.top_p = 1.0
+            # Qwen defaults top_k=0 which triggers a warning when do_sample=False;
+            # clear it since greedy decoding doesn't use top_k at all
+            if hasattr(model.generation_config, 'top_k'):
+                model.generation_config.top_k = None
 
         if self.model_type in ['qwen', 'qwen3.5']:
             # Qwen-1.x base models use <|endoftext|> as EOS;

@@ -43,7 +43,8 @@ class ModelScopeBackend(BaseLLMBackend):
             model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
             model.config.use_cache = False  # 避免 "use_cache=True incompatible with gradient checkpointing" 警告
 
-        if hasattr(model, 'generation_config') and model.generation_config is not None:
+        # MSE-Adapter never modifies generation_config; skip for llama2 to match original behavior
+        if self.model_type != 'llama2' and hasattr(model, 'generation_config') and model.generation_config is not None:
             if getattr(model.generation_config, 'max_length', None) is not None:
                 model.generation_config.max_length = None
             if getattr(model.generation_config, 'do_sample', None) is not None:

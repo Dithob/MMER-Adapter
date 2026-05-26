@@ -356,7 +356,14 @@ class Language_model(nn.Module):
             _old_use_cache = getattr(self.model.config, 'use_cache', True)
             self.model.config.use_cache = True
 
-            outputs = self.model.generate(inputs_embeds=opt_tokens, attention_mask=attention_mask, pad_token_id=pad_id, **gen_kwargs)
+            if self.model_type == 'llama2':
+                # Match MSE-Adapter exactly: no attention_mask, no pad_token_id
+                outputs = self.model.generate(inputs_embeds=opt_tokens,
+                                              num_beams=1, do_sample=False, top_p=None,
+                                              max_new_tokens=effective_max,
+                                              min_new_tokens=effective_max)
+            else:
+                outputs = self.model.generate(inputs_embeds=opt_tokens, attention_mask=attention_mask, pad_token_id=pad_id, **gen_kwargs)
 
             # Restore original settings
             self.model.config.use_cache = _old_use_cache

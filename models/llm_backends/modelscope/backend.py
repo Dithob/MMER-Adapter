@@ -47,23 +47,28 @@ class ModelScopeBackend(BaseLLMBackend):
         )
 
         if hasattr(model, 'gradient_checkpointing_enable'):
-            # Qwen-1.x only: defines the legacy `_set_gradient_checkpointing` method,
-            # causing transformers to ignore gradient_checkpointing_kwargs.
-            # Removing it forces the new API path. Other models (Llama2, etc.) don't need this.
+            # Qwen-1.x defines legacy _set_gradient_checkpointing(self, module, value=True).
+            # transformers v4.36.1 checks: "value" in signature → old format → ignores kwargs.
+            # Replace with new-format stub matching modeling_utils.py line 2059:
+            #   _set_gradient_checkpointing(self, enable=True, gradient_checkpointing_func=checkpoint)
             if self.model_type in ['qwen', 'qwen3.5']:
-                # Qwen-1.x defines a legacy `_set_gradient_checkpointing(self, module, value=True)`.
-                # transformers checks: if "value" in signature → old format (ignores kwargs).
-                # Replace with a new-format stub (no "value" param) so transformers uses the
-                # new code path that correctly passes use_reentrant. This is safe across
-                # multiple seeds because it's a replacement, not a deletion.
-                def _new_format_set_gc(self_inner, module, gradient_checkpointing_func=None):
-                    module.gradient_checkpointing = True
+                from torch.utils.checkpoint import checkpoint as _torch_ckpt
+
+                def _new_set_gc(self_model, enable=True, gradient_checkpointing_func=_torch_ckpt):
+                    """New-format stub replicating PreTrainedModel._set_gradient_checkpointing."""
+                    if hasattr(self_model, 'gradient_checkpointing'):
+                        self_model._gradient_checkpointing_func = gradient_checkpointing_func
+                        self_model.gradient_checkpointing = enable
+                    for m in self_model.modules():
+                        if hasattr(m, 'gradient_checkpointing'):
+                            m._gradient_checkpointing_func = gradient_checkpointing_func
+                            m.gradient_checkpointing = enable
+
                 for cls in type(model).__mro__:
                     if '_set_gradient_checkpointing' in cls.__dict__:
-                        cls._set_gradient_checkpointing = _new_format_set_gc
+                        cls._set_gradient_checkpointing = _new_set_gc
                         break
-                # Qwen's modeling_qwen.py also hardcodes checkpoint() calls without
-                # use_reentrant — cannot fix without editing the cached file.
+                # Qwen's modeling_qwen.py hardcodes checkpoint() without use_reentrant
                 import warnings
                 warnings.filterwarnings("ignore", message=".*use_reentrant.*")
             model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})

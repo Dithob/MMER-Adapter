@@ -307,7 +307,8 @@ class Language_model(nn.Module):
         )
         if self.model_type in ['qwen', 'qwen3.5']:
             attention_mask = torch.cat([atts_bos, atts_fusion], dim=1)
-            gen_kwargs = {"num_beams": 1, "do_sample": False, "bos_token_id": self.tokenizer.bos_token_id, "eos_token_id": self.tokenizer.eos_token_id, "max_new_tokens": self.max_new_tokens}
+            gen_kwargs = {"num_beams": 1, "do_sample": False, "bos_token_id": self.tokenizer.bos_token_id, "eos_token_id": self.tokenizer.eos_token_id, "max_new_tokens": self.max_new_tokens,
+                          "min_new_tokens": self.max_new_tokens}  # force full generation, prevent early EOS (critical for text label mode)
         elif self.model_type == 'llama2':
             attention_mask = atts_fusion if atts_bos is None else torch.cat([atts_bos, atts_fusion], dim=1)
             # Llama2 SentencePiece tokenizer prepends "▁" (space, ID=29871) before content tokens,

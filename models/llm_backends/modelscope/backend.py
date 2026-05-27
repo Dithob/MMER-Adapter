@@ -51,9 +51,16 @@ class ModelScopeBackend(BaseLLMBackend):
             # causing transformers to ignore gradient_checkpointing_kwargs.
             # Removing it forces the new API path. Other models (Llama2, etc.) don't need this.
             if self.model_type in ['qwen', 'qwen3.5']:
+                # Qwen-1.x defines a legacy `_set_gradient_checkpointing(self, module, value=True)`.
+                # transformers checks: if "value" in signature → old format (ignores kwargs).
+                # Replace with a new-format stub (no "value" param) so transformers uses the
+                # new code path that correctly passes use_reentrant. This is safe across
+                # multiple seeds because it's a replacement, not a deletion.
+                def _new_format_set_gc(self_inner, module, gradient_checkpointing_func=None):
+                    module.gradient_checkpointing = True
                 for cls in type(model).__mro__:
                     if '_set_gradient_checkpointing' in cls.__dict__:
-                        delattr(cls, '_set_gradient_checkpointing')
+                        cls._set_gradient_checkpointing = _new_format_set_gc
                         break
                 # Qwen's modeling_qwen.py also hardcodes checkpoint() calls without
                 # use_reentrant — cannot fix without editing the cached file.

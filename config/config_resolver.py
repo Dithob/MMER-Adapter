@@ -3,8 +3,10 @@ config_resolver.py — 三级配置合并器
 
 配置优先级 (高覆盖低):
   Level 3: CLI Override (--batch_size 32 等临时覆盖)
-  Level 2: Model Profile (config/model_profiles/{model_type}.yaml 中的模型×数据集参数)
+  Level 2: Model Profile = default.yaml ← {model_type}.yaml (深度合并覆盖)
   Level 1: Dataset Common (数据集公共参数: dataPath, seq_lens, feature_dims 等)
+
+模型 YAML 文件只需写与 default.yaml 不同的参数即可，其余自动继承默认值。
 
 使用方式:
   from config.config_resolver import ConfigResolver
@@ -140,50 +142,90 @@ _COMMON_PARAS = {
 
 
 # ═══════════════════════════════════════════════════════════════════
-# Level 2: Model Profile Loader
+# Level 2: Model Profile Loader (default.yaml + 模型覆盖)
 # ═══════════════════════════════════════════════════════════════════
 
 _PROFILE_DIR = os.path.join(os.path.dirname(__file__), 'model_profiles')
 
 # 缓存已加载的 YAML (同一进程内不重复读文件)
-_profile_cache = {}
+_yaml_cache = {}
 
-def _load_model_profile(model_type):
-    """加载模型 YAML profile 文件 (带缓存)"""
-    if model_type in _profile_cache:
-        return _profile_cache[model_type]
 
-    profile_path = os.path.join(_PROFILE_DIR, f'{model_type}.yaml')
-    if not os.path.exists(profile_path):
-        raise FileNotFoundError(
-            f"Model profile not found: {profile_path}\n"
-            f"Please create a YAML profile for model_type='{model_type}' in {_PROFILE_DIR}/\n"
-            f"Available profiles: {[f.replace('.yaml','') for f in os.listdir(_PROFILE_DIR) if f.endswith('.yaml')]}"
-        )
+def _load_yaml(filename):
+    """加载 YAML 文件 (带缓存)"""
+    if filename in _yaml_cache:
+        return _yaml_cache[filename]
 
-    with open(profile_path, 'r', encoding='utf-8') as f:
-        profile = yaml.safe_load(f)
+    filepath = os.path.join(_PROFILE_DIR, filename)
+    if not os.path.exists(filepath):
+        return None
 
-    _profile_cache[model_type] = profile
-    return profile
+    with open(filepath, 'r', encoding='utf-8') as f:
+        data = yaml.safe_load(f)
+
+    _yaml_cache[filename] = data or {}
+    return _yaml_cache[filename]
+
+
+def _deep_merge(base, override):
+    """
+    递归深度合并两个 dict。override 中的值覆盖 base 中的同名 key。
+    
+    规则:
+    - 如果 base[key] 和 override[key] 都是 dict → 递归合并
+    - 否则 → override[key] 直接替换 base[key]
+    - override 中存在但 base 中不存在的 key → 直接添加
+    
+    注意: 此函数不会修改原始 base/override dict，返回新 dict。
+    """
+    import copy
+    result = copy.deepcopy(base)
+    for key, value in override.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _deep_merge(result[key], value)
+        else:
+            result[key] = copy.deepcopy(value)
+    return result
 
 
 def _get_profile_params(model_type, task_type, dataset_name):
     """
-    从 YAML profile 中提取 common + task_type.dataset_name 的参数。
+    加载 default.yaml 作为基础，然后用 {model_type}.yaml 中的差异参数覆盖。
+    最后提取 common + task_type.dataset_name 的参数。
+    
+    合并链: default.yaml ← {model_type}.yaml
     
     Returns:
-        dict: 合并后的参数 (common 被 task-specific 覆盖)
+        dict: 合并后的扁平参数 (common 被 task-specific 覆盖)
     """
-    profile = _load_model_profile(model_type)
+    # 1. 加载 default.yaml (基础配置)
+    default_profile = _load_yaml('default.yaml')
+    if default_profile is None:
+        raise FileNotFoundError(
+            f"default.yaml not found in {_PROFILE_DIR}/\n"
+            f"This file is required as the base configuration for all models."
+        )
 
+    # 2. 加载模型专属 YAML (覆盖配置)
+    model_yaml = f'{model_type}.yaml'
+    model_profile = _load_yaml(model_yaml)
+    if model_profile is None:
+        available = [f.replace('.yaml', '') for f in os.listdir(_PROFILE_DIR) if f.endswith('.yaml') and f != 'default.yaml']
+        raise FileNotFoundError(
+            f"Model profile not found: {model_yaml}\n"
+            f"Please create it in {_PROFILE_DIR}/ (can be nearly empty, just override what differs from default.yaml)\n"
+            f"Available model profiles: {available}"
+        )
+
+    # 3. 深度合并: default ← model_override
+    merged_profile = _deep_merge(default_profile, model_profile)
+
+    # 4. 提取 common + task-specific 参数
     result = {}
-    # common 段: pretrain_LM, lora_target_modules 等
-    if 'common' in profile:
-        result.update(profile['common'])
-    # task-specific 段: classification.meld / regression.mosei 等
-    if task_type in profile and dataset_name in profile[task_type]:
-        result.update(profile[task_type][dataset_name])
+    if 'common' in merged_profile:
+        result.update(merged_profile['common'])
+    if task_type in merged_profile and dataset_name in merged_profile[task_type]:
+        result.update(merged_profile[task_type][dataset_name])
 
     return result
 

@@ -1,102 +1,16 @@
 # ═══════════════════════════════════════════════════════════════════
-# Qwen3.5-2B 模型专属训练参数
-# 初始模板: 基于 chatglm3 默认值，请根据实验结果调整
+# Qwen3.5-2B 模型覆盖配置
+# 仅包含与 default.yaml 不同的参数，其余继承默认值
+# 初始模板，请根据实验结果调整
 # ═══════════════════════════════════════════════════════════════════
 
 common:
   pretrain_LM: /root/autodl-tmp/models/Qwen/Qwen-3.5-25B/
   lora_target_modules: q_proj,v_proj
 
-classification:
-  meld:
-    task_specific_prompt: >-
-      Please recognize emotion of the above multimodal content from the target
-      set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is
-    max_new_tokens: 1
-    pseudo_tokens: 2
-    label_index_mapping: {neutral: 0, surprise: 1, fear: 2, sadness: 3, joy: 4, disgust: 5, anger: 6}
-    batch_size: 24
-    gradient_accumulation_steps: 1
-    learning_rate: 3.0e-4
-    a_lstm_hidden_size: 32
-    v_lstm_hidden_size: 16
-    a_lstm_layers: 1
-    v_lstm_layers: 1
-    a_lstm_dropout: 0.0
-    v_lstm_dropout: 0.0
-    warm_up_epochs: 25
-    gamma: 1
-    update_epochs: 1
-    early_stop: 8
-    max_epochs: 50
-    H: 3.0
-
-  iemocap:
-    task_specific_prompt: >-
-      Please recognize the emotion of the above multimodal content from the target
-      set <angry:0, happy:1, sad:2, neutral:3>. response: The emotion is
-    task_specific_prompt_6class: >-
-      Please recognize the emotion of the above multimodal content from the target
-      set <angry:0, happy:1, excited:2, sad:3, neutral:4, frustrated:5>. response: The emotion is
-    max_new_tokens: 2
-    pseudo_tokens: 4
-    label_index_mapping: {angry: 0, happy: 1, sad: 2, neutral: 3}
-    label_index_mapping_6class: {angry: 0, happy: 1, excited: 2, sad: 3, neutral: 4, frustrated: 5}
-    batch_size: 24
-    gradient_accumulation_steps: 2
-    learning_rate: 1.0e-4
-    a_lstm_hidden_size: 64
-    v_lstm_hidden_size: 32
-    warm_up_epochs: 30
-    gamma: 1
-    update_epochs: 1
-    early_stop: 8
-    max_epochs: 50
-    H: 3.0
-
-  cherma:
-    task_specific_prompt: "请选择适用于上述多模态内容的情绪标签：<愤怒:0, 厌恶:1, 恐惧:2, 高兴:3, 平静:4, 悲伤:5, 惊奇:6>。响应: 情绪为"
-    max_new_tokens: 2
-    pseudo_tokens: 4
-    label_index_mapping: {愤怒: 0, 厌恶: 1, 恐惧: 2, 高兴: 3, 平静: 4, 悲伤: 5, 惊奇: 6}
-    batch_size: 16
-    gradient_accumulation_steps: 2
-    learning_rate: 5.0e-5
-    a_lstm_hidden_size: 32
-    v_lstm_hidden_size: 16
-    warm_up_epochs: 30
-    gamma: 0
-    update_epochs: 1
-    early_stop: 8
-    max_epochs: 50
-    H: 1.0
-
-regression:
-  mosei:
-    task_specific_prompt: >-
-      Please predict sentiment intensity of the above multimodal content in range [-3.0, 3.0]. response: The sentiment is
-    max_new_tokens: 4
-    pseudo_tokens: 4
-    batch_size: 16
-    learning_rate: 5.0e-5
-    a_lstm_hidden_size: 64
-    v_lstm_hidden_size: 32
-    warm_up_epochs: 30
-    gamma: 1
-    update_epochs: 1
-    early_stop: 10
-    H: 3.0
-
-  simsv2:
-    task_specific_prompt: "请对上述多模态内容的情感强度进行预测，范围在[-1.0, 1.0]之间。响应: 情感为"
-    max_new_tokens: 4
-    pseudo_tokens: 4
-    batch_size: 16
-    learning_rate: 5.0e-5
-    a_lstm_hidden_size: 64
-    v_lstm_hidden_size: 64
-    warm_up_epochs: 80
-    gamma: 1
-    update_epochs: 1
-    early_stop: 10
-    H: 1.0
+# 目前使用 default.yaml 的默认训练参数
+# 根据实验结果，在此处添加需要覆盖的参数，例如:
+# classification:
+#   meld:
+#     batch_size: 16
+#     learning_rate: 5.0e-4

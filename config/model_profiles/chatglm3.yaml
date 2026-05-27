@@ -1,149 +1,16 @@
 # ═══════════════════════════════════════════════════════════════════
-# ChatGLM3-6B 模型专属训练参数
-# 修改此文件不会影响其他模型 (qwen, llama2, ...) 的配置
+# ChatGLM3-6B 模型覆盖配置
+# 仅包含与 default.yaml 不同的参数
+# ChatGLM3 即为默认基线，此文件基本为空
 # ═══════════════════════════════════════════════════════════════════
 
-# 模型公共参数 (所有数据集共享)
-common:
-  pretrain_LM: /root/autodl-tmp/models/chatglm3-6b-base/
-  lora_target_modules: query_key_value   # ChatGLM3 LoRA 目标模块
-
-# ─── 分类任务 ───────────────────────────────────────────────────────
-classification:
-  meld:
-    task_specific_prompt: >-
-      Please recognize emotion of the above multimodal content from the target
-      set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is
-    max_new_tokens: 1
-    pseudo_tokens: 2
-    label_index_mapping:
-      neutral: 0
-      surprise: 1
-      fear: 2
-      sadness: 3
-      joy: 4
-      disgust: 5
-      anger: 6
-    batch_size: 24
-    gradient_accumulation_steps: 1
-    learning_rate: 3.0e-4
-    a_lstm_hidden_size: 32
-    v_lstm_hidden_size: 16
-    a_lstm_layers: 1
-    v_lstm_layers: 1
-    a_lstm_dropout: 0.0
-    v_lstm_dropout: 0.0
-    warm_up_epochs: 25
-    gamma: 1
-    update_epochs: 1
-    early_stop: 8
-    max_epochs: 50
-    H: 3.0
-
-  iemocap:
-    task_specific_prompt: >-
-      Please recognize the emotion of the above multimodal content from the target
-      set <angry:0, happy:1, sad:2, neutral:3>. response: The emotion is
-    task_specific_prompt_6class: >-
-      Please recognize the emotion of the above multimodal content from the target
-      set <angry:0, happy:1, excited:2, sad:3, neutral:4, frustrated:5>. response: The emotion is
-    max_new_tokens: 2
-    pseudo_tokens: 4
-    label_index_mapping:
-      angry: 0
-      happy: 1
-      sad: 2
-      neutral: 3
-    label_index_mapping_6class:
-      angry: 0
-      happy: 1
-      excited: 2
-      sad: 3
-      neutral: 4
-      frustrated: 5
-    batch_size: 24
-    gradient_accumulation_steps: 2
-    learning_rate: 1.0e-4
-    a_lstm_hidden_size: 64
-    v_lstm_hidden_size: 32
-    a_lstm_layers: 1
-    v_lstm_layers: 1
-    a_lstm_dropout: 0.0
-    v_lstm_dropout: 0.0
-    warm_up_epochs: 30
-    gamma: 1
-    update_epochs: 1
-    early_stop: 8
-    max_epochs: 50
-    H: 3.0
-
-  cherma:
-    task_specific_prompt: >-
-      请选择适用于上述多模态内容的情绪标签：<愤怒:0, 厌恶:1, 恐惧:2, 高兴:3, 平静:4, 悲伤:5, 惊奇:6>。响应: 情绪为
-    max_new_tokens: 2
-    pseudo_tokens: 4
-    label_index_mapping:
-      愤怒: 0
-      厌恶: 1
-      恐惧: 2
-      高兴: 3
-      平静: 4
-      悲伤: 5
-      惊奇: 6
-    batch_size: 16
-    gradient_accumulation_steps: 2
-    learning_rate: 5.0e-5
-    a_lstm_hidden_size: 32
-    v_lstm_hidden_size: 16
-    a_lstm_layers: 1
-    v_lstm_layers: 1
-    a_lstm_dropout: 0.0
-    v_lstm_dropout: 0.0
-    warm_up_epochs: 30
-    update_epochs: 1
-    early_stop: 8
-    max_epochs: 50
-    gamma: 0
-    H: 1.0
-
-# ─── 回归任务 ───────────────────────────────────────────────────────
-regression:
-  mosei:
-    task_specific_prompt: >-
-      Please predict sentiment intensity of the above multimodal content in range [-3.0, 3.0]. response: The sentiment is
-    max_new_tokens: 4
-    pseudo_tokens: 4
-    batch_size: 16
-    gradient_accumulation_steps: 1
-    learning_rate: 5.0e-5
-    a_lstm_hidden_size: 64
-    v_lstm_hidden_size: 32
-    a_lstm_layers: 1
-    v_lstm_layers: 1
-    a_lstm_dropout: 0.0
-    v_lstm_dropout: 0.0
-    warm_up_epochs: 30
-    gamma: 1
-    update_epochs: 1
-    early_stop: 10
-    H: 3.0
-
-  simsv2:
-    task_specific_prompt: >-
-      请对上述多模态内容的情感强度进行预测，范围在[-1.0, 1.0]之间。响应: 情感为
-    max_new_tokens: 4
-    pseudo_tokens: 4
-    batch_size: 16
-    gradient_accumulation_steps: 1
-    learning_rate: 5.0e-5
-    a_lstm_hidden_size: 64
-    v_lstm_hidden_size: 64
-    a_lstm_layers: 1
-    v_lstm_layers: 1
-    a_lstm_dropout: 0.0
-    v_lstm_dropout: 0.0
-    warm_up_epochs: 80
-    update_epochs: 1
-    early_stop: 10
-    gamma: 1
-    H: 1.0
+# ChatGLM3 的参数已经是 default.yaml 的基线值，无需额外覆盖
+# 如需调整，在此处添加对应的键即可，例如:
+#
+# common:
+#   pretrain_LM: /your/custom/path/
+#
+# classification:
+#   meld:
+#     batch_size: 32
+#     learning_rate: 1.0e-4

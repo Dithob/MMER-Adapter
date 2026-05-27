@@ -100,6 +100,26 @@ def test_all_model_types():
         print(f"  ✓ {model_type:10s} → bs={c.batch_size}, lr={c.learning_rate}, LM={os.path.basename(c.pretrain_LM.rstrip('/'))}")
     print("✓ all model types: OK")
 
+def test_deep_merge_inheritance():
+    """验证未覆盖的参数从 default.yaml 正确继承"""
+    # Llama2 的 meld 配置中没有覆盖 gamma, H, early_stop 等
+    # 这些应该从 default.yaml 继承
+    args = make_args(model_type='llama2', datasetName='meld')
+    config = ConfigResolver(args)
+    c = config.get_config()
+    # 这些是 llama2.yaml 中显式覆盖的
+    assert c.batch_size == 6, f"Expected 6 (overridden), got {c.batch_size}"
+    assert c.learning_rate == 5e-4, f"Expected 5e-4 (overridden), got {c.learning_rate}"
+    # 这些应该从 default.yaml 继承 (llama2.yaml 中没有写)
+    assert c.gamma == 1, f"Expected 1 (inherited), got {c.gamma}"
+    assert c.H == 3.0, f"Expected 3.0 (inherited), got {c.H}"
+    assert c.early_stop == 8, f"Expected 8 (inherited), got {c.early_stop}"
+    assert c.max_epochs == 50, f"Expected 50 (inherited), got {c.max_epochs}"
+    assert c.a_lstm_dropout == 0.0, f"Expected 0.0 (inherited), got {c.a_lstm_dropout}"
+    # label_index_mapping 也应该继承
+    assert 'neutral' in c.label_index_mapping, f"Expected inherited label mapping, got {c.label_index_mapping}"
+    print("[OK] deep_merge inheritance: llama2 correctly inherits gamma, H, early_stop, label_mapping from default")
+
 if __name__ == '__main__':
     print("=" * 60)
     print("ConfigResolver 验证测试")
@@ -110,6 +130,7 @@ if __name__ == '__main__':
     test_isolation()
     test_iemocap6()
     test_regression()
+    test_deep_merge_inheritance()
     print()
     print("── 全模型类型加载测试 ──")
     test_all_model_types()

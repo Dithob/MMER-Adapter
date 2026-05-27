@@ -30,6 +30,7 @@ class ModelScopeBackend(BaseLLMBackend):
         # Disable flash attention to fall back to standard attention implementation.
         if self.model_type in ['qwen', 'qwen3.5']:
             load_kwargs['use_flash_attn'] = False
+            load_kwargs['bf16'] = True  # suppress "automatically converting to bf16" warning
         if use_int8:
             try:
                 from transformers import BitsAndBytesConfig

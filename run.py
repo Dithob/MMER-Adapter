@@ -37,8 +37,7 @@ except ImportError:
 from models.AMIO import AMIO
 from trains.ATIO import ATIO
 from data.load_data import MMDataLoader
-from config.config_regression import ConfigRegression
-from config.config_classification import ConfigClassification
+from config.config_resolver import ConfigResolver
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 # os.environ['CUDA_LAUNCH_BLOCKING'] = '1'  # 仅调试时启用，同步模式会严重降低GPU利用率
@@ -202,11 +201,8 @@ def run_normal(args):
     # run results
     for i, seed in enumerate(seeds):
         args = init_args
-        # load config
-        if args.train_mode == "regression":
-            config = ConfigRegression(args)
-        else :
-            config = ConfigClassification(args)
+        # load config (三级合并: Dataset Common ← Model Profile ← CLI Override)
+        config = ConfigResolver(args)
         args = config.get_config()
 
         # ── CLI overrides (take precedence over config file values) ──
@@ -624,18 +620,8 @@ if __name__ == '__main__':
         
     logger = set_log(args)
     
-    # 根据模型类型设置默认的预训练模型路径
-    if args.pretrain_LM == '/root/autodl-tmp/models/chatglm3-6b-base/':
-        if args.model_type == 'qwen':
-            args.pretrain_LM = '/root/autodl-tmp/models/Qwen1_8B/'
-        elif args.model_type == 'qwen3.5':
-            args.pretrain_LM = '/root/autodl-tmp/models/Qwen/Qwen-3.5-25B/'
-        elif args.model_type == 'llama2':
-            args.pretrain_LM = '/root/autodl-tmp/models/Meta/Llama-2-7b-hf/'
-        elif args.model_type == 'deepseek':
-            args.pretrain_LM = '/root/autodl-tmp/models/deepseek-ai/deepseek-llm-7b-base/'
-        elif args.model_type == 'gemma':
-            args.pretrain_LM = '/root/autodl-tmp/models/google/gemma-4-E4B/'
+    # pretrain_LM 路径已由 config/model_profiles/{model_type}.yaml 的 common.pretrain_LM 管理
+    # CLI --pretrain_LM 显式指定时仍会覆盖 profile 值 (Level 3 最高优先级)
 
     # 支持一次性传入多个数据集，如 "mosei,meld" 或 "all"
     dataset_list = []

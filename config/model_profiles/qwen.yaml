@@ -1,0 +1,149 @@
+# ═══════════════════════════════════════════════════════════════════
+# Qwen-1.8B 模型专属训练参数
+# 参数来源: MSE-Adapter-Expend/MSE-Qwen-1.8B
+# 修改此文件不会影响其他模型的配置
+# ═══════════════════════════════════════════════════════════════════
+
+common:
+  pretrain_LM: /root/autodl-tmp/models/Qwen1_8B/
+  lora_target_modules: q_proj,v_proj
+
+# ─── 分类任务 ───────────────────────────────────────────────────────
+classification:
+  meld:
+    task_specific_prompt: >-
+      Please recognize the emotion of the above multimodal content from the
+      target set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is
+    max_new_tokens: 1
+    pseudo_tokens: 2
+    label_index_mapping:
+      neutral: 0
+      surprise: 1
+      fear: 2
+      sadness: 3
+      joy: 4
+      disgust: 5
+      anger: 6
+    batch_size: 16
+    gradient_accumulation_steps: 1
+    learning_rate: 5.0e-4
+    a_lstm_hidden_size: 32
+    v_lstm_hidden_size: 16
+    a_lstm_layers: 1
+    v_lstm_layers: 1
+    a_lstm_dropout: 0.0
+    v_lstm_dropout: 0.0
+    warm_up_epochs: 50
+    gamma: 1
+    update_epochs: 1
+    early_stop: 8
+    max_epochs: 50
+    H: 3.0
+
+  iemocap:
+    task_specific_prompt: >-
+      Please recognize the emotion of the above multimodal content from the label
+      set <hap: 0, sad: 1, neu: 2, ang: 3, exc: 4, fru: 5>. Assistant: The emotion is
+    task_specific_prompt_6class: >-
+      Please recognize the emotion of the above multimodal content from the label
+      set <hap: 0, sad: 1, neu: 2, ang: 3, exc: 4, fru: 5>. Assistant: The emotion is
+    max_new_tokens: 1
+    pseudo_tokens: 4
+    label_index_mapping:
+      angry: 0
+      happy: 1
+      sad: 2
+      neutral: 3
+    label_index_mapping_6class:
+      hap: 0
+      sad: 1
+      neu: 2
+      ang: 3
+      exc: 4
+      fru: 5
+    batch_size: 4
+    gradient_accumulation_steps: 2
+    learning_rate: 5.0e-4
+    a_lstm_hidden_size: 32
+    v_lstm_hidden_size: 32
+    a_lstm_layers: 1
+    v_lstm_layers: 1
+    a_lstm_dropout: 0.0
+    v_lstm_dropout: 0.0
+    warm_up_epochs: 30
+    gamma: 1
+    update_epochs: 1
+    early_stop: 8
+    max_epochs: 50
+    H: 3.0
+
+  cherma:
+    task_specific_prompt: >-
+      请选择适用于上述多模态内容的情绪标签：<愤怒:0, 厌恶:1, 恐惧:2, 高兴:3, 平静:4, 悲伤:5, 惊奇:6>。助手: 情绪为
+    max_new_tokens: 1
+    pseudo_tokens: 4
+    label_index_mapping:
+      愤怒: 0
+      厌恶: 1
+      恐惧: 2
+      高兴: 3
+      平静: 4
+      悲伤: 5
+      惊奇: 6
+    batch_size: 16
+    gradient_accumulation_steps: 2
+    learning_rate: 5.0e-3
+    a_lstm_hidden_size: 32
+    v_lstm_hidden_size: 16
+    a_lstm_layers: 1
+    v_lstm_layers: 1
+    a_lstm_dropout: 0.0
+    v_lstm_dropout: 0.0
+    warm_up_epochs: 30
+    update_epochs: 1
+    early_stop: 8
+    max_epochs: 50
+    gamma: 0
+    H: 1.0
+
+# ─── 回归任务 ───────────────────────────────────────────────────────
+regression:
+  mosei:
+    task_specific_prompt: >-
+      Please predict the sentiment intensity of the above multimodal content in the range [-3.0, +3.0]. Assistant: The sentiment is
+    max_new_tokens: 4
+    pseudo_tokens: 4
+    batch_size: 16
+    gradient_accumulation_steps: 1
+    learning_rate: 5.0e-3
+    a_lstm_hidden_size: 64
+    v_lstm_hidden_size: 32
+    a_lstm_layers: 1
+    v_lstm_layers: 1
+    a_lstm_dropout: 0.0
+    v_lstm_dropout: 0.0
+    warm_up_epochs: 30
+    gamma: 1
+    update_epochs: 1
+    early_stop: 10
+    H: 3.0
+
+  simsv2:
+    task_specific_prompt: >-
+      请对上述多模态内容的情感强度进行预测，范围在[-1.0, +1.0]之间。响应: 情感为
+    max_new_tokens: 4
+    pseudo_tokens: 4
+    batch_size: 16
+    gradient_accumulation_steps: 1
+    learning_rate: 5.0e-4
+    a_lstm_hidden_size: 64
+    v_lstm_hidden_size: 64
+    a_lstm_layers: 1
+    v_lstm_layers: 1
+    a_lstm_dropout: 0.0
+    v_lstm_dropout: 0.0
+    warm_up_epochs: 30
+    update_epochs: 1
+    early_stop: 10
+    gamma: 1
+    H: 1.0

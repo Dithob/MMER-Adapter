@@ -71,3 +71,660 @@
 2026-04-20 21:09:16:INFO:TEST-(hmmem) >>
 2026-04-20 21:09:16:INFO:M: >>  acc: 0.6789  weight_F1: 0.6648 
 2026-04-20 21:09:17:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-qwen-meld-classification.csv...
+2026-05-25 21:20:44:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-25 21:20:44:INFO:Start running hmmem...
+2026-05-25 21:20:44:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen3.5-4B-Base', 'gpu_ids': [], 'seeds': [1234, 2234, 3234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260525_212044', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-25 21:20:44:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-25 21:20:44:INFO:Let's use the GPU 1 !
+2026-05-25 21:20:44:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-25 21:20:49:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-05-25 21:20:49:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 15:33:05:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-26 15:33:05:INFO:Start running hmmem...
+2026-05-26 15:33:05:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1.8B', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260526_153305', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-26 15:33:06:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-26 15:33:06:INFO:Let's use the GPU 1 !
+2026-05-26 15:33:06:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 15:33:10:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-05-26 15:33:10:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 15:36:07:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-26 15:36:07:INFO:Start running hmmem...
+2026-05-26 15:36:07:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260526_153607', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-26 15:36:07:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-26 15:36:07:INFO:Let's use the GPU 1 !
+2026-05-26 15:36:07:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 15:36:12:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-05-26 15:36:12:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 15:43:14:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-26 15:43:14:INFO:Start running hmmem...
+2026-05-26 15:43:14:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260526_154314', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-26 15:43:14:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-26 15:43:14:INFO:Let's use the GPU 1 !
+2026-05-26 15:43:14:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 15:43:20:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-05-26 15:43:20:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 15:43:25:WARNING:Tokenizer forbids add_special_tokens; using pad_token_id=0 as fallback
+2026-05-26 15:43:46:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-26 15:43:46:INFO:Start running hmmem...
+2026-05-26 15:43:46:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260526_154346', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-26 15:43:46:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-26 15:43:46:INFO:Let's use the GPU 1 !
+2026-05-26 15:43:46:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 15:43:52:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-05-26 15:43:52:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 15:43:56:WARNING:Tokenizer forbids add_special_tokens; using pad_token_id=0 as fallback
+2026-05-26 15:45:33:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-26 15:45:33:INFO:Start running hmmem...
+2026-05-26 15:45:33:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260526_154533', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-26 15:45:34:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-26 15:45:34:INFO:Let's use the GPU 1 !
+2026-05-26 15:45:34:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 15:45:38:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-05-26 15:45:39:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 15:45:45:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 15:45:47:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_valid.csv: 1109 entries
+2026-05-26 15:45:47:INFO:MELD valid split loaded 1109/1109 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 15:45:48:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 15:45:51:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_test.csv: 2610 entries
+2026-05-26 15:45:51:INFO:MELD test split loaded 2610/2610 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 15:45:54:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-26 15:45:54:WARNING:Try importing flash-attention for faster inference...
+2026-05-26 15:45:54:WARNING:Warning: import flash_attn rms_norm fail, please install FlashAttention layer_norm to get higher efficiency https://github.com/Dao-AILab/flash-attention/tree/main/csrc/layer_norm
+2026-05-26 15:45:58:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, audio_adapter, video_adapter, shared_proj, global_moe, local_moe, moe_msf
+2026-05-26 15:45:58:INFO:trainable params: 3117642 || all params: 1839946314 || trainable%: 0.16944200905635773
+2026-05-26 15:45:58:INFO:Single-LR optimizer: 98 tensors, lr=0.0005
+2026-05-26 15:45:58:INFO:Init labels...
+2026-05-26 15:45:58:INFO:Start training...
+2026-05-26 15:45:58:INFO:  Batch size = 24
+2026-05-26 15:45:58:INFO:  Gradient Accumulation steps = 1
+2026-05-26 15:45:58:INFO:  Effective batch size = 24
+2026-05-26 15:45:58:INFO:  AMP dtype = torch.bfloat16
+2026-05-26 15:48:26:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-26 15:48:26:INFO:Start running hmmem...
+2026-05-26 15:48:26:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260526_154826', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-26 15:48:26:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-26 15:48:26:INFO:Let's use the GPU 1 !
+2026-05-26 15:48:26:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 15:48:30:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-05-26 15:48:30:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 15:48:37:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 15:48:39:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_valid.csv: 1109 entries
+2026-05-26 15:48:39:INFO:MELD valid split loaded 1109/1109 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 15:48:40:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 15:48:42:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_test.csv: 2610 entries
+2026-05-26 15:48:42:INFO:MELD test split loaded 2610/2610 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 15:48:44:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-26 15:48:49:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, audio_adapter, video_adapter, shared_proj, global_moe, local_moe, moe_msf
+2026-05-26 15:48:49:INFO:trainable params: 3117642 || all params: 1839946314 || trainable%: 0.16944200905635773
+2026-05-26 15:48:49:INFO:Single-LR optimizer: 98 tensors, lr=0.0005
+2026-05-26 15:48:49:INFO:Init labels...
+2026-05-26 15:48:49:INFO:Start training...
+2026-05-26 15:48:49:INFO:  Batch size = 24
+2026-05-26 15:48:49:INFO:  Gradient Accumulation steps = 1
+2026-05-26 15:48:49:INFO:  Effective batch size = 24
+2026-05-26 15:48:49:INFO:  AMP dtype = torch.bfloat16
+2026-05-26 15:51:14:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 3.6284
+2026-05-26 15:51:24:INFO:[GenDebug] model_type=qwen, max_new_tokens=1
+2026-05-26 15:51:24:INFO:[GenDebug] inputs_embeds.shape=torch.Size([24, 126, 2048]), outputs.shape=torch.Size([24, 2])
+2026-05-26 15:51:24:INFO:[GenDebug] outputs[0] token IDs: [151644, 15]
+2026-05-26 15:51:24:INFO:[GenDebug] outputs[0] full decode: '0'
+2026-05-26 15:51:24:INFO:[GenDebug] decoded responses[:8]: ['0', '0', '0', '0', '0', '0', '0', '0']
+2026-05-26 15:51:29:INFO:VAL-(hmmem) >>
+2026-05-26 15:51:29:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-05-26 15:51:32:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260526_154826.pth.
+2026-05-26 15:59:39:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 0.7613
+2026-05-26 15:59:43:INFO:VAL-(hmmem) >>
+2026-05-26 15:59:43:INFO:M: >>  acc: 0.4211  UA: 0.1419  weight_F1: 0.2520  Macro_F1: 0.0849 
+2026-05-26 16:00:01:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-26 16:00:01:INFO:Start running hmmem...
+2026-05-26 16:00:01:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260526_160001', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-26 16:00:01:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-26 16:00:01:INFO:Let's use the GPU 1 !
+2026-05-26 16:00:01:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 16:00:06:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-05-26 16:00:06:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 16:00:12:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 16:00:14:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_valid.csv: 1109 entries
+2026-05-26 16:00:14:INFO:MELD valid split loaded 1109/1109 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 16:00:15:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 16:00:18:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_test.csv: 2610 entries
+2026-05-26 16:00:18:INFO:MELD test split loaded 2610/2610 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 16:00:20:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-26 16:03:18:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-26 16:03:18:INFO:Start running hmmem...
+2026-05-26 16:03:18:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260526_160318', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-26 16:03:18:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-26 16:03:18:INFO:Let's use the GPU 1 !
+2026-05-26 16:03:18:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 16:03:23:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-05-26 16:03:23:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 16:03:29:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 16:03:31:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_valid.csv: 1109 entries
+2026-05-26 16:03:31:INFO:MELD valid split loaded 1109/1109 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 16:03:32:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 16:03:34:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_test.csv: 2610 entries
+2026-05-26 16:03:34:INFO:MELD test split loaded 2610/2610 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 16:03:36:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-26 16:03:40:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, audio_adapter, video_adapter, shared_proj, global_moe, local_moe, moe_msf
+2026-05-26 16:03:40:INFO:trainable params: 3117642 || all params: 1839946314 || trainable%: 0.16944200905635773
+2026-05-26 16:03:40:INFO:Single-LR optimizer: 98 tensors, lr=0.0005
+2026-05-26 16:03:40:INFO:Init labels...
+2026-05-26 16:03:40:INFO:Start training...
+2026-05-26 16:03:40:INFO:  Batch size = 24
+2026-05-26 16:03:40:INFO:  Gradient Accumulation steps = 1
+2026-05-26 16:03:40:INFO:  Effective batch size = 24
+2026-05-26 16:03:40:INFO:  AMP dtype = torch.bfloat16
+2026-05-26 16:06:03:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 3.6284
+2026-05-26 16:06:10:INFO:[GenDebug] model_type=qwen, max_new_tokens=1
+2026-05-26 16:06:10:INFO:[GenDebug] inputs_embeds.shape=torch.Size([24, 126, 2048]), outputs.shape=torch.Size([24, 2])
+2026-05-26 16:06:10:INFO:[GenDebug] outputs[0] token IDs: [151644, 15]
+2026-05-26 16:06:10:INFO:[GenDebug] outputs[0] full decode: '0'
+2026-05-26 16:06:10:INFO:[GenDebug] decoded responses[:8]: ['0', '0', '0', '0', '0', '0', '0', '0']
+2026-05-26 16:06:15:INFO:VAL-(hmmem) >>
+2026-05-26 16:06:15:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-05-26 16:06:17:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260526_160318.pth.
+2026-05-26 16:08:29:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 0.7613
+2026-05-26 16:08:34:INFO:VAL-(hmmem) >>
+2026-05-26 16:08:34:INFO:M: >>  acc: 0.4211  UA: 0.1419  weight_F1: 0.2520  Macro_F1: 0.0849 
+2026-05-26 16:10:45:INFO:TRAIN-(hmmem) (2/3/1)>> loss: 0.7496
+2026-05-26 16:10:50:INFO:VAL-(hmmem) >>
+2026-05-26 16:10:50:INFO:M: >>  acc: 0.4364  UA: 0.1642  weight_F1: 0.2971  Macro_F1: 0.1293 
+2026-05-26 16:10:51:INFO:Saving best model at epoch 3 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260526_160318.pth.
+2026-05-26 16:11:52:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-26 16:11:52:INFO:Start running hmmem...
+2026-05-26 16:11:52:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 48, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260526_161152', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-26 16:11:52:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-26 16:11:52:INFO:Let's use the GPU 1 !
+2026-05-26 16:11:52:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 16:11:57:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-05-26 16:11:57:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 16:12:03:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 16:12:05:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_valid.csv: 1109 entries
+2026-05-26 16:12:05:INFO:MELD valid split loaded 1109/1109 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 16:12:06:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-26 16:12:08:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_test.csv: 2610 entries
+2026-05-26 16:12:08:INFO:MELD test split loaded 2610/2610 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-26 16:12:10:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-26 16:12:14:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, audio_adapter, video_adapter, shared_proj, global_moe, local_moe, moe_msf
+2026-05-26 16:12:14:INFO:trainable params: 3117642 || all params: 1839946314 || trainable%: 0.16944200905635773
+2026-05-26 16:12:14:INFO:Single-LR optimizer: 98 tensors, lr=0.0005
+2026-05-26 16:12:14:INFO:Init labels...
+2026-05-26 16:12:14:INFO:Start training...
+2026-05-26 16:12:14:INFO:  Batch size = 48
+2026-05-26 16:12:14:INFO:  Gradient Accumulation steps = 1
+2026-05-26 16:12:14:INFO:  Effective batch size = 48
+2026-05-26 16:12:14:INFO:  AMP dtype = torch.bfloat16
+2026-05-26 16:14:43:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 5.0500
+2026-05-26 16:14:49:INFO:[GenDebug] model_type=qwen, max_new_tokens=1
+2026-05-26 16:14:49:INFO:[GenDebug] inputs_embeds.shape=torch.Size([48, 126, 2048]), outputs.shape=torch.Size([48, 2])
+2026-05-26 16:14:49:INFO:[GenDebug] outputs[0] token IDs: [151644, 15]
+2026-05-26 16:14:49:INFO:[GenDebug] outputs[0] full decode: '0'
+2026-05-26 16:14:49:INFO:[GenDebug] decoded responses[:8]: ['0', '0', '0', '0', '0', '0', '0', '0']
+2026-05-26 16:14:54:INFO:VAL-(hmmem) >>
+2026-05-26 16:14:54:INFO:M: >>  acc: 0.4256  UA: 0.1448  weight_F1: 0.2567  Macro_F1: 0.0890 
+2026-05-26 16:14:56:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260526_161152.pth.
+2026-05-26 16:17:16:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 0.7761
+2026-05-26 16:17:21:INFO:VAL-(hmmem) >>
+2026-05-26 16:17:21:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2525  Macro_F1: 0.0851 
+2026-05-26 16:19:39:INFO:TRAIN-(hmmem) (2/3/1)>> loss: 0.7633
+2026-05-26 16:19:44:INFO:VAL-(hmmem) >>
+2026-05-26 16:19:44:INFO:M: >>  acc: 0.4283  UA: 0.1488  weight_F1: 0.2653  Macro_F1: 0.0974 
+2026-05-26 16:19:45:INFO:Saving best model at epoch 3 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260526_161152.pth.
+2026-05-26 16:22:05:INFO:TRAIN-(hmmem) (1/4/1)>> loss: 0.7545
+2026-05-26 16:22:10:INFO:VAL-(hmmem) >>
+2026-05-26 16:22:10:INFO:M: >>  acc: 0.4166  UA: 0.2063  weight_F1: 0.3230  Macro_F1: 0.1567 
+2026-05-26 16:22:11:INFO:Saving best model at epoch 4 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260526_161152.pth.
+2026-05-26 16:24:31:INFO:TRAIN-(hmmem) (1/5/1)>> loss: 0.7437
+2026-05-26 16:24:36:INFO:VAL-(hmmem) >>
+2026-05-26 16:24:36:INFO:M: >>  acc: 0.4337  UA: 0.2034  weight_F1: 0.3360  Macro_F1: 0.1629 
+2026-05-26 16:24:37:INFO:Saving best model at epoch 5 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260526_161152.pth.
+2026-05-26 16:24:39:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-meld-classification-20260526_161152-epoch5.ckpt
+2026-05-26 16:26:58:INFO:TRAIN-(hmmem) (1/6/1)>> loss: 0.7281
+2026-05-26 16:27:03:INFO:VAL-(hmmem) >>
+2026-05-26 16:27:03:INFO:M: >>  acc: 0.4427  UA: 0.1771  weight_F1: 0.3062  Macro_F1: 0.1311 
+2026-05-26 16:29:23:INFO:TRAIN-(hmmem) (2/7/1)>> loss: 0.7175
+2026-05-26 16:29:27:INFO:VAL-(hmmem) >>
+2026-05-26 16:29:27:INFO:M: >>  acc: 0.4572  UA: 0.2107  weight_F1: 0.3598  Macro_F1: 0.1694 
+2026-05-26 16:29:28:INFO:Saving best model at epoch 7 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260526_161152.pth.
+2026-05-26 16:31:48:INFO:TRAIN-(hmmem) (1/8/1)>> loss: 0.6987
+2026-05-26 16:31:53:INFO:VAL-(hmmem) >>
+2026-05-26 16:31:53:INFO:M: >>  acc: 0.4878  UA: 0.2173  weight_F1: 0.3657  Macro_F1: 0.1704 
+2026-05-26 16:31:54:INFO:Saving best model at epoch 8 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260526_161152.pth.
+2026-05-26 16:34:14:INFO:TRAIN-(hmmem) (1/9/1)>> loss: 0.6863
+2026-05-26 16:34:19:INFO:VAL-(hmmem) >>
+2026-05-26 16:34:19:INFO:M: >>  acc: 0.4806  UA: 0.2088  weight_F1: 0.3540  Macro_F1: 0.1604 
+2026-05-26 16:36:38:INFO:TRAIN-(hmmem) (2/10/1)>> loss: 0.6820
+2026-05-26 16:36:43:INFO:VAL-(hmmem) >>
+2026-05-26 16:36:43:INFO:M: >>  acc: 0.4914  UA: 0.2238  weight_F1: 0.3776  Macro_F1: 0.1804 
+2026-05-26 16:36:44:INFO:Saving best model at epoch 10 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260526_161152.pth.
+2026-05-26 16:36:45:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-meld-classification-20260526_161152-epoch10.ckpt
+2026-05-26 16:39:05:INFO:TRAIN-(hmmem) (1/11/1)>> loss: 0.6768
+2026-05-26 16:39:10:INFO:VAL-(hmmem) >>
+2026-05-26 16:39:10:INFO:M: >>  acc: 0.4923  UA: 0.2382  weight_F1: 0.4163  Macro_F1: 0.2201 
+2026-05-26 16:39:11:INFO:Saving best model at epoch 11 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260526_161152.pth.
+2026-05-26 16:41:31:INFO:TRAIN-(hmmem) (1/12/1)>> loss: 0.6709
+2026-05-26 16:41:36:INFO:VAL-(hmmem) >>
+2026-05-26 16:41:36:INFO:M: >>  acc: 0.5032  UA: 0.2367  weight_F1: 0.4050  Macro_F1: 0.2068 
+2026-05-26 16:43:55:INFO:TRAIN-(hmmem) (2/13/1)>> loss: 0.6671
+2026-05-26 16:44:00:INFO:VAL-(hmmem) >>
+2026-05-26 16:44:00:INFO:M: >>  acc: 0.5050  UA: 0.2512  weight_F1: 0.4088  Macro_F1: 0.2107 
+2026-05-26 16:46:19:INFO:TRAIN-(hmmem) (3/14/1)>> loss: 0.6624
+2026-05-26 16:46:24:INFO:VAL-(hmmem) >>
+2026-05-26 16:46:24:INFO:M: >>  acc: 0.5077  UA: 0.2462  weight_F1: 0.4070  Macro_F1: 0.2088 
+2026-05-26 16:48:44:INFO:TRAIN-(hmmem) (4/15/1)>> loss: 0.6577
+2026-05-26 16:48:49:INFO:VAL-(hmmem) >>
+2026-05-26 16:48:49:INFO:M: >>  acc: 0.5239  UA: 0.2657  weight_F1: 0.4522  Macro_F1: 0.2534 
+2026-05-26 16:48:50:INFO:Saving best model at epoch 15 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260526_161152.pth.
+2026-05-26 16:48:51:INFO:Checkpoint saved at epoch 15 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-meld-classification-20260526_161152-epoch15.ckpt
+2026-05-26 16:51:11:INFO:TRAIN-(hmmem) (1/16/1)>> loss: 0.6542
+2026-05-26 16:51:15:INFO:VAL-(hmmem) >>
+2026-05-26 16:51:15:INFO:M: >>  acc: 0.5266  UA: 0.2613  weight_F1: 0.4468  Macro_F1: 0.2473 
+2026-05-26 16:53:35:INFO:TRAIN-(hmmem) (2/17/1)>> loss: 0.6478
+2026-05-26 16:53:40:INFO:VAL-(hmmem) >>
+2026-05-26 16:53:40:INFO:M: >>  acc: 0.5158  UA: 0.2500  weight_F1: 0.4291  Macro_F1: 0.2289 
+2026-05-26 16:55:59:INFO:TRAIN-(hmmem) (3/18/1)>> loss: 0.6454
+2026-05-26 16:56:04:INFO:VAL-(hmmem) >>
+2026-05-26 16:56:04:INFO:M: >>  acc: 0.5221  UA: 0.2673  weight_F1: 0.4520  Macro_F1: 0.2545 
+2026-05-26 16:58:23:INFO:TRAIN-(hmmem) (4/19/1)>> loss: 0.6392
+2026-05-26 16:58:28:INFO:VAL-(hmmem) >>
+2026-05-26 16:58:28:INFO:M: >>  acc: 0.5212  UA: 0.2622  weight_F1: 0.4456  Macro_F1: 0.2520 
+2026-05-26 17:00:47:INFO:TRAIN-(hmmem) (5/20/1)>> loss: 0.6369
+2026-05-26 17:00:52:INFO:VAL-(hmmem) >>
+2026-05-26 17:00:52:INFO:M: >>  acc: 0.5347  UA: 0.2828  weight_F1: 0.4655  Macro_F1: 0.2667 
+2026-05-26 17:00:53:INFO:Saving best model at epoch 20 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260526_161152.pth.
+2026-05-26 17:00:55:INFO:Checkpoint saved at epoch 20 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-meld-classification-20260526_161152-epoch20.ckpt
+2026-05-26 17:00:55:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-meld-classification-20260526_161152-epoch5.ckpt
+2026-05-26 17:03:14:INFO:TRAIN-(hmmem) (1/21/1)>> loss: 0.6321
+2026-05-26 17:03:19:INFO:VAL-(hmmem) >>
+2026-05-26 17:03:19:INFO:M: >>  acc: 0.5365  UA: 0.2729  weight_F1: 0.4595  Macro_F1: 0.2582 
+2026-05-26 17:05:38:INFO:TRAIN-(hmmem) (2/22/1)>> loss: 0.6290
+2026-05-26 17:05:43:INFO:VAL-(hmmem) >>
+2026-05-26 17:05:43:INFO:M: >>  acc: 0.5275  UA: 0.2712  weight_F1: 0.4566  Macro_F1: 0.2587 
+2026-05-26 17:08:02:INFO:TRAIN-(hmmem) (3/23/1)>> loss: 0.6260
+2026-05-26 17:08:07:INFO:VAL-(hmmem) >>
+2026-05-26 17:08:07:INFO:M: >>  acc: 0.5311  UA: 0.2757  weight_F1: 0.4583  Macro_F1: 0.2604 
+2026-05-26 17:10:26:INFO:TRAIN-(hmmem) (4/24/1)>> loss: 0.6238
+2026-05-26 17:10:31:INFO:VAL-(hmmem) >>
+2026-05-26 17:10:31:INFO:M: >>  acc: 0.5293  UA: 0.2726  weight_F1: 0.4559  Macro_F1: 0.2570 
+2026-05-26 17:12:51:INFO:TRAIN-(hmmem) (5/25/1)>> loss: 0.6227
+2026-05-26 17:12:56:INFO:VAL-(hmmem) >>
+2026-05-26 17:12:56:INFO:M: >>  acc: 0.5275  UA: 0.2720  weight_F1: 0.4545  Macro_F1: 0.2564 
+2026-05-26 17:12:58:INFO:Checkpoint saved at epoch 25 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-meld-classification-20260526_161152-epoch25.ckpt
+2026-05-26 17:12:58:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-meld-classification-20260526_161152-epoch10.ckpt
+2026-05-26 17:15:18:INFO:TRAIN-(hmmem) (6/26/1)>> loss: 0.6228
+2026-05-26 17:15:22:INFO:VAL-(hmmem) >>
+2026-05-26 17:15:22:INFO:M: >>  acc: 0.5284  UA: 0.2723  weight_F1: 0.4551  Macro_F1: 0.2569 
+2026-05-26 17:17:42:INFO:TRAIN-(hmmem) (7/27/1)>> loss: 0.6232
+2026-05-26 17:17:47:INFO:VAL-(hmmem) >>
+2026-05-26 17:17:47:INFO:M: >>  acc: 0.5302  UA: 0.2749  weight_F1: 0.4586  Macro_F1: 0.2602 
+2026-05-26 17:20:06:INFO:TRAIN-(hmmem) (8/28/1)>> loss: 0.6246
+2026-05-26 17:20:11:INFO:VAL-(hmmem) >>
+2026-05-26 17:20:11:INFO:M: >>  acc: 0.5320  UA: 0.2776  weight_F1: 0.4589  Macro_F1: 0.2599 
+2026-05-26 17:20:24:INFO:TEST-(hmmem) >>
+2026-05-26 17:20:24:INFO:M: >>  acc: 0.5674  UA: 0.2741  weight_F1: 0.5071  Macro_F1: 0.2617 
+2026-05-26 17:20:24:INFO:============================================================
+2026-05-26 17:20:24:INFO:         Detailed Classification Analysis
+2026-05-26 17:20:24:INFO:============================================================
+2026-05-26 17:20:24:INFO:         Class     Prec   Recall       F1   Support
+2026-05-26 17:20:24:INFO:------------------------------------------------------------
+2026-05-26 17:20:24:INFO:       neutral   0.6580   0.8901   0.7567      1256
+2026-05-26 17:20:24:INFO:      surprise   0.4178   0.3167   0.3603       281
+2026-05-26 17:20:24:INFO:          fear   0.0000   0.0000   0.0000        50
+2026-05-26 17:20:24:INFO:       sadness   0.0000   0.0000   0.0000       208
+2026-05-26 17:20:24:INFO:           joy   0.4020   0.5000   0.4457       402
+2026-05-26 17:20:24:INFO:       disgust   0.0000   0.0000   0.0000        68
+2026-05-26 17:20:24:INFO:         anger   0.3687   0.2116   0.2689       345
+2026-05-26 17:20:24:INFO:------------------------------------------------------------
+2026-05-26 17:20:24:INFO:  WA  (Weighted Accuracy) : 0.5674
+2026-05-26 17:20:24:INFO:  UA  (Unweighted Accuracy): 0.2741
+2026-05-26 17:20:24:INFO:  WF1 (Weighted F1)       : 0.5071
+2026-05-26 17:20:24:INFO:  Macro-F1                : 0.2617
+2026-05-26 17:20:24:INFO:============================================================
+2026-05-26 17:20:25:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-meld-TEST-confusion_matrix-20260526_161152.png
+2026-05-26 17:20:45:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-meld-TEST-tsne_emotion-20260526_161152.png
+2026-05-26 17:21:50:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-meld-TEST-tsne_modality-20260526_161152.png
+2026-05-26 17:21:53:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-qwen-meld-classification.csv...
+2026-05-27 16:13:29:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-27 16:13:29:INFO:Start running hmmem...
+2026-05-27 16:13:29:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'MELD_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234, 2234, 3234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'compressed', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 48, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260527_161329', 'dataPath': '/root/autodl-tmp/datasets/MELD_UniMSE', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-27 16:13:29:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-27 16:13:29:INFO:Let's use the GPU 1 !
+2026-05-27 16:13:29:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_train.pkl
+2026-05-27 16:13:34:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_valid.pkl
+2026-05-27 16:13:35:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_test.pkl
+2026-05-27 16:13:37:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-27 16:13:43:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, shared_proj, global_moe, local_moe, moe_msf
+2026-05-27 16:13:43:INFO:trainable params: 2350410 || all params: 1839179082 || trainable%: 0.12779669054543977
+2026-05-27 16:13:43:INFO:Single-LR optimizer: 86 tensors, lr=0.0005
+2026-05-27 16:13:43:INFO:Init labels...
+2026-05-27 16:13:43:INFO:Start training...
+2026-05-27 16:13:43:INFO:  Batch size = 48
+2026-05-27 16:13:43:INFO:  Gradient Accumulation steps = 1
+2026-05-27 16:13:43:INFO:  Effective batch size = 48
+2026-05-27 16:13:43:INFO:  AMP dtype = torch.bfloat16
+2026-05-27 16:15:57:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 4.3139
+2026-05-27 16:16:02:INFO:[GenDebug] model_type=qwen, max_new_tokens=3
+2026-05-27 16:16:02:INFO:[GenDebug] inputs_embeds.shape=torch.Size([48, 112, 2048]), outputs.shape=torch.Size([48, 2])
+2026-05-27 16:16:02:INFO:[GenDebug] outputs[0] token IDs: [151644, 151643]
+2026-05-27 16:16:02:INFO:[GenDebug] outputs[0] full decode: ''
+2026-05-27 16:16:02:INFO:[GenDebug] decoded responses[:8]: ['', '', '', '', '', '', '', '']
+2026-05-27 16:16:07:INFO:VAL-(hmmem) >>
+2026-05-27 16:16:07:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-05-27 16:16:09:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260527_161329.pth.
+2026-05-27 16:18:13:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 0.7343
+2026-05-27 16:18:18:INFO:VAL-(hmmem) >>
+2026-05-27 16:18:18:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-05-27 16:20:22:INFO:TRAIN-(hmmem) (2/3/1)>> loss: 0.6854
+2026-05-27 16:20:26:INFO:VAL-(hmmem) >>
+2026-05-27 16:20:26:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-05-27 16:22:31:INFO:TRAIN-(hmmem) (3/4/1)>> loss: 0.6362
+2026-05-27 16:22:35:INFO:VAL-(hmmem) >>
+2026-05-27 16:22:35:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-05-27 16:24:39:INFO:TRAIN-(hmmem) (4/5/1)>> loss: 0.6331
+2026-05-27 16:24:43:INFO:VAL-(hmmem) >>
+2026-05-27 16:24:43:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-05-27 16:24:46:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-meld-classification-20260527_161329-epoch5.ckpt
+2026-05-27 16:26:50:INFO:TRAIN-(hmmem) (5/6/1)>> loss: 0.6370
+2026-05-27 16:26:54:INFO:VAL-(hmmem) >>
+2026-05-27 16:26:54:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-05-27 16:28:59:INFO:TRAIN-(hmmem) (6/7/1)>> loss: 0.6512
+2026-05-27 16:29:03:INFO:VAL-(hmmem) >>
+2026-05-27 16:29:03:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-05-27 16:31:08:INFO:TRAIN-(hmmem) (7/8/1)>> loss: 0.6115
+2026-05-27 16:31:12:INFO:VAL-(hmmem) >>
+2026-05-27 16:31:12:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-05-27 16:33:16:INFO:TRAIN-(hmmem) (8/9/1)>> loss: 0.6115
+2026-05-27 16:33:20:INFO:VAL-(hmmem) >>
+2026-05-27 16:33:20:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-05-27 16:33:31:INFO:TEST-(hmmem) >>
+2026-05-27 16:33:31:INFO:M: >>  acc: 0.4812  UA: 0.1429  weight_F1: 0.3127  Macro_F1: 0.0928 
+2026-05-27 16:33:31:INFO:============================================================
+2026-05-27 16:33:31:INFO:         Detailed Classification Analysis
+2026-05-27 16:33:31:INFO:============================================================
+2026-05-27 16:33:31:INFO:         Class     Prec   Recall       F1   Support
+2026-05-27 16:33:31:INFO:------------------------------------------------------------
+2026-05-27 16:33:31:INFO:       neutral   0.4812   1.0000   0.6498      1256
+2026-05-27 16:33:31:INFO:      surprise   0.0000   0.0000   0.0000       281
+2026-05-27 16:33:31:INFO:          fear   0.0000   0.0000   0.0000        50
+2026-05-27 16:33:31:INFO:       sadness   0.0000   0.0000   0.0000       208
+2026-05-27 16:33:31:INFO:           joy   0.0000   0.0000   0.0000       402
+2026-05-27 16:33:31:INFO:       disgust   0.0000   0.0000   0.0000        68
+2026-05-27 16:33:31:INFO:         anger   0.0000   0.0000   0.0000       345
+2026-05-27 16:33:31:INFO:------------------------------------------------------------
+2026-05-27 16:33:31:INFO:  WA  (Weighted Accuracy) : 0.4812
+2026-05-27 16:33:31:INFO:  UA  (Unweighted Accuracy): 0.1429
+2026-05-27 16:33:31:INFO:  WF1 (Weighted F1)       : 0.3127
+2026-05-27 16:33:31:INFO:  Macro-F1                : 0.0928
+2026-05-27 16:33:31:INFO:============================================================
+2026-05-27 16:33:31:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-meld-TEST-confusion_matrix-20260527_161329.png
+2026-05-27 16:33:54:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-meld-TEST-tsne_emotion-20260527_161329.png
+2026-05-27 16:35:02:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-meld-TEST-tsne_modality-20260527_161329.png
+2026-05-27 16:35:03:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-qwen-meld-classification.csv...
+2026-05-27 16:35:03:INFO:Start running hmmem...
+2026-05-27 16:35:03:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'MELD_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [0], 'seeds': [1234, 2234, 3234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'compressed', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 48, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260527_161329', 'dataPath': '/root/autodl-tmp/datasets/MELD_UniMSE', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 2234}>
+2026-05-27 16:35:03:INFO:Let's use the GPU 1 !
+2026-05-27 16:35:03:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_train.pkl
+2026-05-27 16:35:06:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_valid.pkl
+2026-05-27 16:35:07:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_test.pkl
+2026-05-27 16:35:08:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-27 16:36:57:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-27 16:36:57:INFO:Start running hmmem...
+2026-05-27 16:36:57:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'MELD_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234, 2234, 3234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'compressed', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 48, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260527_163657', 'dataPath': '/root/autodl-tmp/datasets/MELD_UniMSE', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-27 16:36:57:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-27 16:36:57:INFO:Let's use the GPU 1 !
+2026-05-27 16:36:57:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_train.pkl
+2026-05-27 16:37:01:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_valid.pkl
+2026-05-27 16:37:01:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_test.pkl
+2026-05-27 16:37:03:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-27 16:37:08:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, shared_proj, global_moe, local_moe, moe_msf
+2026-05-27 16:37:08:INFO:trainable params: 2350410 || all params: 1839179082 || trainable%: 0.12779669054543977
+2026-05-27 16:37:08:INFO:Single-LR optimizer: 86 tensors, lr=0.0005
+2026-05-27 16:37:08:INFO:Init labels...
+2026-05-27 16:37:08:INFO:Start training...
+2026-05-27 16:37:08:INFO:  Batch size = 48
+2026-05-27 16:37:08:INFO:  Gradient Accumulation steps = 1
+2026-05-27 16:37:08:INFO:  Effective batch size = 48
+2026-05-27 16:37:08:INFO:  AMP dtype = torch.bfloat16
+2026-05-27 16:39:23:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 4.3139
+2026-05-27 16:39:27:INFO:[GenDebug] model_type=qwen, max_new_tokens=3
+2026-05-27 16:39:27:INFO:[GenDebug] inputs_embeds.shape=torch.Size([48, 112, 2048]), outputs.shape=torch.Size([48, 4])
+2026-05-27 16:39:27:INFO:[GenDebug] outputs[0] token IDs: [151644, 4123, 11, 4123]
+2026-05-27 16:39:27:INFO:[GenDebug] outputs[0] full decode: 'joy,joy'
+2026-05-27 16:39:27:INFO:[GenDebug] decoded responses[:8]: ['joy,joy', 'joy,joy', 'surprise.', 'surprise.', 'joy\nresponse', 'surprise.', 'surprise.', 'disgust']
+2026-05-27 16:39:33:INFO:VAL-(hmmem) >>
+2026-05-27 16:39:33:INFO:M: >>  acc: 0.1461  UA: 0.1617  weight_F1: 0.0805  Macro_F1: 0.0863 
+2026-05-27 16:39:35:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260527_163657.pth.
+2026-05-27 16:41:40:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 0.7343
+2026-05-27 16:41:45:INFO:VAL-(hmmem) >>
+2026-05-27 16:41:45:INFO:M: >>  acc: 0.1416  UA: 0.1723  weight_F1: 0.0715  Macro_F1: 0.0880 
+2026-05-27 16:43:50:INFO:TRAIN-(hmmem) (2/3/1)>> loss: 0.6854
+2026-05-27 16:43:55:INFO:VAL-(hmmem) >>
+2026-05-27 16:43:55:INFO:M: >>  acc: 0.1362  UA: 0.1445  weight_F1: 0.0356  Macro_F1: 0.0387 
+2026-05-27 16:45:59:INFO:TRAIN-(hmmem) (3/4/1)>> loss: 0.6362
+2026-05-27 16:46:04:INFO:VAL-(hmmem) >>
+2026-05-27 16:46:04:INFO:M: >>  acc: 0.1362  UA: 0.1441  weight_F1: 0.0343  Macro_F1: 0.0368 
+2026-05-27 16:48:09:INFO:TRAIN-(hmmem) (4/5/1)>> loss: 0.6331
+2026-05-27 16:48:14:INFO:VAL-(hmmem) >>
+2026-05-27 16:48:14:INFO:M: >>  acc: 0.1317  UA: 0.1557  weight_F1: 0.0339  Macro_F1: 0.0467 
+2026-05-27 16:48:17:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-meld-classification-20260527_163657-epoch5.ckpt
+2026-05-27 16:49:30:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-27 16:49:30:INFO:Start running hmmem...
+2026-05-27 16:49:30:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'MELD_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234, 2234, 3234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'compressed', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 48, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260527_164930', 'dataPath': '/root/autodl-tmp/datasets/MELD_UniMSE', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-27 16:49:30:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-27 16:49:30:INFO:Let's use the GPU 1 !
+2026-05-27 16:49:30:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_train.pkl
+2026-05-27 16:49:34:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_valid.pkl
+2026-05-27 16:49:34:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_test.pkl
+2026-05-27 16:49:36:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-27 16:49:42:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, shared_proj, global_moe, local_moe, moe_msf
+2026-05-27 16:49:42:INFO:trainable params: 2350410 || all params: 1839179082 || trainable%: 0.12779669054543977
+2026-05-27 16:49:42:INFO:Single-LR optimizer: 86 tensors, lr=0.0005
+2026-05-27 16:49:42:INFO:Init labels...
+2026-05-27 16:49:42:INFO:Start training...
+2026-05-27 16:49:42:INFO:  Batch size = 48
+2026-05-27 16:49:42:INFO:  Gradient Accumulation steps = 1
+2026-05-27 16:49:42:INFO:  Effective batch size = 48
+2026-05-27 16:49:42:INFO:  AMP dtype = torch.bfloat16
+2026-05-27 16:51:57:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 4.3139
+2026-05-27 16:52:01:INFO:[GenDebug] model_type=qwen, max_new_tokens=3
+2026-05-27 16:52:01:INFO:[GenDebug] inputs_embeds.shape=torch.Size([48, 112, 2048]), outputs.shape=torch.Size([48, 4])
+2026-05-27 16:52:01:INFO:[GenDebug] outputs[0] token IDs: [151644, 4123, 151643, 151643]
+2026-05-27 16:52:01:INFO:[GenDebug] outputs[0] full decode: 'joy'
+2026-05-27 16:52:01:INFO:[GenDebug] decoded responses[:8]: ['joy', 'joy', 'surprise', 'surprise', 'joy', 'surprise', 'surprise', 'disgust']
+2026-05-27 16:52:06:INFO:VAL-(hmmem) >>
+2026-05-27 16:52:06:INFO:M: >>  acc: 0.1461  UA: 0.1617  weight_F1: 0.0805  Macro_F1: 0.0863 
+2026-05-27 16:52:09:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260527_164930.pth.
+2026-05-27 16:54:13:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 0.7343
+2026-05-27 16:54:18:INFO:VAL-(hmmem) >>
+2026-05-27 16:54:18:INFO:M: >>  acc: 0.1416  UA: 0.1723  weight_F1: 0.0715  Macro_F1: 0.0880 
+2026-05-27 16:56:22:INFO:TRAIN-(hmmem) (2/3/1)>> loss: 0.6854
+2026-05-27 16:56:27:INFO:VAL-(hmmem) >>
+2026-05-27 16:56:27:INFO:M: >>  acc: 0.1362  UA: 0.1445  weight_F1: 0.0356  Macro_F1: 0.0387 
+2026-05-27 16:58:32:INFO:TRAIN-(hmmem) (3/4/1)>> loss: 0.6362
+2026-05-27 16:58:36:INFO:VAL-(hmmem) >>
+2026-05-27 16:58:36:INFO:M: >>  acc: 0.1362  UA: 0.1441  weight_F1: 0.0343  Macro_F1: 0.0368 
+2026-05-27 17:00:41:INFO:TRAIN-(hmmem) (4/5/1)>> loss: 0.6331
+2026-05-27 17:00:46:INFO:VAL-(hmmem) >>
+2026-05-27 17:00:46:INFO:M: >>  acc: 0.1317  UA: 0.1557  weight_F1: 0.0339  Macro_F1: 0.0467 
+2026-05-27 17:00:48:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-meld-classification-20260527_164930-epoch5.ckpt
+2026-05-27 17:02:53:INFO:TRAIN-(hmmem) (5/6/1)>> loss: 0.6370
+2026-05-27 17:02:58:INFO:VAL-(hmmem) >>
+2026-05-27 17:02:58:INFO:M: >>  acc: 0.1371  UA: 0.1538  weight_F1: 0.0486  Macro_F1: 0.0571 
+2026-05-27 17:05:02:INFO:TRAIN-(hmmem) (6/7/1)>> loss: 0.6512
+2026-05-27 17:05:07:INFO:VAL-(hmmem) >>
+2026-05-27 17:05:07:INFO:M: >>  acc: 0.1127  UA: 0.1694  weight_F1: 0.0457  Macro_F1: 0.0714 
+2026-05-27 17:07:12:INFO:TRAIN-(hmmem) (7/8/1)>> loss: 0.6115
+2026-05-27 17:07:17:INFO:VAL-(hmmem) >>
+2026-05-27 17:07:17:INFO:M: >>  acc: 0.1362  UA: 0.1497  weight_F1: 0.0356  Macro_F1: 0.0476 
+2026-05-27 17:09:21:INFO:TRAIN-(hmmem) (8/9/1)>> loss: 0.6115
+2026-05-27 17:09:26:INFO:VAL-(hmmem) >>
+2026-05-27 17:09:26:INFO:M: >>  acc: 0.0757  UA: 0.1531  weight_F1: 0.0372  Macro_F1: 0.0520 
+2026-05-27 17:09:38:INFO:TEST-(hmmem) >>
+2026-05-27 17:09:38:INFO:M: >>  acc: 0.1310  UA: 0.1489  weight_F1: 0.0773  Macro_F1: 0.0743 
+2026-05-27 17:09:38:INFO:============================================================
+2026-05-27 17:09:38:INFO:         Detailed Classification Analysis
+2026-05-27 17:09:38:INFO:============================================================
+2026-05-27 17:09:38:INFO:         Class     Prec   Recall       F1   Support
+2026-05-27 17:09:38:INFO:------------------------------------------------------------
+2026-05-27 17:09:38:INFO:       neutral   0.6250   0.0239   0.0460      1256
+2026-05-27 17:09:38:INFO:      surprise   0.1069   0.6584   0.1839       281
+2026-05-27 17:09:38:INFO:          fear   0.2500   0.0200   0.0370        50
+2026-05-27 17:09:38:INFO:       sadness   0.0556   0.0048   0.0088       208
+2026-05-27 17:09:38:INFO:           joy   0.1667   0.3060   0.2158       402
+2026-05-27 17:09:38:INFO:       disgust   0.0282   0.0294   0.0288        68
+2026-05-27 17:09:38:INFO:         anger   0.0000   0.0000   0.0000       345
+2026-05-27 17:09:38:INFO:------------------------------------------------------------
+2026-05-27 17:09:38:INFO:  WA  (Weighted Accuracy) : 0.1310
+2026-05-27 17:09:38:INFO:  UA  (Unweighted Accuracy): 0.1489
+2026-05-27 17:09:38:INFO:  WF1 (Weighted F1)       : 0.0773
+2026-05-27 17:09:38:INFO:  Macro-F1                : 0.0743
+2026-05-27 17:09:38:INFO:============================================================
+2026-05-27 17:09:38:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-meld-TEST-confusion_matrix-20260527_164930.png
+2026-05-27 17:10:00:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-meld-TEST-tsne_emotion-20260527_164930.png
+2026-05-27 17:11:04:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-meld-TEST-tsne_modality-20260527_164930.png
+2026-05-27 17:11:05:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-qwen-meld-classification.csv...
+2026-05-27 17:11:05:INFO:Start running hmmem...
+2026-05-27 17:11:05:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'MELD_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [0], 'seeds': [1234, 2234, 3234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'compressed', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 48, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260527_164930', 'dataPath': '/root/autodl-tmp/datasets/MELD_UniMSE', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 2234}>
+2026-05-27 17:11:05:INFO:Let's use the GPU 1 !
+2026-05-27 17:11:05:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_train.pkl
+2026-05-27 17:11:08:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_valid.pkl
+2026-05-27 17:11:08:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_test.pkl
+2026-05-27 17:11:10:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-27 17:20:09:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-27 17:20:09:INFO:Start running hmmem...
+2026-05-27 17:20:09:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234, 2234, 3234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 48, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260527_172009', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-27 17:20:09:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-27 17:20:09:INFO:Let's use the GPU 1 !
+2026-05-27 17:20:09:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-27 17:20:14:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-05-27 17:20:14:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-27 17:20:20:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-27 17:20:22:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_valid.csv: 1109 entries
+2026-05-27 17:20:22:INFO:MELD valid split loaded 1109/1109 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-27 17:20:23:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-27 17:20:25:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_test.csv: 2610 entries
+2026-05-27 17:20:25:INFO:MELD test split loaded 2610/2610 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-27 17:20:27:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-27 17:22:35:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-27 17:22:35:INFO:Start running hmmem...
+2026-05-27 17:22:35:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234, 2234, 3234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 48, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260527_172235', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-27 17:22:35:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-27 17:22:35:INFO:Let's use the GPU 1 !
+2026-05-27 17:22:35:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-27 17:22:40:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-05-27 17:22:40:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-27 17:22:47:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-27 17:22:49:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_valid.csv: 1109 entries
+2026-05-27 17:22:49:INFO:MELD valid split loaded 1109/1109 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-27 17:22:50:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-27 17:22:52:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_test.csv: 2610 entries
+2026-05-27 17:22:52:INFO:MELD test split loaded 2610/2610 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-27 17:22:54:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-27 17:37:16:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-27 17:37:16:INFO:Start running hmmem...
+2026-05-27 17:37:16:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234, 2234, 3234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 48, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260527_173716', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-27 17:37:17:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-27 17:37:17:INFO:Let's use the GPU 1 !
+2026-05-27 17:37:17:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-27 17:37:21:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-05-27 17:37:21:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-27 17:37:27:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-27 17:37:29:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_valid.csv: 1109 entries
+2026-05-27 17:37:29:INFO:MELD valid split loaded 1109/1109 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-27 17:37:30:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-05-27 17:37:32:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_test.csv: 2610 entries
+2026-05-27 17:37:32:INFO:MELD test split loaded 2610/2610 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-05-27 17:37:35:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-27 17:37:38:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, audio_adapter, video_adapter, shared_proj, global_moe, local_moe, moe_msf
+2026-05-27 17:37:38:INFO:trainable params: 3117642 || all params: 1839946314 || trainable%: 0.16944200905635773
+2026-05-27 17:37:38:INFO:Single-LR optimizer: 98 tensors, lr=0.0005
+2026-05-27 17:37:38:INFO:Init labels...
+2026-05-27 17:37:38:INFO:Start training...
+2026-05-27 17:37:38:INFO:  Batch size = 48
+2026-05-27 17:37:38:INFO:  Gradient Accumulation steps = 1
+2026-05-27 17:37:38:INFO:  Effective batch size = 48
+2026-05-27 17:37:38:INFO:  AMP dtype = torch.bfloat16
+2026-05-27 17:39:53:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 6.7557
+2026-05-27 17:39:59:INFO:[GenDebug] model_type=qwen, max_new_tokens=3
+2026-05-27 17:39:59:INFO:[GenDebug] inputs_embeds.shape=torch.Size([48, 112, 2048]), outputs.shape=torch.Size([48, 4])
+2026-05-27 17:39:59:INFO:[GenDebug] outputs[0] token IDs: [151644, 82114, 2090, 151643]
+2026-05-27 17:39:59:INFO:[GenDebug] outputs[0] full decode: 'sadness'
+2026-05-27 17:39:59:INFO:[GenDebug] decoded responses[:8]: ['sadness', 'sadness', 'sadness', 'sadness', 'sadness', 'sadness', 'sadness', 'sadness']
+2026-05-27 17:40:04:INFO:VAL-(hmmem) >>
+2026-05-27 17:40:04:INFO:M: >>  acc: 0.0821  UA: 0.1379  weight_F1: 0.0172  Macro_F1: 0.0302 
+2026-05-27 17:40:07:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260527_173716.pth.
+2026-05-27 17:42:11:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 0.7645
+2026-05-27 17:42:16:INFO:VAL-(hmmem) >>
+2026-05-27 17:42:16:INFO:M: >>  acc: 0.0965  UA: 0.1429  weight_F1: 0.0187  Macro_F1: 0.0328 
+2026-05-27 17:42:17:INFO:Saving best model at epoch 2 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260527_173716.pth.
+2026-05-27 17:44:23:INFO:TRAIN-(hmmem) (1/3/1)>> loss: 0.6777
+2026-05-27 17:44:27:INFO:VAL-(hmmem) >>
+2026-05-27 17:44:27:INFO:M: >>  acc: 0.0748  UA: 0.1562  weight_F1: 0.0304  Macro_F1: 0.0439 
+2026-05-27 17:44:28:INFO:Saving best model at epoch 3 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260527_173716.pth.
+2026-05-27 17:46:34:INFO:TRAIN-(hmmem) (1/4/1)>> loss: 0.6255
+2026-05-27 17:46:38:INFO:VAL-(hmmem) >>
+2026-05-27 17:46:38:INFO:M: >>  acc: 0.1353  UA: 0.1429  weight_F1: 0.0322  Macro_F1: 0.0340 
+2026-05-27 17:46:39:INFO:Saving best model at epoch 4 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260527_173716.pth.
+2026-05-27 17:48:45:INFO:TRAIN-(hmmem) (1/5/1)>> loss: 0.6263
+2026-05-27 17:48:50:INFO:VAL-(hmmem) >>
+2026-05-27 17:48:50:INFO:M: >>  acc: 0.1524  UA: 0.1864  weight_F1: 0.0601  Macro_F1: 0.0712 
+2026-05-27 17:48:51:INFO:Saving best model at epoch 5 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260527_173716.pth.
+2026-05-27 17:48:52:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-meld-classification-20260527_173716-epoch5.ckpt
+2026-05-27 17:50:56:INFO:TRAIN-(hmmem) (1/6/1)>> loss: 0.6400
+2026-05-27 17:51:01:INFO:VAL-(hmmem) >>
+2026-05-27 17:51:01:INFO:M: >>  acc: 0.1199  UA: 0.1655  weight_F1: 0.0367  Macro_F1: 0.0440 
+2026-05-27 17:53:06:INFO:TRAIN-(hmmem) (2/7/1)>> loss: 0.6029
+2026-05-27 17:53:11:INFO:VAL-(hmmem) >>
+2026-05-27 17:53:11:INFO:M: >>  acc: 0.1533  UA: 0.1903  weight_F1: 0.0621  Macro_F1: 0.0733 
+2026-05-27 17:53:12:INFO:Saving best model at epoch 7 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260527_173716.pth.
+2026-05-27 17:55:17:INFO:TRAIN-(hmmem) (1/8/1)>> loss: 0.5800
+2026-05-27 17:55:22:INFO:VAL-(hmmem) >>
+2026-05-27 17:55:22:INFO:M: >>  acc: 0.0911  UA: 0.1855  weight_F1: 0.0457  Macro_F1: 0.0549 
+2026-05-27 17:57:26:INFO:TRAIN-(hmmem) (2/9/1)>> loss: 0.5869
+2026-05-27 17:57:31:INFO:VAL-(hmmem) >>
+2026-05-27 17:57:31:INFO:M: >>  acc: 0.1650  UA: 0.1930  weight_F1: 0.0622  Macro_F1: 0.0736 
+2026-05-27 17:57:32:INFO:Saving best model at epoch 9 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260527_173716.pth.
+2026-05-27 17:59:37:INFO:TRAIN-(hmmem) (1/10/1)>> loss: 0.5895
+2026-05-27 17:59:42:INFO:VAL-(hmmem) >>
+2026-05-27 17:59:42:INFO:M: >>  acc: 0.1253  UA: 0.1712  weight_F1: 0.0375  Macro_F1: 0.0454 
+2026-05-27 17:59:44:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-meld-classification-20260527_173716-epoch10.ckpt
+2026-05-27 18:01:48:INFO:TRAIN-(hmmem) (2/11/1)>> loss: 0.5680
+2026-05-27 18:01:53:INFO:VAL-(hmmem) >>
+2026-05-27 18:01:53:INFO:M: >>  acc: 0.1163  UA: 0.1907  weight_F1: 0.0464  Macro_F1: 0.0572 
+2026-05-27 18:03:57:INFO:TRAIN-(hmmem) (3/12/1)>> loss: 0.5701
+2026-05-27 18:04:02:INFO:VAL-(hmmem) >>
+2026-05-27 18:04:02:INFO:M: >>  acc: 0.0559  UA: 0.1647  weight_F1: 0.0412  Macro_F1: 0.0489 
+2026-05-27 18:06:07:INFO:TRAIN-(hmmem) (4/13/1)>> loss: 0.5685
+2026-05-27 18:06:12:INFO:VAL-(hmmem) >>
+2026-05-27 18:06:12:INFO:M: >>  acc: 0.1353  UA: 0.1429  weight_F1: 0.0324  Macro_F1: 0.0342 
+2026-05-27 18:08:17:INFO:TRAIN-(hmmem) (5/14/1)>> loss: 0.5569
+2026-05-27 18:08:22:INFO:VAL-(hmmem) >>
+2026-05-27 18:08:22:INFO:M: >>  acc: 0.1145  UA: 0.1778  weight_F1: 0.0642  Macro_F1: 0.0787 
+2026-05-27 18:08:23:INFO:Saving best model at epoch 14 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260527_173716.pth.
+2026-05-27 18:10:28:INFO:TRAIN-(hmmem) (1/15/1)>> loss: 0.5460
+2026-05-27 18:10:33:INFO:VAL-(hmmem) >>
+2026-05-27 18:10:33:INFO:M: >>  acc: 0.0821  UA: 0.1753  weight_F1: 0.0452  Macro_F1: 0.0524 
+2026-05-27 18:10:35:INFO:Checkpoint saved at epoch 15 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-meld-classification-20260527_173716-epoch15.ckpt
+2026-05-27 18:12:39:INFO:TRAIN-(hmmem) (2/16/1)>> loss: 0.5591
+2026-05-27 18:12:45:INFO:VAL-(hmmem) >>
+2026-05-27 18:12:45:INFO:M: >>  acc: 0.1623  UA: 0.1972  weight_F1: 0.0658  Macro_F1: 0.0772 
+2026-05-27 18:12:45:INFO:Saving best model at epoch 16 to /root/autodl-tmp/results/models/hmmem-qwen-meld-classification-20260527_173716.pth.
+2026-05-27 18:14:50:INFO:TRAIN-(hmmem) (1/17/1)>> loss: 0.5486
+2026-05-27 18:15:07:INFO:========= 准备训练数据集: meld (classification) =========
+2026-05-27 18:15:07:INFO:Start running hmmem...
+2026-05-27 18:15:07:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'MELD_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234, 2234, 3234], 'use_tgm': True, 'use_origin_amm': False, 'use_amm': False, 'amm_mode': 'base', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': True, 'use_moe_fusion': False, 'use_sd_moe': False, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'compressed', 'a_lstm_hidden_size': 32, 'v_lstm_hidden_size': 16, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 48, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 25, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260527_181507', 'dataPath': '/root/autodl-tmp/datasets/MELD_UniMSE', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize emotion of the above multimodal content from the target                                                 set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 2, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-05-27 18:15:07:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-05-27 18:15:07:INFO:Let's use the GPU 1 !
+2026-05-27 18:15:07:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_train.pkl
+2026-05-27 18:15:11:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_valid.pkl
+2026-05-27 18:15:11:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_test.pkl
+2026-05-27 18:15:13:WARNING:The model is automatically converting to bf16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+2026-05-27 18:15:18:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, fusion
+2026-05-27 18:15:18:INFO:trainable params: 1312072 || all params: 1838140744 || trainable%: 0.07138038826911504
+2026-05-27 18:15:18:INFO:Single-LR optimizer: 32 tensors, lr=0.0005
+2026-05-27 18:15:18:INFO:Init labels...
+2026-05-27 18:15:18:INFO:Start training...
+2026-05-27 18:15:18:INFO:  Batch size = 48
+2026-05-27 18:15:18:INFO:  Gradient Accumulation steps = 1
+2026-05-27 18:15:18:INFO:  Effective batch size = 48
+2026-05-27 18:15:18:INFO:  AMP dtype = torch.bfloat16

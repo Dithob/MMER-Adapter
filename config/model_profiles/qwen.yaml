@@ -12,7 +12,7 @@ classification:
   meld:
     task_specific_prompt: >-
       Please recognize the emotion of the above multimodal content from the
-      target set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is
+      target set <neutral:0, surprise:1, fear:2, sad:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is
     batch_size: 16
     learning_rate: 5.0e-4
     warm_up_epochs: 50

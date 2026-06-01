@@ -15,7 +15,7 @@ classification:
   meld:
     task_specific_prompt: >-
       Please recognize emotion of the above multimodal content from the target
-      set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. response: The emotion is
+      set <neutral:0, surprise:1, fear:2, sad:3, joy:4, disgust:5, anger:6>. response: The emotion is
     max_new_tokens: 1
     pseudo_tokens: 2
     label_index_mapping:
@@ -26,6 +26,9 @@ classification:
       joy: 4
       disgust: 5
       anger: 6
+    # Override label names for text generation mode (shorter tokens)
+    text_label_aliases:
+      sadness: sad
     batch_size: 24
     gradient_accumulation_steps: 1
     learning_rate: 3.0e-4

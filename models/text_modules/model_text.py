@@ -34,8 +34,18 @@ class Language_model(nn.Module):
         # ── Label format: index (default) or text ──
         self.label_format = getattr(args, 'label_format', 'index')
         self.label_index_mapping = getattr(args, 'label_index_mapping', {})
-        # Build reverse mapping: idx → label name
-        self._idx_to_name = {v: k for k, v in self.label_index_mapping.items()}
+        # Optional: override label names for text generation (e.g. sadness→sad)
+        # Config: text_label_aliases: {sadness: sad, disgust: disg, ...}
+        text_aliases = getattr(args, 'text_label_aliases', {})
+        # Build reverse mapping: idx → label name (with alias override)
+        self._idx_to_name = {
+            v: text_aliases.get(k, k) for k, v in self.label_index_mapping.items()
+        }
+        # Also build parse mapping: alias → idx (for inference decoding)
+        self.label_index_mapping_for_parse = dict(self.label_index_mapping)
+        for original, alias in text_aliases.items():
+            if original in self.label_index_mapping:
+                self.label_index_mapping_for_parse[alias] = self.label_index_mapping[original]
         # Auto-adjust max_new_tokens for text label format
         # Emotion words like 'surprise', 'frustrated' may need 2-3 tokens
         if self.label_format == 'text' and self.train_mode == 'classification':
@@ -504,9 +514,9 @@ class Language_model(nn.Module):
             return float(response)
         except ValueError:
             pass
-        # Text label mode: fuzzy match against known label names
+        # Text label mode: fuzzy match against known label names (including aliases)
         response_lower = response.lower()
-        for name, idx in self.label_index_mapping.items():
+        for name, idx in self.label_index_mapping_for_parse.items():
             if response_lower.startswith(name.lower()):
                 return float(idx)
         # Fallback: return 0 (first class)

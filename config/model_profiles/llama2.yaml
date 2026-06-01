@@ -13,7 +13,7 @@ classification:
     # Llama2 用 "Assistant:" 风格 prompt
     task_specific_prompt: >-
       Please recognize the emotion of the above multimodal content from the
-      target set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is
+      target set <neutral:0, surprise:1, fear:2, sad:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is
     max_new_tokens: 2
     pseudo_tokens: 4
     batch_size: 6

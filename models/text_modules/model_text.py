@@ -46,10 +46,9 @@ class Language_model(nn.Module):
         for original, alias in text_aliases.items():
             if original in self.label_index_mapping:
                 self.label_index_mapping_for_parse[alias] = self.label_index_mapping[original]
-        # Auto-adjust max_new_tokens for text label format
-        # Emotion words like 'surprise', 'frustrated' may need 2-3 tokens
-        if self.label_format == 'text' and self.train_mode == 'classification':
-            self.max_new_tokens = max(self.max_new_tokens, 3)
+        # Note: max_new_tokens is respected from config as-is.
+        # If using text labels with multi-token words, increase max_new_tokens in YAML.
+        # Use text_label_aliases to shorten labels to single tokens when possible.
 
         self.backend = build_llm_backend(args)
         self._gemma_ple_dim = getattr(self.backend, '_gemma_ple_dim', 0)
@@ -325,7 +324,7 @@ class Language_model(nn.Module):
             # so we need at least 2 tokens to capture: [▁] + [digit/word]
             effective_max = max(self.max_new_tokens, 2)
             gen_kwargs = {"num_beams": 1, "do_sample": False, "max_new_tokens": effective_max,
-                          "min_new_tokens": effective_max}  # force full generation, prevent early EOS
+                          "min_new_tokens": 1}  # allow natural stop after content token
         else:
             attention_mask = atts_fusion
             gen_kwargs = {"num_beams": 1, "do_sample": False, "max_new_tokens": self.max_new_tokens}

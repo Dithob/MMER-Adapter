@@ -33,10 +33,12 @@ class Language_model(nn.Module):
 
         # ── Label format: index (default) or text ──
         self.label_format = getattr(args, 'label_format', 'index')
-        self.label_index_mapping = getattr(args, 'label_index_mapping', {})
+        _lim = getattr(args, 'label_index_mapping', {})
+        self.label_index_mapping = _lim if isinstance(_lim, dict) else {}
         # Optional: override label names for text generation (e.g. sadness→sad)
         # Config: text_label_aliases: {sadness: sad, disgust: disg, ...}
-        text_aliases = getattr(args, 'text_label_aliases', {})
+        _tla = getattr(args, 'text_label_aliases', {})
+        text_aliases = _tla if isinstance(_tla, dict) else {}
         # Build reverse mapping: idx → label name (with alias override)
         self._idx_to_name = {
             v: text_aliases.get(k, k) for k, v in self.label_index_mapping.items()

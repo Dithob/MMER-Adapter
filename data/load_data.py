@@ -646,8 +646,8 @@ class MMDataset(Dataset):
         # ── Assemble dataset fields ──
         self.vision = vision_all
         self.audio = audio_all
-        self.rawText = np.array(tsv_texts)
-        self.ids = ids_all
+        self.rawText = tsv_texts  # Keep as Python list (not np.array) for DataLoader collation
+        self.ids = ids_all.tolist()  # Convert from numpy <U15 to Python list for DataLoader collation
 
         self.labels = {
             'M': labels_all

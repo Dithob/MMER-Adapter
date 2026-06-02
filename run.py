@@ -543,6 +543,10 @@ def parse_args():
                         help='max number of preceding dialogue turns to include as context. '
                              '0 = unlimited (use all preceding turns, default). '
                              '12 = SpeechCueLLM/InstructERC default window size.')
+    parser.add_argument('--use_speaker_tag', action='store_true', default=False,
+                        help='inject Speaker_N: prefixes into dialogue context (InstructERC-style). '
+                             'Format: "Speaker_0: utterance1 Speaker_1: utterance2 ...". '
+                             'Requires --use_context or --prompt_context to take effect.')
 
     # ── Raw AV Token Bypass (EmotionLLaMA-v2 style) ──
     parser.add_argument('--raw_av_mode', type=str, default='none',

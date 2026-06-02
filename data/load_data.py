@@ -18,7 +18,7 @@ __all__ = ['MMDataLoader']
 logger = logging.getLogger('MSA')
 
 
-def _build_context_text(context_raw, target_text, context_window=0):
+def _build_context_text(context_raw, target_text, context_window=0, use_speaker_tag=False):
     """Parse dialogue context, keep only PRECEDING utterances, apply window, reverse for recent-first.
 
     The reversal ensures that when the tokenizer applies right-truncation,
@@ -28,6 +28,7 @@ def _build_context_text(context_raw, target_text, context_window=0):
         context_raw: Raw context string (JSON list like '["<a>text1", "<b>text2", ...]')
         target_text: Target utterance text (to locate position & exclude future turns)
         context_window: Max preceding turns to keep (0 = unlimited, 12 = SpeechCueLLM default)
+        use_speaker_tag: If True, inject Speaker_N: prefixes (InstructERC-style)
 
     Returns:
         Context string with most-recent utterances first, or '' if no valid context.
@@ -70,9 +71,37 @@ def _build_context_text(context_raw, target_text, context_window=0):
     if context_window > 0 and len(preceding) > context_window:
         preceding = preceding[-context_window:]
 
-    # Reverse: most recent first → protected from right-truncation
-    preceding = list(reversed(preceding))
-    return ' '.join(str(t).strip() for t in preceding if str(t).strip())
+    if use_speaker_tag:
+        # ── InstructERC-style: Speaker_N: "utterance" ──
+        # Extract speaker tags from raw context entries, map to Speaker_0/1/2/...
+        speaker_map = {}  # original_tag → Speaker_N
+        speaker_counter = 0
+        formatted = []
+        for entry in preceding:
+            entry_str = str(entry).strip()
+            # Try to extract speaker tag from "<tag>text" or "[tag] text" format
+            spk_match = re.match(r'^<([^>]+)>(.*)', entry_str)
+            if not spk_match:
+                spk_match = re.match(r'^\[([^\]]+)\]\s*(.*)', entry_str)
+            if spk_match:
+                raw_spk = spk_match.group(1).strip()
+                utterance = spk_match.group(2).strip()
+                if raw_spk not in speaker_map:
+                    speaker_map[raw_spk] = f'Speaker_{speaker_counter}'
+                    speaker_counter += 1
+                spk_label = speaker_map[raw_spk]
+            else:
+                # No speaker tag found — assign a generic label
+                utterance = entry_str
+                spk_label = 'Speaker_0'
+            formatted.append(f'{spk_label}: "{utterance}"')
+        # Reverse: most recent first → protected from right-truncation
+        formatted = list(reversed(formatted))
+        return ' '.join(formatted)
+    else:
+        # Reverse: most recent first → protected from right-truncation
+        preceding = list(reversed(preceding))
+        return ' '.join(str(t).strip() for t in preceding if str(t).strip())
 
 class MMDataset(Dataset):
     def __init__(self, args, mode='train'):
@@ -145,10 +174,13 @@ class MMDataset(Dataset):
         # ══════════════════════════════════════════════
         logger.info(f"MELD loading NEW format: {data_path}")
 
+        _use_speaker_tag = getattr(self.args, 'use_speaker_tag', False)
+
         def build_multimodal_text(meta):
             """Build text: utterance-first ordering ensures utterance is never truncated.
 
             If --use_context: "utterance [speaker] Context: recent_ctx ... older_ctx"
+            If --use_speaker_tag + --use_context: InstructERC-style speaker-prefixed context
             If no context:    "utterance"  (matching UniMSE's proven approach)
 
             Context is reversed (most-recent first) so right-truncation
@@ -157,12 +189,20 @@ class MMDataset(Dataset):
             text = str(meta.get('text', '')).strip()
             if not getattr(self.args, 'use_context', False):
                 return text
-            parts = [text]
             speaker = str(meta.get('speaker', '')).strip()
-            if speaker:
-                parts.append(f'[{speaker}]')
             ctx_window = getattr(self.args, 'context_window', 0)
-            context_text = _build_context_text(meta.get('context', ''), text, ctx_window)
+            context_text = _build_context_text(
+                meta.get('context', ''), text, ctx_window,
+                use_speaker_tag=_use_speaker_tag,
+            )
+            if _use_speaker_tag:
+                # InstructERC-style: Speaker_N: "target" Context: Speaker_X: "u1" ...
+                spk_label = f'Speaker_{speaker}' if speaker else 'Speaker_0'
+                parts = [f'{spk_label}: "{text}"']
+            else:
+                parts = [text]
+                if speaker:
+                    parts.append(f'[{speaker}]')
             if context_text:
                 parts.append(f'Context: {context_text}')
             return ' '.join(parts)
@@ -246,7 +286,10 @@ class MMDataset(Dataset):
             raw_text.append(build_multimodal_text(meta))
             # Collect context for prompt-level injection (same windowing as text-level)
             ctx_window = getattr(self.args, 'context_window', 0)
-            ctx_text = _build_context_text(meta.get('context', ''), str(meta.get('text', '')), ctx_window)
+            ctx_text = _build_context_text(
+                meta.get('context', ''), str(meta.get('text', '')), ctx_window,
+                use_speaker_tag=_use_speaker_tag,
+            )
             raw_context.append(ctx_text)
             raw_audio.append(aud_feat)
             raw_video.append(vid_feat)
@@ -301,10 +344,13 @@ class MMDataset(Dataset):
                 iemocap_dir = p
                 break
 
+        _use_speaker_tag = getattr(self.args, 'use_speaker_tag', False)
+
         def build_multimodal_text(meta):
             """Build text: utterance-first ordering ensures utterance is never truncated.
 
             If --use_context: "utterance [speaker] Context: recent_ctx ... older_ctx"
+            If --use_speaker_tag + --use_context: InstructERC-style speaker-prefixed context
             If no context:    "utterance"  (matching UniMSE's proven approach)
 
             Context is reversed (most-recent first) so right-truncation
@@ -313,12 +359,20 @@ class MMDataset(Dataset):
             text = str(meta.get('text', '')).strip()
             if not getattr(self.args, 'use_context', False):
                 return text
-            parts = [text]
             speaker = str(meta.get('speaker', '')).strip()
-            if speaker:
-                parts.append(f'[{speaker}]')
             ctx_window = getattr(self.args, 'context_window', 0)
-            context_text = _build_context_text(meta.get('context', ''), text, ctx_window)
+            context_text = _build_context_text(
+                meta.get('context', ''), text, ctx_window,
+                use_speaker_tag=_use_speaker_tag,
+            )
+            if _use_speaker_tag:
+                # InstructERC-style: Speaker_N: "target" Context: Speaker_X: "u1" ...
+                spk_label = f'Speaker_{speaker}' if speaker else 'Speaker_0'
+                parts = [f'{spk_label}: "{text}"']
+            else:
+                parts = [text]
+                if speaker:
+                    parts.append(f'[{speaker}]')
             if context_text:
                 parts.append(f'Context: {context_text}')
             return ' '.join(parts)

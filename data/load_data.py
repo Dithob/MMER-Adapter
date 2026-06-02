@@ -562,7 +562,139 @@ class MMDataset(Dataset):
             self.__normalize()
     
     def __init_mosei(self):
-        return self.__init_mosi()
+        """Load MOSEI data: audio/video from legacy flat-array pkl + text from TSV files.
+
+        Data layout:
+          - mosei_data_0610.pkl: data[split]['audio'] (N,157,64), data[split]['vision'] (N,32,64),
+                                  data[split]['labels'] (N,1,1), data[split]['id'] (N,3)=[vid,start,stop]
+          - mosei_text/*.tsv:    vid, start, stop, label, cid, text  (tab-separated)
+
+        The TSV rows are 1:1 aligned with pkl array indices (verified).
+        Text is loaded from TSV for PLM tokenization instead of using pkl's GloVe embeddings.
+
+        Falls back to __init_mosi() if no mosei_text directory is found (legacy mode).
+        """
+        import csv
+
+        data_path = self.args.dataPath
+
+        # ── Detect mosei_text TSV directory ──
+        mosei_text_dir = None
+        data_dir = os.path.dirname(data_path)
+        for p in [os.path.join(data_dir, 'mosei_text'),
+                  os.path.join(os.path.dirname(data_dir), 'mosei_text'),
+                  os.path.join(data_dir, '..', 'MOSEI', 'mosei_text')]:
+            if os.path.exists(p):
+                mosei_text_dir = p
+                break
+
+        # Also check root_dataset_dir paths
+        if mosei_text_dir is None:
+            root = getattr(self.args, 'root_dataset_dir', '')
+            for p in [os.path.join(root, 'MOSEI', 'mosei_text'),
+                      os.path.join(root, 'mosei_text')]:
+                if os.path.exists(p):
+                    mosei_text_dir = p
+                    break
+
+        if mosei_text_dir is None:
+            logger.warning("mosei_text directory not found, falling back to legacy __init_mosi()")
+            return self.__init_mosi()
+
+        # ── Load pkl (legacy flat-array format) ──
+        logger.info(f"MOSEI loading NEW mode: pkl={data_path}, text_dir={mosei_text_dir}")
+        with open(data_path, 'rb') as f:
+            data = pickle.load(f)
+
+        split_data = data[self.mode]
+        audio_all = split_data['audio'].astype(np.float32)   # (N, 157, 64) or similar
+        vision_all = split_data['vision'].astype(np.float32)  # (N, 32, 64) or similar
+        labels_all = split_data['labels'].reshape(-1).astype(np.float32)  # (N,)
+        ids_all = split_data['id']  # (N, 3) = [vid, start, stop]
+        n_samples = len(labels_all)
+
+        # ── Load text from TSV ──
+        tsv_path = os.path.join(mosei_text_dir, f'{self.mode}.tsv')
+        if not os.path.exists(tsv_path):
+            logger.warning(f"TSV file not found: {tsv_path}, falling back to legacy __init_mosi()")
+            return self.__init_mosi()
+
+        tsv_texts = []
+        tsv_labels = []
+        with open(tsv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f, delimiter='\t')
+            for row in reader:
+                tsv_texts.append(str(row.get('text', '')).strip())
+                tsv_labels.append(float(row.get('label', 0.0)))
+
+        if len(tsv_texts) != n_samples:
+            logger.error(
+                f"MOSEI TSV/pkl sample count mismatch: TSV={len(tsv_texts)}, pkl={n_samples}. "
+                f"Falling back to legacy mode."
+            )
+            return self.__init_mosi()
+
+        # ── Verify alignment (spot check first 5 labels) ──
+        for i in range(min(5, n_samples)):
+            if abs(tsv_labels[i] - labels_all[i]) > 1e-3:
+                logger.warning(
+                    f"MOSEI label mismatch at index {i}: TSV={tsv_labels[i]}, pkl={labels_all[i]}. "
+                    f"Data may not be aligned!"
+                )
+                break
+
+        # ── Assemble dataset fields ──
+        self.vision = vision_all
+        self.audio = audio_all
+        self.rawText = np.array(tsv_texts)
+        self.ids = ids_all
+
+        self.labels = {
+            'M': labels_all
+        }
+
+        if self.args.need_label_prefix:
+            labels = self.labels['M']
+            label_prefix = []
+            for i in range(len(labels)):
+                if labels[i] < 0:
+                    label_prefix.append(f'negative,{labels[i].item():.{1}f}')
+                elif labels[i] > 0:
+                    label_prefix.append(f'positive,{labels[i].item():.{1}f}')
+                else:
+                    label_prefix.append(f'neutral,{labels[i].item():.{1}f}')
+            self.labels_prefix = label_prefix
+
+        logger.info(f"MOSEI {self.mode} loaded: {n_samples} samples, "
+                     f"audio={self.audio.shape}, vision={self.vision.shape}")
+
+        if self.args.use_PLM:
+            self.text = self.PLM_tokenizer(self.rawText)
+
+        if not self.args.need_data_aligned:
+            # For flat-array format, use actual sequence lengths from data if available
+            if 'audio_lengths' in split_data:
+                self.audio_lengths = split_data['audio_lengths']
+            else:
+                # Compute effective lengths (non-zero frames)
+                self.audio_lengths = np.array([
+                    max(1, np.sum(np.any(self.audio[i] != 0, axis=-1)))
+                    for i in range(n_samples)
+                ])
+            if 'vision_lengths' in split_data:
+                self.vision_lengths = split_data['vision_lengths']
+            else:
+                self.vision_lengths = np.array([
+                    max(1, np.sum(np.any(self.vision[i] != 0, axis=-1)))
+                    for i in range(n_samples)
+                ])
+            self.text_lengths = self.args.seq_lens[0]
+
+        self.audio[self.audio == -np.inf] = 0
+        self.vision[self.vision != self.vision] = 0
+
+        if self.args.need_normalized:
+            self.__normalize()
 
     def __init_sims(self):
         return self.__init_mosi()

@@ -476,6 +476,8 @@ def parse_args():
                         help='IEMOCAP feature preset: raw(64x1280/64x1408) or compressed(157x64/32x64)')
     parser.add_argument('--meld_feature_mode', type=str, default='raw', choices=['raw', 'compressed'],
                         help='MELD feature preset: raw(64x1280/64x1408) or compressed(157x64/32x64)')
+    parser.add_argument('--mosei_feature_mode', type=str, default='legacy', choices=['legacy', 'compressed'],
+                        help='MOSEI feature preset: legacy(old unaligned_50.pkl) or compressed(mosei_data_0610.pkl + TSV text, 157x64/32x64)')
     parser.add_argument('--a_lstm_hidden_size', type=int, default=None,
                         help='override audio LSTM hidden size from config (default: use config value, e.g. 32 for MELD)')
     parser.add_argument('--v_lstm_hidden_size', type=int, default=None,

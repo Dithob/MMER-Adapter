@@ -111,7 +111,16 @@ def _dataset_common_regression(root_dataset_dir):
                 'num_classes': 3,
                 'language': 'en',
                 'KeyEval': 'MAE'
-            }
+            },
+            'unaligned_compressed': {
+                'dataPath': os.path.join(root_dataset_dir, 'MOSEI', 'mosei_data_0610.pkl'),
+                'seq_lens': (50, 157, 32),
+                'feature_dims': (0, 64, 64),
+                'train_samples': 16326,
+                'num_classes': 3,
+                'language': 'en',
+                'KeyEval': 'MAE'
+            },
         },
         'simsv2': {
             'unaligned': {
@@ -285,8 +294,17 @@ class ConfigResolver:
             if key not in dataArgs:
                 raise ValueError(f"Unsupported meld_feature_mode={mode}. Use 'raw' or 'compressed'.")
             dataArgs = dataArgs[key]
+        elif base_dataset_name == 'mosei' and train_mode == 'regression':
+            mode = str(getattr(args, 'mosei_feature_mode', 'legacy')).lower()
+            if mode == 'legacy':
+                key = 'unaligned'
+            else:
+                key = f'unaligned_{mode}'
+            if key not in dataArgs:
+                raise ValueError(f"Unsupported mosei_feature_mode={mode}. Use 'legacy' or 'compressed'.")
+            dataArgs = dataArgs[key]
         else:
-            # cherma, mosei, simsv2 等
+            # cherma, simsv2 等
             if 'unaligned' in dataArgs:
                 dataArgs = dataArgs['unaligned']
             # 如果直接就是最终 dict (没有 aligned/unaligned 嵌套)，保持原样

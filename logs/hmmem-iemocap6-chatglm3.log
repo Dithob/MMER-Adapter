@@ -870,3 +870,188 @@
 2026-05-22 20:47:19:INFO:VAL-(hmmem) >>
 2026-05-22 20:47:19:INFO:M: >>  acc: 0.4188  UA: 0.4658  weight_F1: 0.4090  Macro_F1: 0.4278 
 2026-05-22 20:47:26:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-chatglm3-iemocap6-classification-20260522_200806.pth.
+2026-06-03 19:58:07:INFO:========= 准备训练数据集: iemocap6 (classification) =========
+2026-06-03 19:58:07:INFO:[ConfigResolver] model_type=chatglm3, dataset=iemocap6, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-06-03 19:58:07:INFO:CLI override: batch_size = 24 (config default: 24)
+2026-06-03 19:58:07:INFO:CLI override: gradient_accumulation_steps = 2 (config default: 2)
+2026-06-03 19:58:07:INFO:CLI override: learning_rate = 5e-05 (config default: 5e-05)
+2026-06-03 19:58:07:INFO:Start running hmmem...
+2026-06-03 19:58:07:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'iemocap6', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [], 'seeds': [1234, 2234, 3234, 4234, 5234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'mosei_feature_mode': 'legacy', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'query_key_value', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': True, 'text_seq_len': 128, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 12, 'use_speaker_tag': True, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'instructerc', 'batch_size': 24, 'learning_rate': 5e-05, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 2, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260603_195807', 'dataPath': '/root/autodl-tmp/datasets/IEMOCAP/iemocap_data_0610.pkl', 'seq_lens': (128, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 4290, 'num_classes': 6, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <angry:0, happy:1, excited:2, sad:3, neutral:4, frustrated:5>. Assistant: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'angry': 0, 'happy': 1, 'excited': 2, 'sad': 3, 'neutral': 4, 'frustrated': 5}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-06-03 19:58:07:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-06-03 19:58:07:INFO:Let's use the GPU 1 !
+2026-06-03 19:58:15:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-06-03 19:58:16:INFO:IEMOCAP train split loaded 5247/5247 samples (drop: missing_meta=0, unknown_emo=0, mapping_missing=0, missing_modal=0)
+2026-06-03 19:58:26:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-06-03 19:58:26:INFO:IEMOCAP valid split loaded 511/511 samples (drop: missing_meta=0, unknown_emo=0, mapping_missing=0, missing_modal=0)
+2026-06-03 19:58:28:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-06-03 19:58:28:INFO:IEMOCAP test split loaded 1622/1622 samples (drop: missing_meta=0, unknown_emo=0, mapping_missing=0, missing_modal=0)
+2026-06-03 19:58:47:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, audio_adapter, video_adapter, shared_proj, global_moe, local_moe, moe_msf
+2026-06-03 19:58:47:INFO:trainable params: 4450702 || all params: 6248034702 || trainable%: 0.07123363125008457
+2026-06-03 19:58:47:INFO:Single-LR optimizer: 98 tensors, lr=5e-05
+2026-06-03 19:58:47:INFO:Init labels...
+2026-06-03 19:58:47:INFO:Start training...
+2026-06-03 19:58:47:INFO:  Batch size = 24
+2026-06-03 19:58:47:INFO:  Gradient Accumulation steps = 2
+2026-06-03 19:58:47:INFO:  Effective batch size = 48
+2026-06-03 19:58:47:INFO:  AMP dtype = torch.bfloat16
+2026-06-03 20:04:18:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 2.9096
+2026-06-03 20:04:57:INFO:VAL-(hmmem) >>
+2026-06-03 20:04:57:INFO:M: >>  acc: 0.4775  UA: 0.4557  weight_F1: 0.4772  Macro_F1: 0.4654 
+2026-06-03 20:05:04:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-chatglm3-iemocap6-classification-20260603_195807.pth.
+2026-06-03 20:10:28:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 1.4677
+2026-06-03 20:11:02:INFO:VAL-(hmmem) >>
+2026-06-03 20:11:02:INFO:M: >>  acc: 0.5108  UA: 0.5048  weight_F1: 0.5053  Macro_F1: 0.4996 
+2026-06-03 20:11:07:INFO:Saving best model at epoch 2 to /root/autodl-tmp/results/models/hmmem-chatglm3-iemocap6-classification-20260603_195807.pth.
+2026-06-03 20:16:32:INFO:TRAIN-(hmmem) (1/3/1)>> loss: 1.3276
+2026-06-03 20:17:00:INFO:VAL-(hmmem) >>
+2026-06-03 20:17:00:INFO:M: >>  acc: 0.5010  UA: 0.4790  weight_F1: 0.4944  Macro_F1: 0.4800 
+2026-06-03 20:22:23:INFO:TRAIN-(hmmem) (2/4/1)>> loss: 1.2478
+2026-06-03 20:22:48:INFO:VAL-(hmmem) >>
+2026-06-03 20:22:48:INFO:M: >>  acc: 0.5225  UA: 0.5162  weight_F1: 0.5168  Macro_F1: 0.5134 
+2026-06-03 20:22:54:INFO:Saving best model at epoch 4 to /root/autodl-tmp/results/models/hmmem-chatglm3-iemocap6-classification-20260603_195807.pth.
+2026-06-03 20:28:18:INFO:TRAIN-(hmmem) (1/5/1)>> loss: 1.1981
+2026-06-03 20:28:40:INFO:VAL-(hmmem) >>
+2026-06-03 20:28:40:INFO:M: >>  acc: 0.5245  UA: 0.5304  weight_F1: 0.5087  Macro_F1: 0.5083 
+2026-06-03 20:28:48:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-iemocap6-classification-20260603_195807-epoch5.ckpt
+2026-06-03 20:34:10:INFO:TRAIN-(hmmem) (2/6/1)>> loss: 1.1628
+2026-06-03 20:34:37:INFO:VAL-(hmmem) >>
+2026-06-03 20:34:37:INFO:M: >>  acc: 0.5323  UA: 0.5373  weight_F1: 0.5145  Macro_F1: 0.5107 
+2026-06-03 20:39:59:INFO:TRAIN-(hmmem) (3/7/1)>> loss: 1.1266
+2026-06-03 20:40:28:INFO:VAL-(hmmem) >>
+2026-06-03 20:40:28:INFO:M: >>  acc: 0.5636  UA: 0.5546  weight_F1: 0.5573  Macro_F1: 0.5470 
+2026-06-03 20:40:34:INFO:Saving best model at epoch 7 to /root/autodl-tmp/results/models/hmmem-chatglm3-iemocap6-classification-20260603_195807.pth.
+2026-06-03 20:45:59:INFO:TRAIN-(hmmem) (1/8/1)>> loss: 1.1004
+2026-06-03 20:46:25:INFO:VAL-(hmmem) >>
+2026-06-03 20:46:25:INFO:M: >>  acc: 0.5734  UA: 0.5480  weight_F1: 0.5569  Macro_F1: 0.5376 
+2026-06-03 20:51:47:INFO:TRAIN-(hmmem) (2/9/1)>> loss: 1.0769
+2026-06-03 20:52:10:INFO:VAL-(hmmem) >>
+2026-06-03 20:52:10:INFO:M: >>  acc: 0.5264  UA: 0.5429  weight_F1: 0.5144  Macro_F1: 0.5255 
+2026-06-03 20:57:32:INFO:TRAIN-(hmmem) (3/10/1)>> loss: 1.0632
+2026-06-03 20:57:57:INFO:VAL-(hmmem) >>
+2026-06-03 20:57:57:INFO:M: >>  acc: 0.5753  UA: 0.5819  weight_F1: 0.5731  Macro_F1: 0.5764 
+2026-06-03 20:58:02:INFO:Saving best model at epoch 10 to /root/autodl-tmp/results/models/hmmem-chatglm3-iemocap6-classification-20260603_195807.pth.
+2026-06-03 20:58:12:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-iemocap6-classification-20260603_195807-epoch10.ckpt
+2026-06-03 21:03:35:INFO:TRAIN-(hmmem) (1/11/1)>> loss: 1.0390
+2026-06-03 21:04:03:INFO:VAL-(hmmem) >>
+2026-06-03 21:04:03:INFO:M: >>  acc: 0.5558  UA: 0.5531  weight_F1: 0.5460  Macro_F1: 0.5413 
+2026-06-03 21:09:25:INFO:TRAIN-(hmmem) (2/12/1)>> loss: 1.0125
+2026-06-03 21:09:48:INFO:VAL-(hmmem) >>
+2026-06-03 21:09:48:INFO:M: >>  acc: 0.5734  UA: 0.5777  weight_F1: 0.5656  Macro_F1: 0.5625 
+2026-06-03 21:15:10:INFO:TRAIN-(hmmem) (3/13/1)>> loss: 0.9932
+2026-06-03 21:15:35:INFO:VAL-(hmmem) >>
+2026-06-03 21:15:35:INFO:M: >>  acc: 0.5851  UA: 0.5750  weight_F1: 0.5859  Macro_F1: 0.5822 
+2026-06-03 21:15:40:INFO:Saving best model at epoch 13 to /root/autodl-tmp/results/models/hmmem-chatglm3-iemocap6-classification-20260603_195807.pth.
+2026-06-03 21:21:05:INFO:TRAIN-(hmmem) (1/14/1)>> loss: 0.9760
+2026-06-03 21:21:29:INFO:VAL-(hmmem) >>
+2026-06-03 21:21:29:INFO:M: >>  acc: 0.5969  UA: 0.5758  weight_F1: 0.5890  Macro_F1: 0.5716 
+2026-06-03 21:21:35:INFO:Saving best model at epoch 14 to /root/autodl-tmp/results/models/hmmem-chatglm3-iemocap6-classification-20260603_195807.pth.
+2026-06-03 21:27:00:INFO:TRAIN-(hmmem) (1/15/1)>> loss: 0.9653
+2026-06-03 21:27:28:INFO:VAL-(hmmem) >>
+2026-06-03 21:27:28:INFO:M: >>  acc: 0.5714  UA: 0.5891  weight_F1: 0.5672  Macro_F1: 0.5748 
+2026-06-03 21:27:35:INFO:Checkpoint saved at epoch 15 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-iemocap6-classification-20260603_195807-epoch15.ckpt
+2026-06-03 21:32:58:INFO:TRAIN-(hmmem) (2/16/1)>> loss: 0.9460
+2026-06-03 21:33:23:INFO:VAL-(hmmem) >>
+2026-06-03 21:33:23:INFO:M: >>  acc: 0.5832  UA: 0.5723  weight_F1: 0.5780  Macro_F1: 0.5676 
+2026-06-03 21:38:46:INFO:TRAIN-(hmmem) (3/17/1)>> loss: 0.9311
+2026-06-03 21:39:12:INFO:VAL-(hmmem) >>
+2026-06-03 21:39:12:INFO:M: >>  acc: 0.6145  UA: 0.6321  weight_F1: 0.6106  Macro_F1: 0.6176 
+2026-06-03 21:39:17:INFO:Saving best model at epoch 17 to /root/autodl-tmp/results/models/hmmem-chatglm3-iemocap6-classification-20260603_195807.pth.
+2026-06-03 21:44:42:INFO:TRAIN-(hmmem) (1/18/1)>> loss: 0.9122
+2026-06-03 21:45:07:INFO:VAL-(hmmem) >>
+2026-06-03 21:45:07:INFO:M: >>  acc: 0.5714  UA: 0.5813  weight_F1: 0.5547  Macro_F1: 0.5613 
+2026-06-03 21:50:30:INFO:TRAIN-(hmmem) (2/19/1)>> loss: 0.8849
+2026-06-03 21:50:56:INFO:VAL-(hmmem) >>
+2026-06-03 21:50:56:INFO:M: >>  acc: 0.6204  UA: 0.6162  weight_F1: 0.6178  Macro_F1: 0.6141 
+2026-06-03 21:51:02:INFO:Saving best model at epoch 19 to /root/autodl-tmp/results/models/hmmem-chatglm3-iemocap6-classification-20260603_195807.pth.
+2026-06-03 21:56:27:INFO:TRAIN-(hmmem) (1/20/1)>> loss: 0.8475
+2026-06-03 21:56:55:INFO:VAL-(hmmem) >>
+2026-06-03 21:56:55:INFO:M: >>  acc: 0.6262  UA: 0.6382  weight_F1: 0.6259  Macro_F1: 0.6305 
+2026-06-03 21:57:02:INFO:Saving best model at epoch 20 to /root/autodl-tmp/results/models/hmmem-chatglm3-iemocap6-classification-20260603_195807.pth.
+2026-06-03 21:57:12:INFO:Checkpoint saved at epoch 20 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-iemocap6-classification-20260603_195807-epoch20.ckpt
+2026-06-03 21:57:13:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-iemocap6-classification-20260603_195807-epoch5.ckpt
+2026-06-03 22:02:35:INFO:TRAIN-(hmmem) (1/21/1)>> loss: 0.8374
+2026-06-03 22:03:03:INFO:VAL-(hmmem) >>
+2026-06-03 22:03:03:INFO:M: >>  acc: 0.6204  UA: 0.6141  weight_F1: 0.6213  Macro_F1: 0.6190 
+2026-06-03 22:08:26:INFO:TRAIN-(hmmem) (2/22/1)>> loss: 0.7933
+2026-06-03 22:08:55:INFO:VAL-(hmmem) >>
+2026-06-03 22:08:55:INFO:M: >>  acc: 0.6282  UA: 0.6371  weight_F1: 0.6242  Macro_F1: 0.6265 
+2026-06-03 22:14:18:INFO:TRAIN-(hmmem) (3/23/1)>> loss: 0.7729
+2026-06-03 22:14:46:INFO:VAL-(hmmem) >>
+2026-06-03 22:14:46:INFO:M: >>  acc: 0.6184  UA: 0.6351  weight_F1: 0.6147  Macro_F1: 0.6213 
+2026-06-03 22:20:09:INFO:TRAIN-(hmmem) (4/24/1)>> loss: 0.7557
+2026-06-03 22:20:37:INFO:VAL-(hmmem) >>
+2026-06-03 22:20:37:INFO:M: >>  acc: 0.6438  UA: 0.6535  weight_F1: 0.6437  Macro_F1: 0.6446 
+2026-06-03 22:20:42:INFO:Saving best model at epoch 24 to /root/autodl-tmp/results/models/hmmem-chatglm3-iemocap6-classification-20260603_195807.pth.
+2026-06-03 22:26:07:INFO:TRAIN-(hmmem) (1/25/1)>> loss: 0.7406
+2026-06-03 22:26:36:INFO:VAL-(hmmem) >>
+2026-06-03 22:26:36:INFO:M: >>  acc: 0.6301  UA: 0.6408  weight_F1: 0.6269  Macro_F1: 0.6318 
+2026-06-03 22:26:43:INFO:Checkpoint saved at epoch 25 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-iemocap6-classification-20260603_195807-epoch25.ckpt
+2026-06-03 22:26:44:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-iemocap6-classification-20260603_195807-epoch10.ckpt
+2026-06-03 22:32:06:INFO:TRAIN-(hmmem) (2/26/1)>> loss: 0.7298
+2026-06-03 22:32:35:INFO:VAL-(hmmem) >>
+2026-06-03 22:32:35:INFO:M: >>  acc: 0.6438  UA: 0.6501  weight_F1: 0.6428  Macro_F1: 0.6438 
+2026-06-03 22:37:57:INFO:TRAIN-(hmmem) (3/27/1)>> loss: 0.7208
+2026-06-03 22:38:25:INFO:VAL-(hmmem) >>
+2026-06-03 22:38:25:INFO:M: >>  acc: 0.6184  UA: 0.6220  weight_F1: 0.6181  Macro_F1: 0.6181 
+2026-06-03 22:43:48:INFO:TRAIN-(hmmem) (4/28/1)>> loss: 0.7130
+2026-06-03 22:44:16:INFO:VAL-(hmmem) >>
+2026-06-03 22:44:16:INFO:M: >>  acc: 0.6380  UA: 0.6430  weight_F1: 0.6363  Macro_F1: 0.6374 
+2026-06-03 22:49:39:INFO:TRAIN-(hmmem) (5/29/1)>> loss: 0.7096
+2026-06-03 22:50:08:INFO:VAL-(hmmem) >>
+2026-06-03 22:50:08:INFO:M: >>  acc: 0.6204  UA: 0.6220  weight_F1: 0.6194  Macro_F1: 0.6169 
+2026-06-03 22:55:30:INFO:TRAIN-(hmmem) (6/30/1)>> loss: 0.7073
+2026-06-03 22:55:59:INFO:VAL-(hmmem) >>
+2026-06-03 22:55:59:INFO:M: >>  acc: 0.6282  UA: 0.6322  weight_F1: 0.6271  Macro_F1: 0.6267 
+2026-06-03 22:56:06:INFO:Checkpoint saved at epoch 30 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-iemocap6-classification-20260603_195807-epoch30.ckpt
+2026-06-03 22:56:07:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-iemocap6-classification-20260603_195807-epoch15.ckpt
+2026-06-03 23:01:29:INFO:TRAIN-(hmmem) (7/31/1)>> loss: 0.7116
+2026-06-03 23:01:58:INFO:VAL-(hmmem) >>
+2026-06-03 23:01:58:INFO:M: >>  acc: 0.6243  UA: 0.6291  weight_F1: 0.6234  Macro_F1: 0.6230 
+2026-06-03 23:07:20:INFO:TRAIN-(hmmem) (8/32/1)>> loss: 0.7108
+2026-06-03 23:07:49:INFO:VAL-(hmmem) >>
+2026-06-03 23:07:49:INFO:M: >>  acc: 0.6262  UA: 0.6313  weight_F1: 0.6248  Macro_F1: 0.6259 
+2026-06-03 23:09:13:INFO:TEST-(hmmem) >>
+2026-06-03 23:09:13:INFO:M: >>  acc: 0.6369  UA: 0.6233  weight_F1: 0.6387  Macro_F1: 0.6256 
+2026-06-03 23:09:13:INFO:============================================================
+2026-06-03 23:09:13:INFO:         Detailed Classification Analysis
+2026-06-03 23:09:13:INFO:============================================================
+2026-06-03 23:09:13:INFO:         Class     Prec   Recall       F1   Support
+2026-06-03 23:09:13:INFO:------------------------------------------------------------
+2026-06-03 23:09:13:INFO:         angry   0.6620   0.5529   0.6026       170
+2026-06-03 23:09:13:INFO:         happy   0.4246   0.5315   0.4720       143
+2026-06-03 23:09:13:INFO:       excited   0.7718   0.6221   0.6889       299
+2026-06-03 23:09:13:INFO:           sad   0.7377   0.7347   0.7362       245
+2026-06-03 23:09:13:INFO:       neutral   0.5788   0.7266   0.6443       384
+2026-06-03 23:09:13:INFO:    frustrated   0.6527   0.5722   0.6098       381
+2026-06-03 23:09:13:INFO:------------------------------------------------------------
+2026-06-03 23:09:13:INFO:  WA  (Weighted Accuracy) : 0.6369
+2026-06-03 23:09:13:INFO:  UA  (Unweighted Accuracy): 0.6233
+2026-06-03 23:09:13:INFO:  WF1 (Weighted F1)       : 0.6387
+2026-06-03 23:09:13:INFO:  Macro-F1                : 0.6256
+2026-06-03 23:09:13:INFO:============================================================
+2026-06-03 23:09:14:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-chatglm3-iemocap6-TEST-confusion_matrix-20260603_195807.png
+2026-06-03 23:09:27:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-chatglm3-iemocap6-TEST-tsne_emotion-20260603_195807.png
+2026-06-03 23:09:57:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-chatglm3-iemocap6-TEST-tsne_modality-20260603_195807.png
+2026-06-03 23:09:59:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-chatglm3-iemocap6-classification.csv...
+2026-06-03 23:09:59:INFO:[ConfigResolver] model_type=chatglm3, dataset=iemocap6, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-06-03 23:09:59:INFO:CLI override: batch_size = 24 (config default: 24)
+2026-06-03 23:09:59:INFO:CLI override: gradient_accumulation_steps = 2 (config default: 2)
+2026-06-03 23:09:59:INFO:CLI override: learning_rate = 5e-05 (config default: 5e-05)
+2026-06-03 23:09:59:INFO:Start running hmmem...
+2026-06-03 23:09:59:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'iemocap6', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [0], 'seeds': [1234, 2234, 3234, 4234, 5234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'mosei_feature_mode': 'legacy', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'query_key_value', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': True, 'text_seq_len': 128, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 12, 'use_speaker_tag': True, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'instructerc', 'batch_size': 24, 'learning_rate': 5e-05, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 2, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260603_195807', 'dataPath': '/root/autodl-tmp/datasets/IEMOCAP/iemocap_data_0610.pkl', 'seq_lens': (128, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 4290, 'num_classes': 6, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <angry:0, happy:1, excited:2, sad:3, neutral:4, frustrated:5>. Assistant: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'angry': 0, 'happy': 1, 'excited': 2, 'sad': 3, 'neutral': 4, 'frustrated': 5}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 2234}>
+2026-06-03 23:09:59:INFO:Let's use the GPU 1 !
+2026-06-03 23:10:02:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-06-03 23:10:02:INFO:IEMOCAP train split loaded 5247/5247 samples (drop: missing_meta=0, unknown_emo=0, mapping_missing=0, missing_modal=0)
+2026-06-03 23:10:10:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-06-03 23:10:11:INFO:IEMOCAP valid split loaded 511/511 samples (drop: missing_meta=0, unknown_emo=0, mapping_missing=0, missing_modal=0)
+2026-06-03 23:10:12:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-06-03 23:10:13:INFO:IEMOCAP test split loaded 1622/1622 samples (drop: missing_meta=0, unknown_emo=0, mapping_missing=0, missing_modal=0)
+2026-06-03 23:10:31:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, audio_adapter, video_adapter, shared_proj, global_moe, local_moe, moe_msf
+2026-06-03 23:10:31:INFO:trainable params: 4450702 || all params: 6248034702 || trainable%: 0.07123363125008457
+2026-06-03 23:10:31:INFO:Single-LR optimizer: 98 tensors, lr=5e-05
+2026-06-03 23:10:31:INFO:Init labels...
+2026-06-03 23:10:31:INFO:Start training...
+2026-06-03 23:10:31:INFO:  Batch size = 24
+2026-06-03 23:10:31:INFO:  Gradient Accumulation steps = 2
+2026-06-03 23:10:31:INFO:  Effective batch size = 48
+2026-06-03 23:10:31:INFO:  AMP dtype = torch.bfloat16

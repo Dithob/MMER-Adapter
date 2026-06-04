@@ -1232,3 +1232,862 @@
 2026-05-26 23:18:58:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_emotion-20260526_185028.png
 2026-05-26 23:19:59:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_modality-20260526_185028.png
 2026-05-26 23:20:02:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-llama2-meld-classification.csv...
+2026-06-01 10:12:10:INFO:========= 准备训练数据集: meld (classification) =========
+2026-06-01 10:12:10:INFO:[ConfigResolver] model_type=llama2, dataset=meld, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-06-01 10:12:10:INFO:Start running hmmem...
+2026-06-01 10:12:10:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'llama2', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Llama-2-7b', 'gpu_ids': [], 'seeds': [4234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 6, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260601_101210', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <neutral:0, surprise:1, fear:2, sadness:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 4234}>
+2026-06-01 10:12:10:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-06-01 10:12:10:INFO:Let's use the GPU 1 !
+2026-06-01 10:12:10:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-06-01 10:12:16:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-06-01 10:12:16:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-06-01 10:12:22:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-06-01 10:12:25:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_valid.csv: 1109 entries
+2026-06-01 10:12:25:INFO:MELD valid split loaded 1109/1109 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-06-01 10:12:25:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-06-01 10:12:27:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_test.csv: 2610 entries
+2026-06-01 10:12:27:INFO:MELD test split loaded 2610/2610 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-06-01 10:12:48:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, audio_adapter, video_adapter, shared_proj, global_moe, local_moe, moe_msf
+2026-06-01 10:12:48:INFO:trainable params: 4450702 || all params: 6742866318 || trainable%: 0.06600608391299269
+2026-06-01 10:12:48:INFO:Single-LR optimizer: 98 tensors, lr=0.0005
+2026-06-01 10:12:48:INFO:Init labels...
+2026-06-01 10:12:48:INFO:Start training...
+2026-06-01 10:12:48:INFO:  Batch size = 6
+2026-06-01 10:12:48:INFO:  Gradient Accumulation steps = 1
+2026-06-01 10:12:48:INFO:  Effective batch size = 6
+2026-06-01 10:12:48:INFO:  AMP dtype = torch.bfloat16
+2026-06-01 10:20:45:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 2.7771
+2026-06-01 10:20:51:INFO:[GenDebug] model_type=llama2, max_new_tokens=3
+2026-06-01 10:20:51:INFO:[GenDebug] inputs_embeds.shape=torch.Size([6, 126, 4096]), outputs.shape=torch.Size([6, 4])
+2026-06-01 10:20:51:INFO:[GenDebug] outputs[0] token IDs: [1, 21104, 21104, 21104]
+2026-06-01 10:20:51:INFO:[GenDebug] outputs[0] full decode: 'neutral neutral neutral'
+2026-06-01 10:20:51:INFO:[GenDebug] decoded responses[:8]: ['neutral neutral neutral', 'neutral neutral neutral', 'neutral neutral neutral', 'neutral neutral neutral', 'neutral neutral neutral', 'neutral neutral neutral']
+2026-06-01 10:21:16:INFO:VAL-(hmmem) >>
+2026-06-01 10:21:16:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-06-01 10:21:25:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_101210.pth.
+2026-06-01 11:28:04:INFO:========= 准备训练数据集: meld (classification) =========
+2026-06-01 11:28:04:INFO:[ConfigResolver] model_type=llama2, dataset=meld, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'text_label_aliases', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-06-01 11:28:04:INFO:Start running hmmem...
+2026-06-01 11:28:04:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'llama2', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Llama-2-7b', 'gpu_ids': [], 'seeds': [4234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260601_112804', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <neutral:0, surprise:1, fear:2, sad:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'text_label_aliases': {'sadness': 'sad'}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 4234}>
+2026-06-01 11:28:04:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-06-01 11:28:04:INFO:Let's use the GPU 1 !
+2026-06-01 11:28:04:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-06-01 11:28:10:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-06-01 11:28:10:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-06-01 11:28:16:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-06-01 11:28:19:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_valid.csv: 1109 entries
+2026-06-01 11:28:19:INFO:MELD valid split loaded 1109/1109 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-06-01 11:28:19:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-06-01 11:28:21:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_test.csv: 2610 entries
+2026-06-01 11:28:21:INFO:MELD test split loaded 2610/2610 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-06-01 11:28:40:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, audio_adapter, video_adapter, shared_proj, global_moe, local_moe, moe_msf
+2026-06-01 11:28:40:INFO:trainable params: 4450702 || all params: 6742866318 || trainable%: 0.06600608391299269
+2026-06-01 11:28:40:INFO:Single-LR optimizer: 98 tensors, lr=0.0005
+2026-06-01 11:28:40:INFO:Init labels...
+2026-06-01 11:28:40:INFO:Start training...
+2026-06-01 11:28:40:INFO:  Batch size = 24
+2026-06-01 11:28:40:INFO:  Gradient Accumulation steps = 1
+2026-06-01 11:28:40:INFO:  Effective batch size = 24
+2026-06-01 11:28:40:INFO:  AMP dtype = torch.bfloat16
+2026-06-01 11:36:11:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 3.8629
+2026-06-01 11:36:18:INFO:[GenDebug] model_type=llama2, max_new_tokens=3
+2026-06-01 11:36:18:INFO:[GenDebug] inputs_embeds.shape=torch.Size([24, 125, 4096]), outputs.shape=torch.Size([24, 4])
+2026-06-01 11:36:18:INFO:[GenDebug] outputs[0] token IDs: [1, 21104, 21104, 21104]
+2026-06-01 11:36:18:INFO:[GenDebug] outputs[0] full decode: 'neutral neutral neutral'
+2026-06-01 11:36:18:INFO:[GenDebug] decoded responses[:8]: ['neutral neutral neutral', 'neutral neutral neutral', 'neutral neutral neutral', 'neutral neutral surprise', 'neutral neutral neutral', 'neutral neutral neutral', 'neutral neutral neutral', 'neutral neutral neutral']
+2026-06-01 11:36:37:INFO:VAL-(hmmem) >>
+2026-06-01 11:36:37:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-06-01 11:36:45:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_112804.pth.
+2026-06-01 11:44:06:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 1.6705
+2026-06-01 11:44:25:INFO:VAL-(hmmem) >>
+2026-06-01 11:44:25:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-06-01 11:51:43:INFO:TRAIN-(hmmem) (2/3/1)>> loss: 1.5508
+2026-06-01 11:52:02:INFO:VAL-(hmmem) >>
+2026-06-01 11:52:02:INFO:M: >>  acc: 0.5212  UA: 0.2656  weight_F1: 0.4507  Macro_F1: 0.2596 
+2026-06-01 11:52:08:INFO:Saving best model at epoch 3 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_112804.pth.
+2026-06-01 11:59:29:INFO:TRAIN-(hmmem) (1/4/1)>> loss: 1.3030
+2026-06-01 11:59:48:INFO:VAL-(hmmem) >>
+2026-06-01 11:59:48:INFO:M: >>  acc: 0.5789  UA: 0.3345  weight_F1: 0.5245  Macro_F1: 0.3339 
+2026-06-01 11:59:55:INFO:Saving best model at epoch 4 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_112804.pth.
+2026-06-01 12:07:15:INFO:TRAIN-(hmmem) (1/5/1)>> loss: 1.1708
+2026-06-01 12:07:34:INFO:VAL-(hmmem) >>
+2026-06-01 12:07:34:INFO:M: >>  acc: 0.6159  UA: 0.3749  weight_F1: 0.5737  Macro_F1: 0.3811 
+2026-06-01 12:07:41:INFO:Saving best model at epoch 5 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_112804.pth.
+2026-06-01 12:07:52:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_112804-epoch5.ckpt
+2026-06-01 12:15:11:INFO:TRAIN-(hmmem) (1/6/1)>> loss: 1.1231
+2026-06-01 12:15:29:INFO:VAL-(hmmem) >>
+2026-06-01 12:15:29:INFO:M: >>  acc: 0.6069  UA: 0.3831  weight_F1: 0.5703  Macro_F1: 0.3877 
+2026-06-01 12:22:48:INFO:TRAIN-(hmmem) (2/7/1)>> loss: 1.1104
+2026-06-01 12:23:06:INFO:VAL-(hmmem) >>
+2026-06-01 12:23:06:INFO:M: >>  acc: 0.6375  UA: 0.4187  weight_F1: 0.6109  Macro_F1: 0.4300 
+2026-06-01 12:23:13:INFO:Saving best model at epoch 7 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_112804.pth.
+2026-06-01 12:30:34:INFO:TRAIN-(hmmem) (1/8/1)>> loss: 1.0951
+2026-06-01 12:30:53:INFO:VAL-(hmmem) >>
+2026-06-01 12:30:53:INFO:M: >>  acc: 0.6348  UA: 0.4162  weight_F1: 0.6015  Macro_F1: 0.4197 
+2026-06-01 12:38:12:INFO:TRAIN-(hmmem) (2/9/1)>> loss: 1.0713
+2026-06-01 12:38:30:INFO:VAL-(hmmem) >>
+2026-06-01 12:38:30:INFO:M: >>  acc: 0.6411  UA: 0.4143  weight_F1: 0.6061  Macro_F1: 0.4301 
+2026-06-01 12:45:49:INFO:TRAIN-(hmmem) (3/10/1)>> loss: 1.0672
+2026-06-01 12:46:08:INFO:VAL-(hmmem) >>
+2026-06-01 12:46:08:INFO:M: >>  acc: 0.6114  UA: 0.4241  weight_F1: 0.5892  Macro_F1: 0.4134 
+2026-06-01 12:46:17:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_112804-epoch10.ckpt
+2026-06-01 12:53:35:INFO:TRAIN-(hmmem) (4/11/1)>> loss: 1.0518
+2026-06-01 12:53:54:INFO:VAL-(hmmem) >>
+2026-06-01 12:53:54:INFO:M: >>  acc: 0.6402  UA: 0.4118  weight_F1: 0.6049  Macro_F1: 0.4348 
+2026-06-01 13:01:13:INFO:TRAIN-(hmmem) (5/12/1)>> loss: 1.0443
+2026-06-01 13:01:31:INFO:VAL-(hmmem) >>
+2026-06-01 13:01:31:INFO:M: >>  acc: 0.6330  UA: 0.3991  weight_F1: 0.5941  Macro_F1: 0.3942 
+2026-06-01 13:08:50:INFO:TRAIN-(hmmem) (6/13/1)>> loss: 1.0353
+2026-06-01 13:09:08:INFO:VAL-(hmmem) >>
+2026-06-01 13:09:08:INFO:M: >>  acc: 0.6366  UA: 0.4054  weight_F1: 0.5974  Macro_F1: 0.4155 
+2026-06-01 13:16:27:INFO:TRAIN-(hmmem) (7/14/1)>> loss: 1.0206
+2026-06-01 13:16:45:INFO:VAL-(hmmem) >>
+2026-06-01 13:16:45:INFO:M: >>  acc: 0.6420  UA: 0.4326  weight_F1: 0.6114  Macro_F1: 0.4554 
+2026-06-01 13:16:52:INFO:Saving best model at epoch 14 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_112804.pth.
+2026-06-01 13:24:13:INFO:TRAIN-(hmmem) (1/15/1)>> loss: 1.0278
+2026-06-01 13:24:31:INFO:VAL-(hmmem) >>
+2026-06-01 13:24:31:INFO:M: >>  acc: 0.6420  UA: 0.4328  weight_F1: 0.6166  Macro_F1: 0.4452 
+2026-06-01 13:24:37:INFO:Saving best model at epoch 15 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_112804.pth.
+2026-06-01 13:24:49:INFO:Checkpoint saved at epoch 15 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_112804-epoch15.ckpt
+2026-06-01 13:26:20:INFO:========= 准备训练数据集: meld (classification) =========
+2026-06-01 13:26:20:INFO:[ConfigResolver] model_type=llama2, dataset=meld, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'text_label_aliases', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-06-01 13:26:20:INFO:Start running hmmem...
+2026-06-01 13:26:20:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'llama2', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'MELD_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Llama-2-7b', 'gpu_ids': [], 'seeds': [1234, 2234, 3234, 4234, 5234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'compressed', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260601_132620', 'dataPath': '/root/autodl-tmp/datasets/MELD_UniMSE', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <neutral:0, surprise:1, fear:2, sad:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'text_label_aliases': {'sadness': 'sad'}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-06-01 13:26:20:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-06-01 13:26:20:INFO:Let's use the GPU 1 !
+2026-06-01 13:26:20:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_train.pkl
+2026-06-01 13:26:24:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_valid.pkl
+2026-06-01 13:26:24:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_test.pkl
+2026-06-01 13:26:46:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, shared_proj, global_moe, local_moe, moe_msf
+2026-06-01 13:26:46:INFO:trainable params: 3671182 || all params: 6742086798 || trainable%: 0.05445171665676322
+2026-06-01 13:26:46:INFO:Single-LR optimizer: 86 tensors, lr=0.0005
+2026-06-01 13:26:46:INFO:Init labels...
+2026-06-01 13:26:46:INFO:Start training...
+2026-06-01 13:26:46:INFO:  Batch size = 24
+2026-06-01 13:26:46:INFO:  Gradient Accumulation steps = 1
+2026-06-01 13:26:46:INFO:  Effective batch size = 24
+2026-06-01 13:26:46:INFO:  AMP dtype = torch.bfloat16
+2026-06-01 13:35:06:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 1.4152
+2026-06-01 13:35:11:INFO:[GenDebug] model_type=llama2, max_new_tokens=1
+2026-06-01 13:35:11:INFO:[GenDebug] inputs_embeds.shape=torch.Size([24, 139, 4096]), outputs.shape=torch.Size([24, 3])
+2026-06-01 13:35:11:INFO:[GenDebug] outputs[0] token IDs: [1, 29871, 29900]
+2026-06-01 13:35:11:INFO:[GenDebug] outputs[0] full decode: '0'
+2026-06-01 13:35:11:INFO:[GenDebug] decoded responses[:8]: ['0', '0', '0', '0', '0', '0', '0', '0']
+2026-06-01 13:35:30:INFO:VAL-(hmmem) >>
+2026-06-01 13:35:30:INFO:M: >>  acc: 0.4247  UA: 0.1438  weight_F1: 0.2547  Macro_F1: 0.0871 
+2026-06-01 13:35:38:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 13:43:50:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 0.7811
+2026-06-01 13:44:10:INFO:VAL-(hmmem) >>
+2026-06-01 13:44:10:INFO:M: >>  acc: 0.4229  UA: 0.1426  weight_F1: 0.2522  Macro_F1: 0.0850 
+2026-06-01 13:52:20:INFO:TRAIN-(hmmem) (2/3/1)>> loss: 0.7446
+2026-06-01 13:52:39:INFO:VAL-(hmmem) >>
+2026-06-01 13:52:39:INFO:M: >>  acc: 0.4878  UA: 0.2227  weight_F1: 0.3891  Macro_F1: 0.2156 
+2026-06-01 13:52:47:INFO:Saving best model at epoch 3 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 14:01:00:INFO:TRAIN-(hmmem) (1/4/1)>> loss: 0.6528
+2026-06-01 14:01:19:INFO:VAL-(hmmem) >>
+2026-06-01 14:01:19:INFO:M: >>  acc: 0.5537  UA: 0.3223  weight_F1: 0.5029  Macro_F1: 0.3358 
+2026-06-01 14:01:27:INFO:Saving best model at epoch 4 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 14:09:39:INFO:TRAIN-(hmmem) (1/5/1)>> loss: 0.5906
+2026-06-01 14:09:59:INFO:VAL-(hmmem) >>
+2026-06-01 14:09:59:INFO:M: >>  acc: 0.5816  UA: 0.3564  weight_F1: 0.5401  Macro_F1: 0.3723 
+2026-06-01 14:10:06:INFO:Saving best model at epoch 5 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 14:10:19:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch5.ckpt
+2026-06-01 14:18:29:INFO:TRAIN-(hmmem) (1/6/1)>> loss: 0.5671
+2026-06-01 14:18:48:INFO:VAL-(hmmem) >>
+2026-06-01 14:18:48:INFO:M: >>  acc: 0.6132  UA: 0.3944  weight_F1: 0.5777  Macro_F1: 0.4148 
+2026-06-01 14:18:56:INFO:Saving best model at epoch 6 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 14:27:08:INFO:TRAIN-(hmmem) (1/7/1)>> loss: 0.5425
+2026-06-01 14:27:27:INFO:VAL-(hmmem) >>
+2026-06-01 14:27:27:INFO:M: >>  acc: 0.6204  UA: 0.4154  weight_F1: 0.5885  Macro_F1: 0.4332 
+2026-06-01 14:27:35:INFO:Saving best model at epoch 7 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 14:35:47:INFO:TRAIN-(hmmem) (1/8/1)>> loss: 0.5323
+2026-06-01 14:36:06:INFO:VAL-(hmmem) >>
+2026-06-01 14:36:06:INFO:M: >>  acc: 0.5942  UA: 0.3638  weight_F1: 0.5465  Macro_F1: 0.3805 
+2026-06-01 14:44:16:INFO:TRAIN-(hmmem) (2/9/1)>> loss: 0.5192
+2026-06-01 14:44:36:INFO:VAL-(hmmem) >>
+2026-06-01 14:44:36:INFO:M: >>  acc: 0.5942  UA: 0.3631  weight_F1: 0.5342  Macro_F1: 0.3838 
+2026-06-01 14:52:45:INFO:TRAIN-(hmmem) (3/10/1)>> loss: 0.5100
+2026-06-01 14:53:05:INFO:VAL-(hmmem) >>
+2026-06-01 14:53:05:INFO:M: >>  acc: 0.6294  UA: 0.4181  weight_F1: 0.5987  Macro_F1: 0.4410 
+2026-06-01 14:53:13:INFO:Saving best model at epoch 10 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 14:53:25:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch10.ckpt
+2026-06-01 15:01:36:INFO:TRAIN-(hmmem) (1/11/1)>> loss: 0.5000
+2026-06-01 15:01:55:INFO:VAL-(hmmem) >>
+2026-06-01 15:01:55:INFO:M: >>  acc: 0.6240  UA: 0.4188  weight_F1: 0.5949  Macro_F1: 0.4491 
+2026-06-01 15:10:05:INFO:TRAIN-(hmmem) (2/12/1)>> loss: 0.4926
+2026-06-01 15:10:24:INFO:VAL-(hmmem) >>
+2026-06-01 15:10:24:INFO:M: >>  acc: 0.6321  UA: 0.4278  weight_F1: 0.6046  Macro_F1: 0.4434 
+2026-06-01 15:10:32:INFO:Saving best model at epoch 12 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 15:18:45:INFO:TRAIN-(hmmem) (1/13/1)>> loss: 0.4882
+2026-06-01 15:19:04:INFO:VAL-(hmmem) >>
+2026-06-01 15:19:04:INFO:M: >>  acc: 0.6357  UA: 0.4356  weight_F1: 0.6100  Macro_F1: 0.4597 
+2026-06-01 15:19:12:INFO:Saving best model at epoch 13 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 15:27:25:INFO:TRAIN-(hmmem) (1/14/1)>> loss: 0.4813
+2026-06-01 15:27:44:INFO:VAL-(hmmem) >>
+2026-06-01 15:27:44:INFO:M: >>  acc: 0.6141  UA: 0.3948  weight_F1: 0.5765  Macro_F1: 0.4193 
+2026-06-01 15:35:54:INFO:TRAIN-(hmmem) (2/15/1)>> loss: 0.4765
+2026-06-01 15:36:14:INFO:VAL-(hmmem) >>
+2026-06-01 15:36:14:INFO:M: >>  acc: 0.6213  UA: 0.4417  weight_F1: 0.6003  Macro_F1: 0.4567 
+2026-06-01 15:36:24:INFO:Checkpoint saved at epoch 15 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch15.ckpt
+2026-06-01 15:44:34:INFO:TRAIN-(hmmem) (3/16/1)>> loss: 0.4669
+2026-06-01 15:44:53:INFO:VAL-(hmmem) >>
+2026-06-01 15:44:53:INFO:M: >>  acc: 0.6348  UA: 0.4362  weight_F1: 0.6090  Macro_F1: 0.4677 
+2026-06-01 15:53:03:INFO:TRAIN-(hmmem) (4/17/1)>> loss: 0.4595
+2026-06-01 15:53:22:INFO:VAL-(hmmem) >>
+2026-06-01 15:53:22:INFO:M: >>  acc: 0.6339  UA: 0.4563  weight_F1: 0.6140  Macro_F1: 0.4820 
+2026-06-01 15:53:30:INFO:Saving best model at epoch 17 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 16:01:42:INFO:TRAIN-(hmmem) (1/18/1)>> loss: 0.4559
+2026-06-01 16:02:02:INFO:VAL-(hmmem) >>
+2026-06-01 16:02:02:INFO:M: >>  acc: 0.6330  UA: 0.4358  weight_F1: 0.6059  Macro_F1: 0.4617 
+2026-06-01 16:10:11:INFO:TRAIN-(hmmem) (2/19/1)>> loss: 0.4496
+2026-06-01 16:10:31:INFO:VAL-(hmmem) >>
+2026-06-01 16:10:31:INFO:M: >>  acc: 0.6330  UA: 0.4458  weight_F1: 0.6095  Macro_F1: 0.4685 
+2026-06-01 16:18:41:INFO:TRAIN-(hmmem) (3/20/1)>> loss: 0.4441
+2026-06-01 16:19:00:INFO:VAL-(hmmem) >>
+2026-06-01 16:19:00:INFO:M: >>  acc: 0.6357  UA: 0.4563  weight_F1: 0.6187  Macro_F1: 0.4713 
+2026-06-01 16:19:08:INFO:Saving best model at epoch 20 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 16:19:20:INFO:Checkpoint saved at epoch 20 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch20.ckpt
+2026-06-01 16:19:21:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch5.ckpt
+2026-06-01 16:27:30:INFO:TRAIN-(hmmem) (1/21/1)>> loss: 0.4366
+2026-06-01 16:27:49:INFO:VAL-(hmmem) >>
+2026-06-01 16:27:49:INFO:M: >>  acc: 0.6348  UA: 0.4421  weight_F1: 0.6112  Macro_F1: 0.4780 
+2026-06-01 16:35:59:INFO:TRAIN-(hmmem) (2/22/1)>> loss: 0.4307
+2026-06-01 16:36:18:INFO:VAL-(hmmem) >>
+2026-06-01 16:36:18:INFO:M: >>  acc: 0.6456  UA: 0.4485  weight_F1: 0.6215  Macro_F1: 0.4771 
+2026-06-01 16:36:26:INFO:Saving best model at epoch 22 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 16:44:37:INFO:TRAIN-(hmmem) (1/23/1)>> loss: 0.4256
+2026-06-01 16:44:57:INFO:VAL-(hmmem) >>
+2026-06-01 16:44:57:INFO:M: >>  acc: 0.6393  UA: 0.4494  weight_F1: 0.6148  Macro_F1: 0.4782 
+2026-06-01 16:53:06:INFO:TRAIN-(hmmem) (2/24/1)>> loss: 0.4193
+2026-06-01 16:53:26:INFO:VAL-(hmmem) >>
+2026-06-01 16:53:26:INFO:M: >>  acc: 0.6375  UA: 0.4599  weight_F1: 0.6183  Macro_F1: 0.4815 
+2026-06-01 17:01:36:INFO:TRAIN-(hmmem) (3/25/1)>> loss: 0.4150
+2026-06-01 17:01:55:INFO:VAL-(hmmem) >>
+2026-06-01 17:01:55:INFO:M: >>  acc: 0.6384  UA: 0.4573  weight_F1: 0.6183  Macro_F1: 0.4868 
+2026-06-01 17:02:05:INFO:Checkpoint saved at epoch 25 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch25.ckpt
+2026-06-01 17:02:06:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch10.ckpt
+2026-06-01 17:10:14:INFO:TRAIN-(hmmem) (4/26/1)>> loss: 0.4115
+2026-06-01 17:10:34:INFO:VAL-(hmmem) >>
+2026-06-01 17:10:34:INFO:M: >>  acc: 0.6285  UA: 0.4364  weight_F1: 0.6050  Macro_F1: 0.4607 
+2026-06-01 17:18:43:INFO:TRAIN-(hmmem) (5/27/1)>> loss: 0.4081
+2026-06-01 17:19:02:INFO:VAL-(hmmem) >>
+2026-06-01 17:19:02:INFO:M: >>  acc: 0.6339  UA: 0.4416  weight_F1: 0.6110  Macro_F1: 0.4651 
+2026-06-01 17:27:12:INFO:TRAIN-(hmmem) (6/28/1)>> loss: 0.4054
+2026-06-01 17:27:32:INFO:VAL-(hmmem) >>
+2026-06-01 17:27:32:INFO:M: >>  acc: 0.6366  UA: 0.4486  weight_F1: 0.6152  Macro_F1: 0.4718 
+2026-06-01 17:35:41:INFO:TRAIN-(hmmem) (7/29/1)>> loss: 0.4035
+2026-06-01 17:36:01:INFO:VAL-(hmmem) >>
+2026-06-01 17:36:01:INFO:M: >>  acc: 0.6339  UA: 0.4442  weight_F1: 0.6119  Macro_F1: 0.4666 
+2026-06-01 17:44:10:INFO:TRAIN-(hmmem) (8/30/1)>> loss: 0.4019
+2026-06-01 17:44:30:INFO:VAL-(hmmem) >>
+2026-06-01 17:44:30:INFO:M: >>  acc: 0.6339  UA: 0.4442  weight_F1: 0.6118  Macro_F1: 0.4667 
+2026-06-01 17:44:39:INFO:Checkpoint saved at epoch 30 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch30.ckpt
+2026-06-01 17:44:40:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch15.ckpt
+2026-06-01 17:45:26:INFO:TEST-(hmmem) >>
+2026-06-01 17:45:26:INFO:M: >>  acc: 0.6494  UA: 0.4221  weight_F1: 0.6260  Macro_F1: 0.4493 
+2026-06-01 17:45:26:INFO:============================================================
+2026-06-01 17:45:26:INFO:         Detailed Classification Analysis
+2026-06-01 17:45:26:INFO:============================================================
+2026-06-01 17:45:26:INFO:         Class     Prec   Recall       F1   Support
+2026-06-01 17:45:26:INFO:------------------------------------------------------------
+2026-06-01 17:45:26:INFO:       neutral   0.7112   0.8782   0.7859      1256
+2026-06-01 17:45:26:INFO:      surprise   0.5647   0.5587   0.5617       281
+2026-06-01 17:45:26:INFO:          fear   0.3000   0.1800   0.2250        50
+2026-06-01 17:45:26:INFO:       sadness   0.5862   0.2452   0.3458       208
+2026-06-01 17:45:26:INFO:           joy   0.5791   0.5373   0.5574       402
+2026-06-01 17:45:26:INFO:       disgust   0.3636   0.1176   0.1778        68
+2026-06-01 17:45:26:INFO:         anger   0.5613   0.4377   0.4919       345
+2026-06-01 17:45:26:INFO:------------------------------------------------------------
+2026-06-01 17:45:26:INFO:  WA  (Weighted Accuracy) : 0.6494
+2026-06-01 17:45:26:INFO:  UA  (Unweighted Accuracy): 0.4221
+2026-06-01 17:45:26:INFO:  WF1 (Weighted F1)       : 0.6260
+2026-06-01 17:45:26:INFO:  Macro-F1                : 0.4493
+2026-06-01 17:45:26:INFO:============================================================
+2026-06-01 17:45:26:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-confusion_matrix-20260601_132620.png
+2026-06-01 17:45:45:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_emotion-20260601_132620.png
+2026-06-01 17:46:45:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_modality-20260601_132620.png
+2026-06-01 17:46:46:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-llama2-meld-classification.csv...
+2026-06-01 17:46:46:INFO:[ConfigResolver] model_type=llama2, dataset=meld, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'text_label_aliases', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-06-01 17:46:46:INFO:Start running hmmem...
+2026-06-01 17:46:46:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'llama2', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'MELD_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Llama-2-7b', 'gpu_ids': [0], 'seeds': [1234, 2234, 3234, 4234, 5234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'compressed', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260601_132620', 'dataPath': '/root/autodl-tmp/datasets/MELD_UniMSE', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <neutral:0, surprise:1, fear:2, sad:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'text_label_aliases': {'sadness': 'sad'}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 2234}>
+2026-06-01 17:46:46:INFO:Let's use the GPU 1 !
+2026-06-01 17:46:46:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_train.pkl
+2026-06-01 17:46:49:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_valid.pkl
+2026-06-01 17:46:50:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_test.pkl
+2026-06-01 17:47:08:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, shared_proj, global_moe, local_moe, moe_msf
+2026-06-01 17:47:08:INFO:trainable params: 3671182 || all params: 6742086798 || trainable%: 0.05445171665676322
+2026-06-01 17:47:08:INFO:Single-LR optimizer: 86 tensors, lr=0.0005
+2026-06-01 17:47:08:INFO:Init labels...
+2026-06-01 17:47:08:INFO:Start training...
+2026-06-01 17:47:08:INFO:  Batch size = 24
+2026-06-01 17:47:08:INFO:  Gradient Accumulation steps = 1
+2026-06-01 17:47:08:INFO:  Effective batch size = 24
+2026-06-01 17:47:08:INFO:  AMP dtype = torch.bfloat16
+2026-06-01 17:55:18:INFO:TRAIN-(hmmem) (1/1/2)>> loss: 1.8261
+2026-06-01 17:55:19:INFO:[GenDebug] model_type=llama2, max_new_tokens=1
+2026-06-01 17:55:19:INFO:[GenDebug] inputs_embeds.shape=torch.Size([24, 139, 4096]), outputs.shape=torch.Size([24, 3])
+2026-06-01 17:55:19:INFO:[GenDebug] outputs[0] token IDs: [1, 29871, 29900]
+2026-06-01 17:55:19:INFO:[GenDebug] outputs[0] full decode: '0'
+2026-06-01 17:55:19:INFO:[GenDebug] decoded responses[:8]: ['0', '0', '0', '0', '0', '0', '0', '0']
+2026-06-01 17:55:38:INFO:VAL-(hmmem) >>
+2026-06-01 17:55:38:INFO:M: >>  acc: 0.4229  UA: 0.1580  weight_F1: 0.2768  Macro_F1: 0.1205 
+2026-06-01 17:55:47:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 18:04:01:INFO:TRAIN-(hmmem) (1/2/2)>> loss: 0.7091
+2026-06-01 18:04:21:INFO:VAL-(hmmem) >>
+2026-06-01 18:04:21:INFO:M: >>  acc: 0.5338  UA: 0.2847  weight_F1: 0.4579  Macro_F1: 0.2981 
+2026-06-01 18:04:29:INFO:Saving best model at epoch 2 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 18:12:41:INFO:TRAIN-(hmmem) (1/3/2)>> loss: 0.5950
+2026-06-01 18:13:00:INFO:VAL-(hmmem) >>
+2026-06-01 18:13:00:INFO:M: >>  acc: 0.5906  UA: 0.3465  weight_F1: 0.5405  Macro_F1: 0.3751 
+2026-06-01 18:13:08:INFO:Saving best model at epoch 3 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 18:21:20:INFO:TRAIN-(hmmem) (1/4/2)>> loss: 0.5478
+2026-06-01 18:21:39:INFO:VAL-(hmmem) >>
+2026-06-01 18:21:39:INFO:M: >>  acc: 0.6105  UA: 0.3695  weight_F1: 0.5653  Macro_F1: 0.3950 
+2026-06-01 18:21:47:INFO:Saving best model at epoch 4 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 18:29:59:INFO:TRAIN-(hmmem) (1/5/2)>> loss: 0.5222
+2026-06-01 18:30:18:INFO:VAL-(hmmem) >>
+2026-06-01 18:30:18:INFO:M: >>  acc: 0.6240  UA: 0.4205  weight_F1: 0.5965  Macro_F1: 0.4457 
+2026-06-01 18:30:26:INFO:Saving best model at epoch 5 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 18:30:39:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch5.ckpt
+2026-06-01 18:30:39:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch20.ckpt
+2026-06-01 18:38:49:INFO:TRAIN-(hmmem) (1/6/2)>> loss: 0.5062
+2026-06-01 18:39:08:INFO:VAL-(hmmem) >>
+2026-06-01 18:39:08:INFO:M: >>  acc: 0.6204  UA: 0.4205  weight_F1: 0.5933  Macro_F1: 0.4476 
+2026-06-01 18:47:18:INFO:TRAIN-(hmmem) (2/7/2)>> loss: 0.4933
+2026-06-01 18:47:38:INFO:VAL-(hmmem) >>
+2026-06-01 18:47:38:INFO:M: >>  acc: 0.6312  UA: 0.4227  weight_F1: 0.5908  Macro_F1: 0.4582 
+2026-06-01 18:55:48:INFO:TRAIN-(hmmem) (3/8/2)>> loss: 0.4817
+2026-06-01 18:56:07:INFO:VAL-(hmmem) >>
+2026-06-01 18:56:07:INFO:M: >>  acc: 0.6411  UA: 0.4619  weight_F1: 0.6204  Macro_F1: 0.4900 
+2026-06-01 18:56:15:INFO:Saving best model at epoch 8 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 19:04:28:INFO:TRAIN-(hmmem) (1/9/2)>> loss: 0.4748
+2026-06-01 19:04:48:INFO:VAL-(hmmem) >>
+2026-06-01 19:04:48:INFO:M: >>  acc: 0.6438  UA: 0.4630  weight_F1: 0.6162  Macro_F1: 0.4947 
+2026-06-01 19:12:57:INFO:TRAIN-(hmmem) (2/10/2)>> loss: 0.4649
+2026-06-01 19:13:17:INFO:VAL-(hmmem) >>
+2026-06-01 19:13:17:INFO:M: >>  acc: 0.6492  UA: 0.4696  weight_F1: 0.6241  Macro_F1: 0.4918 
+2026-06-01 19:13:24:INFO:Saving best model at epoch 10 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 19:13:37:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch10.ckpt
+2026-06-01 19:13:37:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch25.ckpt
+2026-06-01 19:21:47:INFO:TRAIN-(hmmem) (1/11/2)>> loss: 0.4578
+2026-06-01 19:22:07:INFO:VAL-(hmmem) >>
+2026-06-01 19:22:07:INFO:M: >>  acc: 0.6465  UA: 0.4651  weight_F1: 0.6260  Macro_F1: 0.4946 
+2026-06-01 19:22:14:INFO:Saving best model at epoch 11 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 19:30:26:INFO:TRAIN-(hmmem) (1/12/2)>> loss: 0.4522
+2026-06-01 19:30:45:INFO:VAL-(hmmem) >>
+2026-06-01 19:30:45:INFO:M: >>  acc: 0.6564  UA: 0.5037  weight_F1: 0.6443  Macro_F1: 0.5257 
+2026-06-01 19:30:54:INFO:Saving best model at epoch 12 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 19:39:09:INFO:TRAIN-(hmmem) (1/13/2)>> loss: 0.4463
+2026-06-01 19:39:28:INFO:VAL-(hmmem) >>
+2026-06-01 19:39:28:INFO:M: >>  acc: 0.6465  UA: 0.4606  weight_F1: 0.6222  Macro_F1: 0.4924 
+2026-06-01 19:47:38:INFO:TRAIN-(hmmem) (2/14/2)>> loss: 0.4384
+2026-06-01 19:47:57:INFO:VAL-(hmmem) >>
+2026-06-01 19:47:57:INFO:M: >>  acc: 0.6483  UA: 0.4865  weight_F1: 0.6351  Macro_F1: 0.5044 
+2026-06-01 19:56:08:INFO:TRAIN-(hmmem) (3/15/2)>> loss: 0.4309
+2026-06-01 19:56:27:INFO:VAL-(hmmem) >>
+2026-06-01 19:56:27:INFO:M: >>  acc: 0.6465  UA: 0.4813  weight_F1: 0.6326  Macro_F1: 0.4991 
+2026-06-01 19:56:37:INFO:Checkpoint saved at epoch 15 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch15.ckpt
+2026-06-01 19:56:38:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch30.ckpt
+2026-06-01 20:04:47:INFO:TRAIN-(hmmem) (4/16/2)>> loss: 0.4271
+2026-06-01 20:05:06:INFO:VAL-(hmmem) >>
+2026-06-01 20:05:06:INFO:M: >>  acc: 0.6483  UA: 0.4679  weight_F1: 0.6269  Macro_F1: 0.4971 
+2026-06-01 20:13:16:INFO:TRAIN-(hmmem) (5/17/2)>> loss: 0.4195
+2026-06-01 20:13:36:INFO:VAL-(hmmem) >>
+2026-06-01 20:13:36:INFO:M: >>  acc: 0.6564  UA: 0.4931  weight_F1: 0.6413  Macro_F1: 0.5200 
+2026-06-01 20:21:46:INFO:TRAIN-(hmmem) (6/18/2)>> loss: 0.4121
+2026-06-01 20:22:05:INFO:VAL-(hmmem) >>
+2026-06-01 20:22:05:INFO:M: >>  acc: 0.6501  UA: 0.4889  weight_F1: 0.6355  Macro_F1: 0.5101 
+2026-06-01 20:30:15:INFO:TRAIN-(hmmem) (7/19/2)>> loss: 0.4058
+2026-06-01 20:30:34:INFO:VAL-(hmmem) >>
+2026-06-01 20:30:34:INFO:M: >>  acc: 0.6528  UA: 0.4715  weight_F1: 0.6309  Macro_F1: 0.5025 
+2026-06-01 20:38:44:INFO:TRAIN-(hmmem) (8/20/2)>> loss: 0.3994
+2026-06-01 20:39:03:INFO:VAL-(hmmem) >>
+2026-06-01 20:39:03:INFO:M: >>  acc: 0.6501  UA: 0.4762  weight_F1: 0.6266  Macro_F1: 0.5052 
+2026-06-01 20:39:13:INFO:Checkpoint saved at epoch 20 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch20.ckpt
+2026-06-01 20:39:14:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch5.ckpt
+2026-06-01 20:40:00:INFO:TEST-(hmmem) >>
+2026-06-01 20:40:00:INFO:M: >>  acc: 0.6548  UA: 0.4399  weight_F1: 0.6400  Macro_F1: 0.4628 
+2026-06-01 20:40:00:INFO:============================================================
+2026-06-01 20:40:00:INFO:         Detailed Classification Analysis
+2026-06-01 20:40:00:INFO:============================================================
+2026-06-01 20:40:00:INFO:         Class     Prec   Recall       F1   Support
+2026-06-01 20:40:00:INFO:------------------------------------------------------------
+2026-06-01 20:40:00:INFO:       neutral   0.7301   0.8615   0.7904      1256
+2026-06-01 20:40:00:INFO:      surprise   0.5447   0.4769   0.5085       281
+2026-06-01 20:40:00:INFO:          fear   0.2812   0.1800   0.2195        50
+2026-06-01 20:40:00:INFO:       sadness   0.5000   0.3413   0.4057       208
+2026-06-01 20:40:00:INFO:           joy   0.6705   0.5771   0.6203       402
+2026-06-01 20:40:00:INFO:       disgust   0.2326   0.1471   0.1802        68
+2026-06-01 20:40:00:INFO:         anger   0.5361   0.4957   0.5151       345
+2026-06-01 20:40:00:INFO:------------------------------------------------------------
+2026-06-01 20:40:00:INFO:  WA  (Weighted Accuracy) : 0.6548
+2026-06-01 20:40:00:INFO:  UA  (Unweighted Accuracy): 0.4399
+2026-06-01 20:40:00:INFO:  WF1 (Weighted F1)       : 0.6400
+2026-06-01 20:40:00:INFO:  Macro-F1                : 0.4628
+2026-06-01 20:40:00:INFO:============================================================
+2026-06-01 20:40:00:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-confusion_matrix-20260601_132620.png
+2026-06-01 20:40:18:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_emotion-20260601_132620.png
+2026-06-01 20:41:20:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_modality-20260601_132620.png
+2026-06-01 20:41:21:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-llama2-meld-classification.csv...
+2026-06-01 20:41:21:INFO:[ConfigResolver] model_type=llama2, dataset=meld, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'text_label_aliases', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-06-01 20:41:21:INFO:Start running hmmem...
+2026-06-01 20:41:21:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'llama2', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'MELD_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Llama-2-7b', 'gpu_ids': [0], 'seeds': [1234, 2234, 3234, 4234, 5234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'compressed', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260601_132620', 'dataPath': '/root/autodl-tmp/datasets/MELD_UniMSE', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <neutral:0, surprise:1, fear:2, sad:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'text_label_aliases': {'sadness': 'sad'}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 3234}>
+2026-06-01 20:41:21:INFO:Let's use the GPU 1 !
+2026-06-01 20:41:21:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_train.pkl
+2026-06-01 20:41:25:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_valid.pkl
+2026-06-01 20:41:25:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_test.pkl
+2026-06-01 20:41:47:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, shared_proj, global_moe, local_moe, moe_msf
+2026-06-01 20:41:47:INFO:trainable params: 3671182 || all params: 6742086798 || trainable%: 0.05445171665676322
+2026-06-01 20:41:47:INFO:Single-LR optimizer: 86 tensors, lr=0.0005
+2026-06-01 20:41:47:INFO:Init labels...
+2026-06-01 20:41:47:INFO:Start training...
+2026-06-01 20:41:47:INFO:  Batch size = 24
+2026-06-01 20:41:47:INFO:  Gradient Accumulation steps = 1
+2026-06-01 20:41:47:INFO:  Effective batch size = 24
+2026-06-01 20:41:47:INFO:  AMP dtype = torch.bfloat16
+2026-06-01 20:49:56:INFO:TRAIN-(hmmem) (1/1/3)>> loss: 1.7388
+2026-06-01 20:49:57:INFO:[GenDebug] model_type=llama2, max_new_tokens=1
+2026-06-01 20:49:57:INFO:[GenDebug] inputs_embeds.shape=torch.Size([24, 139, 4096]), outputs.shape=torch.Size([24, 3])
+2026-06-01 20:49:57:INFO:[GenDebug] outputs[0] token IDs: [1, 29871, 29946]
+2026-06-01 20:49:57:INFO:[GenDebug] outputs[0] full decode: '4'
+2026-06-01 20:49:57:INFO:[GenDebug] decoded responses[:8]: ['4', '0', '0', '0', '0', '0', '0', '0']
+2026-06-01 20:50:16:INFO:VAL-(hmmem) >>
+2026-06-01 20:50:16:INFO:M: >>  acc: 0.4193  UA: 0.1448  weight_F1: 0.2595  Macro_F1: 0.0935 
+2026-06-01 20:50:24:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 20:58:35:INFO:TRAIN-(hmmem) (1/2/3)>> loss: 0.7869
+2026-06-01 20:58:55:INFO:VAL-(hmmem) >>
+2026-06-01 20:58:55:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-06-01 21:07:05:INFO:TRAIN-(hmmem) (2/3/3)>> loss: 0.7742
+2026-06-01 21:07:24:INFO:VAL-(hmmem) >>
+2026-06-01 21:07:24:INFO:M: >>  acc: 0.4238  UA: 0.1429  weight_F1: 0.2523  Macro_F1: 0.0850 
+2026-06-01 21:15:34:INFO:TRAIN-(hmmem) (3/4/3)>> loss: 0.7231
+2026-06-01 21:15:54:INFO:VAL-(hmmem) >>
+2026-06-01 21:15:54:INFO:M: >>  acc: 0.4923  UA: 0.2234  weight_F1: 0.3742  Macro_F1: 0.1759 
+2026-06-01 21:16:02:INFO:Saving best model at epoch 4 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 21:24:14:INFO:TRAIN-(hmmem) (1/5/3)>> loss: 0.6805
+2026-06-01 21:24:33:INFO:VAL-(hmmem) >>
+2026-06-01 21:24:33:INFO:M: >>  acc: 0.5095  UA: 0.2435  weight_F1: 0.4107  Macro_F1: 0.2184 
+2026-06-01 21:24:42:INFO:Saving best model at epoch 5 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 21:24:55:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch5.ckpt
+2026-06-01 21:24:56:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch10.ckpt
+2026-06-01 21:33:05:INFO:TRAIN-(hmmem) (1/6/3)>> loss: 0.6639
+2026-06-01 21:33:25:INFO:VAL-(hmmem) >>
+2026-06-01 21:33:25:INFO:M: >>  acc: 0.5266  UA: 0.2601  weight_F1: 0.4255  Macro_F1: 0.2305 
+2026-06-01 21:33:33:INFO:Saving best model at epoch 6 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 21:41:45:INFO:TRAIN-(hmmem) (1/7/3)>> loss: 0.6453
+2026-06-01 21:42:04:INFO:VAL-(hmmem) >>
+2026-06-01 21:42:04:INFO:M: >>  acc: 0.5176  UA: 0.2804  weight_F1: 0.4376  Macro_F1: 0.2436 
+2026-06-01 21:42:12:INFO:Saving best model at epoch 7 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 21:50:24:INFO:TRAIN-(hmmem) (1/8/3)>> loss: 0.6291
+2026-06-01 21:50:44:INFO:VAL-(hmmem) >>
+2026-06-01 21:50:44:INFO:M: >>  acc: 0.5446  UA: 0.3053  weight_F1: 0.4897  Macro_F1: 0.2965 
+2026-06-01 21:50:52:INFO:Saving best model at epoch 8 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 21:59:04:INFO:TRAIN-(hmmem) (1/9/3)>> loss: 0.6135
+2026-06-01 21:59:23:INFO:VAL-(hmmem) >>
+2026-06-01 21:59:23:INFO:M: >>  acc: 0.5500  UA: 0.3033  weight_F1: 0.4851  Macro_F1: 0.2897 
+2026-06-01 22:07:33:INFO:TRAIN-(hmmem) (2/10/3)>> loss: 0.6017
+2026-06-01 22:07:52:INFO:VAL-(hmmem) >>
+2026-06-01 22:07:52:INFO:M: >>  acc: 0.5618  UA: 0.3149  weight_F1: 0.4974  Macro_F1: 0.3025 
+2026-06-01 22:08:00:INFO:Saving best model at epoch 10 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 22:08:14:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch10.ckpt
+2026-06-01 22:08:14:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch15.ckpt
+2026-06-01 22:16:24:INFO:TRAIN-(hmmem) (1/11/3)>> loss: 0.5867
+2026-06-01 22:16:43:INFO:VAL-(hmmem) >>
+2026-06-01 22:16:43:INFO:M: >>  acc: 0.5663  UA: 0.3085  weight_F1: 0.5008  Macro_F1: 0.3080 
+2026-06-01 22:16:51:INFO:Saving best model at epoch 11 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 22:25:03:INFO:TRAIN-(hmmem) (1/12/3)>> loss: 0.5792
+2026-06-01 22:25:22:INFO:VAL-(hmmem) >>
+2026-06-01 22:25:22:INFO:M: >>  acc: 0.5744  UA: 0.3177  weight_F1: 0.5163  Macro_F1: 0.3173 
+2026-06-01 22:25:30:INFO:Saving best model at epoch 12 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 22:33:41:INFO:TRAIN-(hmmem) (1/13/3)>> loss: 0.5699
+2026-06-01 22:34:00:INFO:VAL-(hmmem) >>
+2026-06-01 22:34:00:INFO:M: >>  acc: 0.5564  UA: 0.2931  weight_F1: 0.4820  Macro_F1: 0.2836 
+2026-06-01 22:42:10:INFO:TRAIN-(hmmem) (2/14/3)>> loss: 0.5608
+2026-06-01 22:42:29:INFO:VAL-(hmmem) >>
+2026-06-01 22:42:29:INFO:M: >>  acc: 0.5636  UA: 0.3213  weight_F1: 0.5092  Macro_F1: 0.3151 
+2026-06-01 22:50:38:INFO:TRAIN-(hmmem) (3/15/3)>> loss: 0.5519
+2026-06-01 22:50:57:INFO:VAL-(hmmem) >>
+2026-06-01 22:50:57:INFO:M: >>  acc: 0.5717  UA: 0.3178  weight_F1: 0.5102  Macro_F1: 0.3155 
+2026-06-01 22:51:07:INFO:Checkpoint saved at epoch 15 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch15.ckpt
+2026-06-01 22:51:08:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch20.ckpt
+2026-06-01 22:59:16:INFO:TRAIN-(hmmem) (4/16/3)>> loss: 0.5420
+2026-06-01 22:59:36:INFO:VAL-(hmmem) >>
+2026-06-01 22:59:36:INFO:M: >>  acc: 0.5555  UA: 0.2932  weight_F1: 0.4930  Macro_F1: 0.2978 
+2026-06-01 23:07:45:INFO:TRAIN-(hmmem) (5/17/3)>> loss: 0.5322
+2026-06-01 23:08:04:INFO:VAL-(hmmem) >>
+2026-06-01 23:08:04:INFO:M: >>  acc: 0.5897  UA: 0.3476  weight_F1: 0.5425  Macro_F1: 0.3505 
+2026-06-01 23:08:12:INFO:Saving best model at epoch 17 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-01 23:16:23:INFO:TRAIN-(hmmem) (1/18/3)>> loss: 0.5231
+2026-06-01 23:16:43:INFO:VAL-(hmmem) >>
+2026-06-01 23:16:43:INFO:M: >>  acc: 0.5753  UA: 0.3430  weight_F1: 0.5391  Macro_F1: 0.3455 
+2026-06-01 23:24:52:INFO:TRAIN-(hmmem) (2/19/3)>> loss: 0.5134
+2026-06-01 23:25:11:INFO:VAL-(hmmem) >>
+2026-06-01 23:25:11:INFO:M: >>  acc: 0.5681  UA: 0.3357  weight_F1: 0.5272  Macro_F1: 0.3366 
+2026-06-01 23:33:21:INFO:TRAIN-(hmmem) (3/20/3)>> loss: 0.5048
+2026-06-01 23:33:40:INFO:VAL-(hmmem) >>
+2026-06-01 23:33:40:INFO:M: >>  acc: 0.5546  UA: 0.3139  weight_F1: 0.4930  Macro_F1: 0.2998 
+2026-06-01 23:33:50:INFO:Checkpoint saved at epoch 20 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch20.ckpt
+2026-06-01 23:33:50:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch5.ckpt
+2026-06-01 23:42:00:INFO:TRAIN-(hmmem) (4/21/3)>> loss: 0.4942
+2026-06-01 23:42:19:INFO:VAL-(hmmem) >>
+2026-06-01 23:42:19:INFO:M: >>  acc: 0.5744  UA: 0.3413  weight_F1: 0.5307  Macro_F1: 0.3409 
+2026-06-01 23:50:30:INFO:TRAIN-(hmmem) (5/22/3)>> loss: 0.4864
+2026-06-01 23:50:49:INFO:VAL-(hmmem) >>
+2026-06-01 23:50:49:INFO:M: >>  acc: 0.5780  UA: 0.3493  weight_F1: 0.5382  Macro_F1: 0.3512 
+2026-06-01 23:58:59:INFO:TRAIN-(hmmem) (6/23/3)>> loss: 0.4766
+2026-06-01 23:59:18:INFO:VAL-(hmmem) >>
+2026-06-01 23:59:18:INFO:M: >>  acc: 0.5753  UA: 0.3389  weight_F1: 0.5371  Macro_F1: 0.3450 
+2026-06-02 00:07:28:INFO:TRAIN-(hmmem) (7/24/3)>> loss: 0.4700
+2026-06-02 00:07:47:INFO:VAL-(hmmem) >>
+2026-06-02 00:07:47:INFO:M: >>  acc: 0.5654  UA: 0.3422  weight_F1: 0.5266  Macro_F1: 0.3359 
+2026-06-02 00:15:58:INFO:TRAIN-(hmmem) (8/25/3)>> loss: 0.4619
+2026-06-02 00:16:17:INFO:VAL-(hmmem) >>
+2026-06-02 00:16:17:INFO:M: >>  acc: 0.5663  UA: 0.3377  weight_F1: 0.5252  Macro_F1: 0.3404 
+2026-06-02 00:16:27:INFO:Checkpoint saved at epoch 25 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch25.ckpt
+2026-06-02 00:16:28:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch10.ckpt
+2026-06-02 00:17:13:INFO:TEST-(hmmem) >>
+2026-06-02 00:17:13:INFO:M: >>  acc: 0.6073  UA: 0.3266  weight_F1: 0.5616  Macro_F1: 0.3338 
+2026-06-02 00:17:13:INFO:============================================================
+2026-06-02 00:17:13:INFO:         Detailed Classification Analysis
+2026-06-02 00:17:13:INFO:============================================================
+2026-06-02 00:17:13:INFO:         Class     Prec   Recall       F1   Support
+2026-06-02 00:17:13:INFO:------------------------------------------------------------
+2026-06-02 00:17:13:INFO:       neutral   0.6570   0.9013   0.7600      1256
+2026-06-02 00:17:13:INFO:      surprise   0.4945   0.4804   0.4874       281
+2026-06-02 00:17:13:INFO:          fear   0.0000   0.0000   0.0000        50
+2026-06-02 00:17:13:INFO:       sadness   0.3929   0.1587   0.2260       208
+2026-06-02 00:17:13:INFO:           joy   0.5478   0.4851   0.5145       402
+2026-06-02 00:17:13:INFO:       disgust   0.0000   0.0000   0.0000        68
+2026-06-02 00:17:13:INFO:         anger   0.5263   0.2609   0.3488       345
+2026-06-02 00:17:13:INFO:------------------------------------------------------------
+2026-06-02 00:17:13:INFO:  WA  (Weighted Accuracy) : 0.6073
+2026-06-02 00:17:13:INFO:  UA  (Unweighted Accuracy): 0.3266
+2026-06-02 00:17:13:INFO:  WF1 (Weighted F1)       : 0.5616
+2026-06-02 00:17:13:INFO:  Macro-F1                : 0.3338
+2026-06-02 00:17:13:INFO:============================================================
+2026-06-02 00:17:14:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-confusion_matrix-20260601_132620.png
+2026-06-02 00:17:34:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_emotion-20260601_132620.png
+2026-06-02 00:18:34:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_modality-20260601_132620.png
+2026-06-02 00:18:35:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-llama2-meld-classification.csv...
+2026-06-02 00:18:35:INFO:[ConfigResolver] model_type=llama2, dataset=meld, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'text_label_aliases', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-06-02 00:18:35:INFO:Start running hmmem...
+2026-06-02 00:18:35:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'llama2', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'MELD_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Llama-2-7b', 'gpu_ids': [0], 'seeds': [1234, 2234, 3234, 4234, 5234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'compressed', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260601_132620', 'dataPath': '/root/autodl-tmp/datasets/MELD_UniMSE', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <neutral:0, surprise:1, fear:2, sad:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'text_label_aliases': {'sadness': 'sad'}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 4234}>
+2026-06-02 00:18:35:INFO:Let's use the GPU 1 !
+2026-06-02 00:18:35:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_train.pkl
+2026-06-02 00:18:38:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_valid.pkl
+2026-06-02 00:18:39:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_test.pkl
+2026-06-02 00:18:56:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, shared_proj, global_moe, local_moe, moe_msf
+2026-06-02 00:18:56:INFO:trainable params: 3671182 || all params: 6742086798 || trainable%: 0.05445171665676322
+2026-06-02 00:18:56:INFO:Single-LR optimizer: 86 tensors, lr=0.0005
+2026-06-02 00:18:56:INFO:Init labels...
+2026-06-02 00:18:56:INFO:Start training...
+2026-06-02 00:18:56:INFO:  Batch size = 24
+2026-06-02 00:18:56:INFO:  Gradient Accumulation steps = 1
+2026-06-02 00:18:56:INFO:  Effective batch size = 24
+2026-06-02 00:18:56:INFO:  AMP dtype = torch.bfloat16
+2026-06-02 00:27:06:INFO:TRAIN-(hmmem) (1/1/4)>> loss: 1.4338
+2026-06-02 00:27:07:INFO:[GenDebug] model_type=llama2, max_new_tokens=1
+2026-06-02 00:27:07:INFO:[GenDebug] inputs_embeds.shape=torch.Size([24, 139, 4096]), outputs.shape=torch.Size([24, 3])
+2026-06-02 00:27:07:INFO:[GenDebug] outputs[0] token IDs: [1, 29871, 29900]
+2026-06-02 00:27:07:INFO:[GenDebug] outputs[0] full decode: '0'
+2026-06-02 00:27:07:INFO:[GenDebug] decoded responses[:8]: ['0', '0', '0', '0', '0', '0', '0', '0']
+2026-06-02 00:27:25:INFO:VAL-(hmmem) >>
+2026-06-02 00:27:25:INFO:M: >>  acc: 0.4238  UA: 0.1434  weight_F1: 0.2539  Macro_F1: 0.0867 
+2026-06-02 00:27:34:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 00:35:46:INFO:TRAIN-(hmmem) (1/2/4)>> loss: 0.7209
+2026-06-02 00:36:06:INFO:VAL-(hmmem) >>
+2026-06-02 00:36:06:INFO:M: >>  acc: 0.5221  UA: 0.2954  weight_F1: 0.4618  Macro_F1: 0.2841 
+2026-06-02 00:36:14:INFO:Saving best model at epoch 2 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 00:44:27:INFO:TRAIN-(hmmem) (1/3/4)>> loss: 0.5954
+2026-06-02 00:44:47:INFO:VAL-(hmmem) >>
+2026-06-02 00:44:47:INFO:M: >>  acc: 0.6123  UA: 0.3894  weight_F1: 0.5795  Macro_F1: 0.4175 
+2026-06-02 00:44:55:INFO:Saving best model at epoch 3 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 00:53:06:INFO:TRAIN-(hmmem) (1/4/4)>> loss: 0.5409
+2026-06-02 00:53:26:INFO:VAL-(hmmem) >>
+2026-06-02 00:53:26:INFO:M: >>  acc: 0.6213  UA: 0.4417  weight_F1: 0.6002  Macro_F1: 0.4532 
+2026-06-02 00:53:34:INFO:Saving best model at epoch 4 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 01:01:46:INFO:TRAIN-(hmmem) (1/5/4)>> loss: 0.5142
+2026-06-02 01:02:05:INFO:VAL-(hmmem) >>
+2026-06-02 01:02:05:INFO:M: >>  acc: 0.6168  UA: 0.4068  weight_F1: 0.5805  Macro_F1: 0.4218 
+2026-06-02 01:02:15:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch5.ckpt
+2026-06-02 01:02:16:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch15.ckpt
+2026-06-02 01:10:26:INFO:TRAIN-(hmmem) (2/6/4)>> loss: 0.4970
+2026-06-02 01:10:45:INFO:VAL-(hmmem) >>
+2026-06-02 01:10:45:INFO:M: >>  acc: 0.6258  UA: 0.3927  weight_F1: 0.5842  Macro_F1: 0.4248 
+2026-06-02 01:18:55:INFO:TRAIN-(hmmem) (3/7/4)>> loss: 0.4854
+2026-06-02 01:19:14:INFO:VAL-(hmmem) >>
+2026-06-02 01:19:14:INFO:M: >>  acc: 0.6456  UA: 0.4424  weight_F1: 0.6224  Macro_F1: 0.4677 
+2026-06-02 01:19:22:INFO:Saving best model at epoch 7 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 01:27:34:INFO:TRAIN-(hmmem) (1/8/4)>> loss: 0.4777
+2026-06-02 01:27:53:INFO:VAL-(hmmem) >>
+2026-06-02 01:27:53:INFO:M: >>  acc: 0.6303  UA: 0.4382  weight_F1: 0.6080  Macro_F1: 0.4607 
+2026-06-02 01:36:03:INFO:TRAIN-(hmmem) (2/9/4)>> loss: 0.4705
+2026-06-02 01:36:22:INFO:VAL-(hmmem) >>
+2026-06-02 01:36:22:INFO:M: >>  acc: 0.6393  UA: 0.4806  weight_F1: 0.6245  Macro_F1: 0.5024 
+2026-06-02 01:36:30:INFO:Saving best model at epoch 9 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 01:44:42:INFO:TRAIN-(hmmem) (1/10/4)>> loss: 0.4639
+2026-06-02 01:45:01:INFO:VAL-(hmmem) >>
+2026-06-02 01:45:01:INFO:M: >>  acc: 0.6375  UA: 0.4465  weight_F1: 0.6127  Macro_F1: 0.4790 
+2026-06-02 01:45:11:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch10.ckpt
+2026-06-02 01:45:11:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch20.ckpt
+2026-06-02 01:53:21:INFO:TRAIN-(hmmem) (2/11/4)>> loss: 0.4564
+2026-06-02 01:53:40:INFO:VAL-(hmmem) >>
+2026-06-02 01:53:40:INFO:M: >>  acc: 0.6447  UA: 0.4586  weight_F1: 0.6215  Macro_F1: 0.4859 
+2026-06-02 02:01:50:INFO:TRAIN-(hmmem) (3/12/4)>> loss: 0.4489
+2026-06-02 02:02:10:INFO:VAL-(hmmem) >>
+2026-06-02 02:02:10:INFO:M: >>  acc: 0.6249  UA: 0.4448  weight_F1: 0.6061  Macro_F1: 0.4602 
+2026-06-02 02:10:20:INFO:TRAIN-(hmmem) (4/13/4)>> loss: 0.4418
+2026-06-02 02:10:39:INFO:VAL-(hmmem) >>
+2026-06-02 02:10:39:INFO:M: >>  acc: 0.6339  UA: 0.4900  weight_F1: 0.6190  Macro_F1: 0.4916 
+2026-06-02 02:18:50:INFO:TRAIN-(hmmem) (5/14/4)>> loss: 0.4366
+2026-06-02 02:19:09:INFO:VAL-(hmmem) >>
+2026-06-02 02:19:09:INFO:M: >>  acc: 0.6411  UA: 0.4316  weight_F1: 0.6125  Macro_F1: 0.4635 
+2026-06-02 02:27:19:INFO:TRAIN-(hmmem) (6/15/4)>> loss: 0.4279
+2026-06-02 02:27:39:INFO:VAL-(hmmem) >>
+2026-06-02 02:27:39:INFO:M: >>  acc: 0.6384  UA: 0.4540  weight_F1: 0.6147  Macro_F1: 0.4745 
+2026-06-02 02:27:49:INFO:Checkpoint saved at epoch 15 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch15.ckpt
+2026-06-02 02:27:49:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch25.ckpt
+2026-06-02 02:35:58:INFO:TRAIN-(hmmem) (7/16/4)>> loss: 0.4249
+2026-06-02 02:36:18:INFO:VAL-(hmmem) >>
+2026-06-02 02:36:18:INFO:M: >>  acc: 0.6393  UA: 0.4691  weight_F1: 0.6237  Macro_F1: 0.4925 
+2026-06-02 02:44:28:INFO:TRAIN-(hmmem) (8/17/4)>> loss: 0.4158
+2026-06-02 02:44:47:INFO:VAL-(hmmem) >>
+2026-06-02 02:44:47:INFO:M: >>  acc: 0.6330  UA: 0.4747  weight_F1: 0.6200  Macro_F1: 0.4930 
+2026-06-02 02:45:33:INFO:TEST-(hmmem) >>
+2026-06-02 02:45:33:INFO:M: >>  acc: 0.6398  UA: 0.4606  weight_F1: 0.6277  Macro_F1: 0.4718 
+2026-06-02 02:45:33:INFO:============================================================
+2026-06-02 02:45:33:INFO:         Detailed Classification Analysis
+2026-06-02 02:45:33:INFO:============================================================
+2026-06-02 02:45:33:INFO:         Class     Prec   Recall       F1   Support
+2026-06-02 02:45:33:INFO:------------------------------------------------------------
+2026-06-02 02:45:33:INFO:       neutral   0.7479   0.7962   0.7713      1256
+2026-06-02 02:45:33:INFO:      surprise   0.4558   0.6797   0.5457       281
+2026-06-02 02:45:33:INFO:          fear   0.4062   0.2600   0.3171        50
+2026-06-02 02:45:33:INFO:       sadness   0.5495   0.2933   0.3824       208
+2026-06-02 02:45:33:INFO:           joy   0.5638   0.6592   0.6078       402
+2026-06-02 02:45:33:INFO:       disgust   0.2895   0.1618   0.2075        68
+2026-06-02 02:45:33:INFO:         anger   0.6355   0.3739   0.4708       345
+2026-06-02 02:45:33:INFO:------------------------------------------------------------
+2026-06-02 02:45:33:INFO:  WA  (Weighted Accuracy) : 0.6398
+2026-06-02 02:45:33:INFO:  UA  (Unweighted Accuracy): 0.4606
+2026-06-02 02:45:33:INFO:  WF1 (Weighted F1)       : 0.6277
+2026-06-02 02:45:33:INFO:  Macro-F1                : 0.4718
+2026-06-02 02:45:33:INFO:============================================================
+2026-06-02 02:45:34:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-confusion_matrix-20260601_132620.png
+2026-06-02 02:45:51:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_emotion-20260601_132620.png
+2026-06-02 02:46:50:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_modality-20260601_132620.png
+2026-06-02 02:46:51:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-llama2-meld-classification.csv...
+2026-06-02 02:46:51:INFO:[ConfigResolver] model_type=llama2, dataset=meld, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'text_label_aliases', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-06-02 02:46:51:INFO:Start running hmmem...
+2026-06-02 02:46:51:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'llama2', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'MELD_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Llama-2-7b', 'gpu_ids': [0], 'seeds': [1234, 2234, 3234, 4234, 5234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'compressed', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260601_132620', 'dataPath': '/root/autodl-tmp/datasets/MELD_UniMSE', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <neutral:0, surprise:1, fear:2, sad:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'text_label_aliases': {'sadness': 'sad'}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 5234}>
+2026-06-02 02:46:51:INFO:Let's use the GPU 1 !
+2026-06-02 02:46:51:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_train.pkl
+2026-06-02 02:46:54:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_valid.pkl
+2026-06-02 02:46:54:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_test.pkl
+2026-06-02 02:47:11:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, shared_proj, global_moe, local_moe, moe_msf
+2026-06-02 02:47:11:INFO:trainable params: 3671182 || all params: 6742086798 || trainable%: 0.05445171665676322
+2026-06-02 02:47:11:INFO:Single-LR optimizer: 86 tensors, lr=0.0005
+2026-06-02 02:47:11:INFO:Init labels...
+2026-06-02 02:47:11:INFO:Start training...
+2026-06-02 02:47:11:INFO:  Batch size = 24
+2026-06-02 02:47:11:INFO:  Gradient Accumulation steps = 1
+2026-06-02 02:47:11:INFO:  Effective batch size = 24
+2026-06-02 02:47:11:INFO:  AMP dtype = torch.bfloat16
+2026-06-02 02:55:21:INFO:TRAIN-(hmmem) (1/1/5)>> loss: 1.4601
+2026-06-02 02:55:21:INFO:[GenDebug] model_type=llama2, max_new_tokens=1
+2026-06-02 02:55:21:INFO:[GenDebug] inputs_embeds.shape=torch.Size([24, 139, 4096]), outputs.shape=torch.Size([24, 3])
+2026-06-02 02:55:21:INFO:[GenDebug] outputs[0] token IDs: [1, 29871, 29900]
+2026-06-02 02:55:21:INFO:[GenDebug] outputs[0] full decode: '0'
+2026-06-02 02:55:21:INFO:[GenDebug] decoded responses[:8]: ['0', '0', '0', '0', '0', '0', '0', '0']
+2026-06-02 02:55:40:INFO:VAL-(hmmem) >>
+2026-06-02 02:55:40:INFO:M: >>  acc: 0.4256  UA: 0.1446  weight_F1: 0.2566  Macro_F1: 0.0887 
+2026-06-02 02:55:48:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 03:04:00:INFO:TRAIN-(hmmem) (1/2/5)>> loss: 0.7064
+2026-06-02 03:04:20:INFO:VAL-(hmmem) >>
+2026-06-02 03:04:20:INFO:M: >>  acc: 0.5410  UA: 0.2915  weight_F1: 0.4812  Macro_F1: 0.2925 
+2026-06-02 03:04:28:INFO:Saving best model at epoch 2 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 03:12:40:INFO:TRAIN-(hmmem) (1/3/5)>> loss: 0.6043
+2026-06-02 03:12:59:INFO:VAL-(hmmem) >>
+2026-06-02 03:12:59:INFO:M: >>  acc: 0.6005  UA: 0.3575  weight_F1: 0.5527  Macro_F1: 0.3901 
+2026-06-02 03:13:08:INFO:Saving best model at epoch 3 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 03:21:19:INFO:TRAIN-(hmmem) (1/4/5)>> loss: 0.5510
+2026-06-02 03:21:39:INFO:VAL-(hmmem) >>
+2026-06-02 03:21:39:INFO:M: >>  acc: 0.6249  UA: 0.3963  weight_F1: 0.5886  Macro_F1: 0.4308 
+2026-06-02 03:21:46:INFO:Saving best model at epoch 4 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 03:29:58:INFO:TRAIN-(hmmem) (1/5/5)>> loss: 0.5219
+2026-06-02 03:30:17:INFO:VAL-(hmmem) >>
+2026-06-02 03:30:17:INFO:M: >>  acc: 0.6303  UA: 0.4304  weight_F1: 0.6100  Macro_F1: 0.4430 
+2026-06-02 03:30:25:INFO:Saving best model at epoch 5 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 03:30:38:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch5.ckpt
+2026-06-02 03:38:48:INFO:TRAIN-(hmmem) (1/6/5)>> loss: 0.5056
+2026-06-02 03:39:07:INFO:VAL-(hmmem) >>
+2026-06-02 03:39:07:INFO:M: >>  acc: 0.6348  UA: 0.4829  weight_F1: 0.6189  Macro_F1: 0.5102 
+2026-06-02 03:39:15:INFO:Saving best model at epoch 6 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 03:47:27:INFO:TRAIN-(hmmem) (1/7/5)>> loss: 0.4923
+2026-06-02 03:47:46:INFO:VAL-(hmmem) >>
+2026-06-02 03:47:46:INFO:M: >>  acc: 0.6474  UA: 0.4593  weight_F1: 0.6204  Macro_F1: 0.5002 
+2026-06-02 03:47:55:INFO:Saving best model at epoch 7 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 03:56:07:INFO:TRAIN-(hmmem) (1/8/5)>> loss: 0.4833
+2026-06-02 03:56:26:INFO:VAL-(hmmem) >>
+2026-06-02 03:56:26:INFO:M: >>  acc: 0.6366  UA: 0.4397  weight_F1: 0.6097  Macro_F1: 0.4770 
+2026-06-02 04:04:36:INFO:TRAIN-(hmmem) (2/9/5)>> loss: 0.4749
+2026-06-02 04:04:55:INFO:VAL-(hmmem) >>
+2026-06-02 04:04:55:INFO:M: >>  acc: 0.6357  UA: 0.4367  weight_F1: 0.6080  Macro_F1: 0.4727 
+2026-06-02 04:13:05:INFO:TRAIN-(hmmem) (3/10/5)>> loss: 0.4676
+2026-06-02 04:13:24:INFO:VAL-(hmmem) >>
+2026-06-02 04:13:24:INFO:M: >>  acc: 0.6564  UA: 0.4697  weight_F1: 0.6350  Macro_F1: 0.5028 
+2026-06-02 04:13:32:INFO:Saving best model at epoch 10 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_132620.pth.
+2026-06-02 04:13:45:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch10.ckpt
+2026-06-02 04:21:55:INFO:TRAIN-(hmmem) (1/11/5)>> loss: 0.4583
+2026-06-02 04:22:14:INFO:VAL-(hmmem) >>
+2026-06-02 04:22:14:INFO:M: >>  acc: 0.6402  UA: 0.4717  weight_F1: 0.6228  Macro_F1: 0.4995 
+2026-06-02 09:49:05:INFO:========= 准备训练数据集: meld (classification) =========
+2026-06-02 09:49:05:INFO:[ConfigResolver] model_type=llama2, dataset=meld, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'text_label_aliases', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-06-02 09:49:05:INFO:Start running hmmem...
+2026-06-02 09:49:05:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'llama2', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'MELD_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Llama-2-7b', 'gpu_ids': [], 'seeds': [5234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'compressed', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': '/root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch10.ckpt', 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260602_094905', 'dataPath': '/root/autodl-tmp/datasets/MELD_UniMSE', 'seq_lens': (65, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <neutral:0, surprise:1, fear:2, sad:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'text_label_aliases': {'sadness': 'sad'}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 5234}>
+2026-06-02 09:49:05:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-06-02 09:49:05:INFO:Let's use the GPU 1 !
+2026-06-02 09:49:05:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_train.pkl
+2026-06-02 09:49:08:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_valid.pkl
+2026-06-02 09:49:09:INFO:MELD loading OLD format: /root/autodl-tmp/datasets/MELD_UniMSE/meld_test.pkl
+2026-06-02 09:49:30:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, shared_proj, global_moe, local_moe, moe_msf
+2026-06-02 09:49:30:INFO:trainable params: 3671182 || all params: 6742086798 || trainable%: 0.05445171665676322
+2026-06-02 09:49:30:INFO:Single-LR optimizer: 86 tensors, lr=0.0005
+2026-06-02 09:49:30:INFO:Init labels...
+2026-06-02 09:49:30:INFO:Resuming from checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch10.ckpt
+2026-06-02 09:49:30:INFO:Optimizer/scheduler state restored successfully.
+2026-06-02 09:49:30:INFO:Resumed from checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260601_132620-epoch10.ckpt (epoch=10, best_valid=0.6350)
+2026-06-02 09:49:30:INFO:Start training...
+2026-06-02 09:49:30:INFO:  Batch size = 24
+2026-06-02 09:49:30:INFO:  Gradient Accumulation steps = 1
+2026-06-02 09:49:30:INFO:  Effective batch size = 24
+2026-06-02 09:49:30:INFO:  AMP dtype = torch.bfloat16
+2026-06-02 09:49:30:INFO:  Resuming from epoch 10, best_valid=0.6350 (best_epoch=10)
+2026-06-02 09:57:34:INFO:TRAIN-(hmmem) (1/11/1)>> loss: 0.4589
+2026-06-02 09:57:38:INFO:[GenDebug] model_type=llama2, max_new_tokens=1
+2026-06-02 09:57:38:INFO:[GenDebug] inputs_embeds.shape=torch.Size([24, 139, 4096]), outputs.shape=torch.Size([24, 3])
+2026-06-02 09:57:38:INFO:[GenDebug] outputs[0] token IDs: [1, 29871, 29941]
+2026-06-02 09:57:38:INFO:[GenDebug] outputs[0] full decode: '3'
+2026-06-02 09:57:38:INFO:[GenDebug] decoded responses[:8]: ['3', '1', '0', '4', '3', '0', '0', '0']
+2026-06-02 09:57:57:INFO:VAL-(hmmem) >>
+2026-06-02 09:57:57:INFO:M: >>  acc: 0.6312  UA: 0.4361  weight_F1: 0.6014  Macro_F1: 0.4763 
+2026-06-02 10:05:53:INFO:TRAIN-(hmmem) (2/12/1)>> loss: 0.4549
+2026-06-02 10:06:12:INFO:VAL-(hmmem) >>
+2026-06-02 10:06:12:INFO:M: >>  acc: 0.6447  UA: 0.4641  weight_F1: 0.6186  Macro_F1: 0.4955 
+2026-06-02 10:14:07:INFO:TRAIN-(hmmem) (3/13/1)>> loss: 0.4438
+2026-06-02 10:14:26:INFO:VAL-(hmmem) >>
+2026-06-02 10:14:26:INFO:M: >>  acc: 0.6393  UA: 0.4779  weight_F1: 0.6222  Macro_F1: 0.4992 
+2026-06-02 10:22:22:INFO:TRAIN-(hmmem) (4/14/1)>> loss: 0.4371
+2026-06-02 10:22:41:INFO:VAL-(hmmem) >>
+2026-06-02 10:22:41:INFO:M: >>  acc: 0.6456  UA: 0.4665  weight_F1: 0.6236  Macro_F1: 0.4921 
+2026-06-02 10:30:37:INFO:TRAIN-(hmmem) (5/15/1)>> loss: 0.4300
+2026-06-02 10:30:56:INFO:VAL-(hmmem) >>
+2026-06-02 10:30:56:INFO:M: >>  acc: 0.6420  UA: 0.4816  weight_F1: 0.6280  Macro_F1: 0.5073 
+2026-06-02 10:31:05:INFO:Checkpoint saved at epoch 15 -> /root/autodl-tmp/results/models/checkpoints/hmmem-llama2-meld-classification-20260602_094905-epoch15.ckpt
+2026-06-02 10:39:02:INFO:TRAIN-(hmmem) (6/16/1)>> loss: 0.4244
+2026-06-02 10:39:21:INFO:VAL-(hmmem) >>
+2026-06-02 10:39:21:INFO:M: >>  acc: 0.6393  UA: 0.4770  weight_F1: 0.6208  Macro_F1: 0.5001 
+2026-06-02 10:47:17:INFO:TRAIN-(hmmem) (7/17/1)>> loss: 0.4151
+2026-06-02 10:47:36:INFO:VAL-(hmmem) >>
+2026-06-02 10:47:36:INFO:M: >>  acc: 0.6321  UA: 0.4580  weight_F1: 0.6084  Macro_F1: 0.4831 
+2026-06-02 10:55:32:INFO:TRAIN-(hmmem) (8/18/1)>> loss: 0.4098
+2026-06-02 10:55:51:INFO:VAL-(hmmem) >>
+2026-06-02 10:55:51:INFO:M: >>  acc: 0.6465  UA: 0.4837  weight_F1: 0.6332  Macro_F1: 0.5045 
+2026-06-02 10:55:51:INFO:No new best found during resumed training. Saving checkpoint-restored best model to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260602_094905.pth
+2026-06-02 10:55:58:INFO:Saving best model at epoch 10 to /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260602_094905.pth.
+2026-06-02 10:56:45:INFO:TEST-(hmmem) >>
+2026-06-02 10:56:45:INFO:M: >>  acc: 0.6540  UA: 0.4592  weight_F1: 0.6390  Macro_F1: 0.4876 
+2026-06-02 10:56:45:INFO:============================================================
+2026-06-02 10:56:45:INFO:         Detailed Classification Analysis
+2026-06-02 10:56:45:INFO:============================================================
+2026-06-02 10:56:45:INFO:         Class     Prec   Recall       F1   Support
+2026-06-02 10:56:45:INFO:------------------------------------------------------------
+2026-06-02 10:56:45:INFO:       neutral   0.7106   0.8543   0.7758      1256
+2026-06-02 10:56:45:INFO:      surprise   0.5657   0.5516   0.5586       281
+2026-06-02 10:56:45:INFO:          fear   0.2683   0.2200   0.2418        50
+2026-06-02 10:56:45:INFO:       sadness   0.5303   0.3365   0.4118       208
+2026-06-02 10:56:45:INFO:           joy   0.6424   0.5498   0.5925       402
+2026-06-02 10:56:45:INFO:       disgust   0.4706   0.2353   0.3137        68
+2026-06-02 10:56:45:INFO:         anger   0.5855   0.4667   0.5194       345
+2026-06-02 10:56:45:INFO:------------------------------------------------------------
+2026-06-02 10:56:45:INFO:  WA  (Weighted Accuracy) : 0.6540
+2026-06-02 10:56:45:INFO:  UA  (Unweighted Accuracy): 0.4592
+2026-06-02 10:56:45:INFO:  WF1 (Weighted F1)       : 0.6390
+2026-06-02 10:56:45:INFO:  Macro-F1                : 0.4876
+2026-06-02 10:56:45:INFO:============================================================
+2026-06-02 10:56:46:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-confusion_matrix-20260602_094905.png
+2026-06-02 10:57:04:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_emotion-20260602_094905.png
+2026-06-02 10:58:06:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_modality-20260602_094905.png
+2026-06-02 10:58:07:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-llama2-meld-classification.csv...
+2026-06-02 15:36:55:INFO:========= 准备训练数据集: meld (classification) =========
+2026-06-02 15:36:55:INFO:[ConfigResolver] model_type=llama2, dataset=meld, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'text_label_aliases', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-06-02 15:36:55:INFO:Start running hmmem...
+2026-06-02 15:36:55:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'llama2', 'datasetName': 'meld', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Llama-2-7b', 'gpu_ids': [], 'seeds': [4234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'mosei_feature_mode': 'legacy', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'text', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 0.0005, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 1, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': True, 'eval_model_path': '/root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_112804.pth', 'timestamp': '20260602_153655', 'dataPath': '/root/autodl-tmp/datasets/MELD/meld_data_0610.pkl', 'seq_lens': (65, 64, 64), 'feature_dims': (0, 1280, 1408), 'train_samples': 9988, 'num_classes': 7, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <neutral:0, surprise:1, fear:2, sad:3, joy:4, disgust:5, anger:6>. Assistant: The emotion is', 'max_new_tokens': 1, 'pseudo_tokens': 4, 'label_index_mapping': {'neutral': 0, 'surprise': 1, 'fear': 2, 'sadness': 3, 'joy': 4, 'disgust': 5, 'anger': 6}, 'text_label_aliases': {'sadness': 'sad'}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 4234}>
+2026-06-02 15:36:55:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-06-02 15:36:55:INFO:Let's use the GPU 1 !
+2026-06-02 15:36:55:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-06-02 15:37:00:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_train.csv: 9989 entries
+2026-06-02 15:37:00:INFO:MELD train split loaded 9989/9989 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-06-02 15:37:06:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-06-02 15:37:08:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_valid.csv: 1109 entries
+2026-06-02 15:37:08:INFO:MELD valid split loaded 1109/1109 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-06-02 15:37:08:INFO:MELD loading NEW format: /root/autodl-tmp/datasets/MELD/meld_data_0610.pkl
+2026-06-02 15:37:10:INFO:MELD text loaded from /root/autodl-tmp/datasets/MELD/meld_text/meld_data_test.csv: 2610 entries
+2026-06-02 15:37:10:INFO:MELD test split loaded 2610/2610 samples (drop: missing_meta=0, mapping_missing=0, missing_modal=0)
+2026-06-02 15:37:29:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, audio_adapter, video_adapter, shared_proj, global_moe, local_moe, moe_msf
+2026-06-02 15:37:29:INFO:trainable params: 4450702 || all params: 6742866318 || trainable%: 0.06600608391299269
+2026-06-02 15:37:29:INFO:[Eval-Only] Loading model from: /root/autodl-tmp/results/models/hmmem-llama2-meld-classification-20260601_112804.pth
+2026-06-02 15:37:29:INFO:[Eval-Only] Running evaluation on VALID set...
+2026-06-02 15:37:36:INFO:[GenDebug] model_type=llama2, max_new_tokens=1
+2026-06-02 15:37:36:INFO:[GenDebug] inputs_embeds.shape=torch.Size([24, 125, 4096]), outputs.shape=torch.Size([24, 3])
+2026-06-02 15:37:36:INFO:[GenDebug] outputs[0] token IDs: [1, 16671, 16671]
+2026-06-02 15:37:36:INFO:[GenDebug] outputs[0] full decode: 'surprise surprise'
+2026-06-02 15:37:36:INFO:[GenDebug] decoded responses[:8]: ['surprise surprise', 'surprise surprise', 'neutral neutral', 'joy joy', 'sad sad', 'neutral neutral', 'neutral neutral', 'joy joy']
+2026-06-02 15:37:53:INFO:VALID-(hmmem) >>
+2026-06-02 15:37:53:INFO:M: >>  acc: 0.6420  UA: 0.4328  weight_F1: 0.6166  Macro_F1: 0.4452 
+2026-06-02 15:37:53:INFO:============================================================
+2026-06-02 15:37:53:INFO:         Detailed Classification Analysis
+2026-06-02 15:37:53:INFO:============================================================
+2026-06-02 15:37:53:INFO:         Class     Prec   Recall       F1   Support
+2026-06-02 15:37:53:INFO:------------------------------------------------------------
+2026-06-02 15:37:53:INFO:       neutral   0.7086   0.8638   0.7785       470
+2026-06-02 15:37:53:INFO:      surprise   0.6154   0.5867   0.6007       150
+2026-06-02 15:37:53:INFO:          fear   0.5000   0.1500   0.2308        40
+2026-06-02 15:37:53:INFO:       sadness   0.6207   0.3243   0.4260       111
+2026-06-02 15:37:53:INFO:           joy   0.5256   0.6933   0.5979       163
+2026-06-02 15:37:53:INFO:       disgust   0.0000   0.0000   0.0000        22
+2026-06-02 15:37:53:INFO:         anger   0.5833   0.4118   0.4828       153
+2026-06-02 15:37:53:INFO:------------------------------------------------------------
+2026-06-02 15:37:53:INFO:  WA  (Weighted Accuracy) : 0.6420
+2026-06-02 15:37:53:INFO:  UA  (Unweighted Accuracy): 0.4328
+2026-06-02 15:37:53:INFO:  WF1 (Weighted F1)       : 0.6166
+2026-06-02 15:37:53:INFO:  Macro-F1                : 0.4452
+2026-06-02 15:37:53:INFO:============================================================
+2026-06-02 15:37:53:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-VALID-confusion_matrix-20260602_153655.png
+2026-06-02 15:38:02:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-VALID-tsne_emotion-20260602_153655.png
+2026-06-02 15:38:27:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-VALID-tsne_modality-20260602_153655.png
+2026-06-02 15:38:27:INFO:[Eval-Only] Running evaluation on TEST set...
+2026-06-02 15:39:07:INFO:TEST-(hmmem) >>
+2026-06-02 15:39:07:INFO:M: >>  acc: 0.6475  UA: 0.4113  weight_F1: 0.6249  Macro_F1: 0.4186 
+2026-06-02 15:39:07:INFO:============================================================
+2026-06-02 15:39:07:INFO:         Detailed Classification Analysis
+2026-06-02 15:39:07:INFO:============================================================
+2026-06-02 15:39:07:INFO:         Class     Prec   Recall       F1   Support
+2026-06-02 15:39:07:INFO:------------------------------------------------------------
+2026-06-02 15:39:07:INFO:       neutral   0.7438   0.8344   0.7865      1256
+2026-06-02 15:39:07:INFO:      surprise   0.5939   0.5516   0.5720       281
+2026-06-02 15:39:07:INFO:          fear   0.3846   0.1000   0.1587        50
+2026-06-02 15:39:07:INFO:       sadness   0.4370   0.2837   0.3440       208
+2026-06-02 15:39:07:INFO:           joy   0.5250   0.7065   0.6023       402
+2026-06-02 15:39:07:INFO:       disgust   0.0000   0.0000   0.0000        68
+2026-06-02 15:39:07:INFO:         anger   0.5538   0.4029   0.4664       345
+2026-06-02 15:39:07:INFO:------------------------------------------------------------
+2026-06-02 15:39:07:INFO:  WA  (Weighted Accuracy) : 0.6475
+2026-06-02 15:39:07:INFO:  UA  (Unweighted Accuracy): 0.4113
+2026-06-02 15:39:07:INFO:  WF1 (Weighted F1)       : 0.6249
+2026-06-02 15:39:07:INFO:  Macro-F1                : 0.4186
+2026-06-02 15:39:07:INFO:============================================================
+2026-06-02 15:39:07:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-confusion_matrix-20260602_153655.png
+2026-06-02 15:39:32:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_emotion-20260602_153655.png
+2026-06-02 15:40:47:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-llama2-meld-TEST-tsne_modality-20260602_153655.png
+2026-06-02 15:40:49:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-llama2-meld-classification.csv...

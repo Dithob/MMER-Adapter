@@ -19,22 +19,14 @@ classification:
 
   iemocap:
     task_specific_prompt: >-
-      Please recognize the emotion of the above multimodal content from the label
-      set <hap: 0, sad: 1, neu: 2, ang: 3, exc: 4, fru: 5>. Assistant: The emotion is
+      Please recognize the emotion of the above multimodal content from the target
+      set <angry:0, happy:1, sad:2, neutral:3>. Assistant: The emotion is
     task_specific_prompt_6class: >-
-      Please recognize the emotion of the above multimodal content from the label
-      set <hap: 0, sad: 1, neu: 2, ang: 3, exc: 4, fru: 5>. Assistant: The emotion is
-    max_new_tokens: 1
-    label_index_mapping_6class:
-      hap: 0
-      sad: 1
-      neu: 2
-      ang: 3
-      exc: 4
-      fru: 5
-    batch_size: 4
-    learning_rate: 5.0e-4
-    a_lstm_hidden_size: 32
+      Please recognize the emotion of the above multimodal content from the target
+      set <angry:0, happy:1, excited:2, sad:3, neutral:4, frustrated:5>. Assistant: The emotion is
+    batch_size: 24
+    learning_rate: 5.0e-5
+    a_lstm_hidden_size: 64
     v_lstm_hidden_size: 32
 
   cherma:

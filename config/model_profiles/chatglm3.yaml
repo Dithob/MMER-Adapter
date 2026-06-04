@@ -14,3 +14,36 @@
 #   meld:
 #     batch_size: 32
 #     learning_rate: 1.0e-4
+
+classification:
+  iemocap:
+    task_specific_prompt: >-
+      Please recognize the emotion of the above multimodal content from the target
+      set <angry:0, happy:1, sad:2, neutral:3>. Assistant: The emotion is
+    task_specific_prompt_6class: >-
+      Please recognize the emotion of the above multimodal content from the target
+      set <angry:0, happy:1, excited:2, sad:3, neutral:4, frustrated:5>. Assistant: The emotion is
+    batch_size: 24
+    learning_rate: 5.0e-5
+
+
+regression:
+  mosei:
+    task_specific_prompt: >-
+      Please predict sentiment intensity of the above multimodal content in range [-3.0, 3.0]. response: The sentiment is
+    max_new_tokens: 4
+    pseudo_tokens: 4
+    batch_size: 32
+    gradient_accumulation_steps: 2
+    learning_rate: 5.0e-5
+    a_lstm_hidden_size: 64
+    v_lstm_hidden_size: 32
+    a_lstm_layers: 1
+    v_lstm_layers: 1
+    a_lstm_dropout: 0.0
+    v_lstm_dropout: 0.0
+    warm_up_epochs: 30
+    gamma: 1
+    update_epochs: 1
+    early_stop: 10
+    H: 3.0

@@ -1,0 +1,280 @@
+2026-06-02 15:45:11:INFO:========= 准备训练数据集: mosei (regression) =========
+2026-06-02 15:45:11:INFO:[ConfigResolver] model_type=chatglm3, dataset=mosei, task=regression, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'H']
+2026-06-02 15:45:11:INFO:Start running hmmem...
+2026-06-02 15:45:11:INFO:<Storage{'is_tune': False, 'train_mode': 'regression', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'mosei', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'mosei_feature_mode': 'compressed', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'query_key_value', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 5e-05, 'max_epochs': None, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 2, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260602_154511', 'dataPath': '/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl', 'seq_lens': (50, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 16326, 'num_classes': 3, 'language': 'en', 'KeyEval': 'MAE', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please predict sentiment intensity of the above multimodal content in range [-3.0, 3.0]. response: The sentiment is', 'max_new_tokens': 4, 'pseudo_tokens': 4, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-06-02 15:45:11:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-06-02 15:45:11:INFO:Let's use the GPU 1 !
+2026-06-02 15:45:11:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 15:45:18:INFO:MOSEI train loaded: 16326 samples, audio=(16326, 157, 64), vision=(16326, 32, 64)
+2026-06-02 15:45:22:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 15:45:27:INFO:MOSEI valid loaded: 1871 samples, audio=(1871, 157, 64), vision=(1871, 32, 64)
+2026-06-02 15:45:28:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 15:45:33:INFO:MOSEI test loaded: 4659 samples, audio=(4659, 157, 64), vision=(4659, 32, 64)
+2026-06-02 15:48:48:INFO:========= 准备训练数据集: mosei (regression) =========
+2026-06-02 15:48:48:INFO:[ConfigResolver] model_type=chatglm3, dataset=mosei, task=regression, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'H']
+2026-06-02 15:48:48:INFO:Start running hmmem...
+2026-06-02 15:48:48:INFO:<Storage{'is_tune': False, 'train_mode': 'regression', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'mosei', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'mosei_feature_mode': 'compressed', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'query_key_value', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 5e-05, 'max_epochs': None, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 2, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260602_154848', 'dataPath': '/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl', 'seq_lens': (50, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 16326, 'num_classes': 3, 'language': 'en', 'KeyEval': 'MAE', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please predict sentiment intensity of the above multimodal content in range [-3.0, 3.0]. response: The sentiment is', 'max_new_tokens': 4, 'pseudo_tokens': 4, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-06-02 15:48:48:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-06-02 15:48:48:INFO:Let's use the GPU 1 !
+2026-06-02 15:48:48:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 15:48:55:INFO:MOSEI train loaded: 16326 samples, audio=(16326, 157, 64), vision=(16326, 32, 64)
+2026-06-02 15:48:59:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 15:49:05:INFO:MOSEI valid loaded: 1871 samples, audio=(1871, 157, 64), vision=(1871, 32, 64)
+2026-06-02 15:49:06:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 15:49:12:INFO:MOSEI test loaded: 4659 samples, audio=(4659, 157, 64), vision=(4659, 32, 64)
+2026-06-02 15:49:42:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, shared_proj, global_moe, local_moe, moe_msf
+2026-06-02 15:49:42:INFO:trainable params: 3671182 || all params: 6247255182 || trainable%: 0.05876471975368718
+2026-06-02 15:49:42:INFO:Single-LR optimizer: 86 tensors, lr=5e-05
+2026-06-02 15:49:42:INFO:Init labels...
+2026-06-02 15:49:42:INFO:Start training...
+2026-06-02 15:49:42:INFO:  Batch size = 24
+2026-06-02 15:49:42:INFO:  Gradient Accumulation steps = 2
+2026-06-02 15:49:42:INFO:  Effective batch size = 48
+2026-06-02 15:49:42:INFO:  AMP dtype = torch.bfloat16
+2026-06-02 16:00:41:INFO:========= 准备训练数据集: mosei (regression) =========
+2026-06-02 16:00:41:INFO:[ConfigResolver] model_type=chatglm3, dataset=mosei, task=regression, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'H']
+2026-06-02 16:00:41:INFO:Start running hmmem...
+2026-06-02 16:00:41:INFO:<Storage{'is_tune': False, 'train_mode': 'regression', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'mosei', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'mosei_feature_mode': 'compressed', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'query_key_value', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 5e-05, 'max_epochs': None, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 2, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260602_160041', 'dataPath': '/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl', 'seq_lens': (50, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 16326, 'num_classes': 3, 'language': 'en', 'KeyEval': 'MAE', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please predict sentiment intensity of the above multimodal content in range [-3.0, 3.0]. response: The sentiment is', 'max_new_tokens': 4, 'pseudo_tokens': 4, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-06-02 16:00:41:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-06-02 16:00:41:INFO:Let's use the GPU 1 !
+2026-06-02 16:00:41:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 16:00:47:INFO:MOSEI train loaded: 16326 samples, audio=(16326, 157, 64), vision=(16326, 32, 64)
+2026-06-02 16:00:50:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 16:00:56:INFO:MOSEI valid loaded: 1871 samples, audio=(1871, 157, 64), vision=(1871, 32, 64)
+2026-06-02 16:00:56:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 16:01:02:INFO:MOSEI test loaded: 4659 samples, audio=(4659, 157, 64), vision=(4659, 32, 64)
+2026-06-02 16:01:21:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, shared_proj, global_moe, local_moe, moe_msf
+2026-06-02 16:01:21:INFO:trainable params: 3671182 || all params: 6247255182 || trainable%: 0.05876471975368718
+2026-06-02 16:01:21:INFO:Single-LR optimizer: 86 tensors, lr=5e-05
+2026-06-02 16:01:21:INFO:Init labels...
+2026-06-02 16:01:21:INFO:Start training...
+2026-06-02 16:01:21:INFO:  Batch size = 24
+2026-06-02 16:01:21:INFO:  Gradient Accumulation steps = 2
+2026-06-02 16:01:21:INFO:  Effective batch size = 48
+2026-06-02 16:01:21:INFO:  AMP dtype = torch.bfloat16
+2026-06-02 16:11:12:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 1.3884
+2026-06-02 16:13:15:INFO:VAL-(hmmem) >>
+2026-06-02 16:13:15:INFO:M: >>  Has0_acc_2: 0.8092  Has0_F1_score: 0.7858  Non0_acc_2: 0.5118  Non0_F1_score: 0.4702  Mult_acc_5: 0.4960  Mult_acc_7: 0.4596  MAE: 0.6925  Corr: 0.5640 
+2026-06-02 16:13:22:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-chatglm3-mosei-regression-20260602_160041.pth.
+2026-06-02 16:23:08:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 0.6023
+2026-06-02 16:25:07:INFO:VAL-(hmmem) >>
+2026-06-02 16:25:07:INFO:M: >>  Has0_acc_2: 0.7723  Has0_F1_score: 0.7203  Non0_acc_2: 0.4917  Non0_F1_score: 0.4393  Mult_acc_5: 0.4869  Mult_acc_7: 0.4703  MAE: 0.6867  Corr: 0.5146 
+2026-06-02 16:25:15:INFO:Saving best model at epoch 2 to /root/autodl-tmp/results/models/hmmem-chatglm3-mosei-regression-20260602_160041.pth.
+2026-06-02 16:35:01:INFO:TRAIN-(hmmem) (1/3/1)>> loss: 0.5601
+2026-06-02 16:37:01:INFO:VAL-(hmmem) >>
+2026-06-02 16:37:01:INFO:M: >>  Has0_acc_2: 0.7402  Has0_F1_score: 0.6554  Non0_acc_2: 0.4673  Non0_F1_score: 0.3963  Mult_acc_5: 0.4816  Mult_acc_7: 0.4580  MAE: 0.7396  Corr: 0.4222 
+2026-06-02 16:46:45:INFO:TRAIN-(hmmem) (2/4/1)>> loss: 0.5462
+2026-06-02 16:48:45:INFO:VAL-(hmmem) >>
+2026-06-02 16:48:45:INFO:M: >>  Has0_acc_2: 0.7509  Has0_F1_score: 0.6765  Non0_acc_2: 0.4409  Non0_F1_score: 0.3526  Mult_acc_5: 0.4816  Mult_acc_7: 0.4703  MAE: 0.7163  Corr: 0.4265 
+2026-06-02 16:58:28:INFO:TRAIN-(hmmem) (3/5/1)>> loss: 0.5362
+2026-06-02 17:00:28:INFO:VAL-(hmmem) >>
+2026-06-02 17:00:28:INFO:M: >>  Has0_acc_2: 0.7370  Has0_F1_score: 0.6464  Non0_acc_2: 0.4346  Non0_F1_score: 0.3419  Mult_acc_5: 0.4842  Mult_acc_7: 0.4741  MAE: 0.7253  Corr: 0.3995 
+2026-06-02 17:00:36:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-mosei-regression-20260602_160041-epoch5.ckpt
+2026-06-02 17:10:20:INFO:TRAIN-(hmmem) (4/6/1)>> loss: 0.5325
+2026-06-02 17:12:20:INFO:VAL-(hmmem) >>
+2026-06-02 17:12:20:INFO:M: >>  Has0_acc_2: 0.7397  Has0_F1_score: 0.6535  Non0_acc_2: 0.4534  Non0_F1_score: 0.3750  Mult_acc_5: 0.4864  Mult_acc_7: 0.4805  MAE: 0.7208  Corr: 0.4138 
+2026-06-02 17:22:04:INFO:TRAIN-(hmmem) (5/7/1)>> loss: 0.5298
+2026-06-02 17:24:03:INFO:VAL-(hmmem) >>
+2026-06-02 17:24:03:INFO:M: >>  Has0_acc_2: 0.7440  Has0_F1_score: 0.6719  Non0_acc_2: 0.4061  Non0_F1_score: 0.2909  Mult_acc_5: 0.4773  Mult_acc_7: 0.4666  MAE: 0.7315  Corr: 0.3826 
+2026-06-02 17:33:45:INFO:TRAIN-(hmmem) (6/8/1)>> loss: 0.5257
+2026-06-02 17:35:44:INFO:VAL-(hmmem) >>
+2026-06-02 17:35:44:INFO:M: >>  Has0_acc_2: 0.7344  Has0_F1_score: 0.6348  Non0_acc_2: 0.4207  Non0_F1_score: 0.3175  Mult_acc_5: 0.4794  Mult_acc_7: 0.4709  MAE: 0.7265  Corr: 0.3733 
+2026-06-02 17:45:28:INFO:TRAIN-(hmmem) (7/9/1)>> loss: 0.5233
+2026-06-02 17:47:28:INFO:VAL-(hmmem) >>
+2026-06-02 17:47:28:INFO:M: >>  Has0_acc_2: 0.7424  Has0_F1_score: 0.6567  Non0_acc_2: 0.4110  Non0_F1_score: 0.2999  Mult_acc_5: 0.4821  Mult_acc_7: 0.4645  MAE: 0.7236  Corr: 0.3999 
+2026-06-02 17:57:11:INFO:TRAIN-(hmmem) (8/10/1)>> loss: 0.5211
+2026-06-02 17:59:11:INFO:VAL-(hmmem) >>
+2026-06-02 17:59:11:INFO:M: >>  Has0_acc_2: 0.7397  Has0_F1_score: 0.6439  Non0_acc_2: 0.3943  Non0_F1_score: 0.2687  Mult_acc_5: 0.4719  Mult_acc_7: 0.4591  MAE: 0.7276  Corr: 0.3590 
+2026-06-02 17:59:20:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-mosei-regression-20260602_160041-epoch10.ckpt
+2026-06-02 18:04:18:INFO:TEST-(hmmem) >>
+2026-06-02 18:04:18:INFO:M: >>  Has0_acc_2: 0.7667  Has0_F1_score: 0.7168  Non0_acc_2: 0.5135  Non0_F1_score: 0.4619  Mult_acc_5: 0.4829  Mult_acc_7: 0.4640  MAE: 0.7144  Corr: 0.5262 
+2026-06-02 18:04:19:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-chatglm3-mosei-regression.csv...
+2026-06-02 18:17:40:INFO:========= 准备训练数据集: mosei (regression) =========
+2026-06-02 18:17:40:INFO:[ConfigResolver] model_type=chatglm3, dataset=mosei, task=regression, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'H']
+2026-06-02 18:17:40:INFO:Start running hmmem...
+2026-06-02 18:17:40:INFO:<Storage{'is_tune': False, 'train_mode': 'regression', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'mosei', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': True, 'use_origin_amm': False, 'use_amm': False, 'amm_mode': 'base', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': True, 'use_moe_fusion': False, 'use_sd_moe': False, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'mosei_feature_mode': 'compressed', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'query_key_value', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 32, 'learning_rate': 5e-05, 'max_epochs': None, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 2, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260602_181740', 'dataPath': '/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl', 'seq_lens': (50, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 16326, 'num_classes': 3, 'language': 'en', 'KeyEval': 'MAE', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please predict sentiment intensity of the above multimodal content in range [-3.0, 3.0]. response: The sentiment is', 'max_new_tokens': 4, 'pseudo_tokens': 4, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-06-02 18:17:40:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-06-02 18:17:40:INFO:Let's use the GPU 1 !
+2026-06-02 18:17:40:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 18:17:47:INFO:MOSEI train loaded: 16326 samples, audio=(16326, 157, 64), vision=(16326, 32, 64)
+2026-06-02 18:17:51:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 18:17:57:INFO:MOSEI valid loaded: 1871 samples, audio=(1871, 157, 64), vision=(1871, 32, 64)
+2026-06-02 18:17:57:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 18:18:03:INFO:MOSEI test loaded: 4659 samples, audio=(4659, 157, 64), vision=(4659, 32, 64)
+2026-06-02 18:18:22:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, fusion
+2026-06-02 18:18:22:INFO:trainable params: 2632844 || all params: 6246216844 || trainable%: 0.04215101822039786
+2026-06-02 18:18:22:INFO:Single-LR optimizer: 32 tensors, lr=5e-05
+2026-06-02 18:18:22:INFO:Init labels...
+2026-06-02 18:18:22:INFO:Start training...
+2026-06-02 18:18:22:INFO:  Batch size = 32
+2026-06-02 18:18:22:INFO:  Gradient Accumulation steps = 2
+2026-06-02 18:18:22:INFO:  Effective batch size = 64
+2026-06-02 18:18:22:INFO:  AMP dtype = torch.bfloat16
+2026-06-02 18:28:04:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 1.1598
+2026-06-02 18:30:02:INFO:VAL-(hmmem) >>
+2026-06-02 18:30:02:INFO:M: >>  Has0_acc_2: 0.7814  Has0_F1_score: 0.7456  Non0_acc_2: 0.7510  Non0_F1_score: 0.7536  Mult_acc_5: 0.2881  Mult_acc_7: 0.2523  MAE: 1.2343  Corr: 0.5201 
+2026-06-02 18:30:08:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-chatglm3-mosei-regression-20260602_181740.pth.
+2026-06-02 18:39:46:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 1.0260
+2026-06-02 18:41:43:INFO:VAL-(hmmem) >>
+2026-06-02 18:41:43:INFO:M: >>  Has0_acc_2: 0.7980  Has0_F1_score: 0.7700  Non0_acc_2: 0.6662  Non0_F1_score: 0.6720  Mult_acc_5: 0.4073  Mult_acc_7: 0.3811  MAE: 0.9211  Corr: 0.5274 
+2026-06-02 18:41:50:INFO:Saving best model at epoch 2 to /root/autodl-tmp/results/models/hmmem-chatglm3-mosei-regression-20260602_181740.pth.
+2026-06-02 18:51:27:INFO:TRAIN-(hmmem) (1/3/1)>> loss: 0.7242
+2026-06-02 18:53:23:INFO:VAL-(hmmem) >>
+2026-06-02 18:53:23:INFO:M: >>  Has0_acc_2: 0.8429  Has0_F1_score: 0.8289  Non0_acc_2: 0.4840  Non0_F1_score: 0.4322  Mult_acc_5: 0.4992  Mult_acc_7: 0.4842  MAE: 0.6520  Corr: 0.5861 
+2026-06-02 18:53:31:INFO:Saving best model at epoch 3 to /root/autodl-tmp/results/models/hmmem-chatglm3-mosei-regression-20260602_181740.pth.
+2026-06-02 19:03:08:INFO:TRAIN-(hmmem) (1/4/1)>> loss: 0.5409
+2026-06-02 19:05:04:INFO:VAL-(hmmem) >>
+2026-06-02 19:05:05:INFO:M: >>  Has0_acc_2: 0.8258  Has0_F1_score: 0.8105  Non0_acc_2: 0.4958  Non0_F1_score: 0.4536  Mult_acc_5: 0.4853  Mult_acc_7: 0.4730  MAE: 0.6806  Corr: 0.5489 
+2026-06-02 19:14:39:INFO:TRAIN-(hmmem) (2/5/1)>> loss: 0.5324
+2026-06-02 19:16:36:INFO:VAL-(hmmem) >>
+2026-06-02 19:16:36:INFO:M: >>  Has0_acc_2: 0.8060  Has0_F1_score: 0.7768  Non0_acc_2: 0.4652  Non0_F1_score: 0.4055  Mult_acc_5: 0.4896  Mult_acc_7: 0.4789  MAE: 0.6834  Corr: 0.5039 
+2026-06-02 19:16:45:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-mosei-regression-20260602_181740-epoch5.ckpt
+2026-06-02 19:26:21:INFO:TRAIN-(hmmem) (3/6/1)>> loss: 0.5284
+2026-06-02 19:28:17:INFO:VAL-(hmmem) >>
+2026-06-02 19:28:17:INFO:M: >>  Has0_acc_2: 0.8183  Has0_F1_score: 0.8010  Non0_acc_2: 0.4903  Non0_F1_score: 0.4404  Mult_acc_5: 0.4939  Mult_acc_7: 0.4789  MAE: 0.6611  Corr: 0.5671 
+2026-06-02 19:37:52:INFO:TRAIN-(hmmem) (4/7/1)>> loss: 0.5250
+2026-06-02 19:39:49:INFO:VAL-(hmmem) >>
+2026-06-02 19:39:49:INFO:M: >>  Has0_acc_2: 0.7996  Has0_F1_score: 0.7643  Non0_acc_2: 0.4583  Non0_F1_score: 0.3922  Mult_acc_5: 0.4896  Mult_acc_7: 0.4784  MAE: 0.6784  Corr: 0.4959 
+2026-06-02 19:49:24:INFO:TRAIN-(hmmem) (5/8/1)>> loss: 0.5216
+2026-06-02 19:51:20:INFO:VAL-(hmmem) >>
+2026-06-02 19:51:20:INFO:M: >>  Has0_acc_2: 0.8140  Has0_F1_score: 0.7939  Non0_acc_2: 0.4722  Non0_F1_score: 0.4096  Mult_acc_5: 0.5024  Mult_acc_7: 0.4901  MAE: 0.6583  Corr: 0.5536 
+2026-06-02 20:00:55:INFO:TRAIN-(hmmem) (6/9/1)>> loss: 0.5203
+2026-06-02 20:02:52:INFO:VAL-(hmmem) >>
+2026-06-02 20:02:52:INFO:M: >>  Has0_acc_2: 0.8092  Has0_F1_score: 0.7876  Non0_acc_2: 0.4736  Non0_F1_score: 0.4112  Mult_acc_5: 0.4933  Mult_acc_7: 0.4794  MAE: 0.6688  Corr: 0.5524 
+2026-06-02 20:12:27:INFO:TRAIN-(hmmem) (7/10/1)>> loss: 0.5183
+2026-06-02 20:14:24:INFO:VAL-(hmmem) >>
+2026-06-02 20:14:24:INFO:M: >>  Has0_acc_2: 0.7942  Has0_F1_score: 0.7643  Non0_acc_2: 0.4743  Non0_F1_score: 0.4164  Mult_acc_5: 0.4805  Mult_acc_7: 0.4677  MAE: 0.6836  Corr: 0.5028 
+2026-06-02 20:14:32:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-mosei-regression-20260602_181740-epoch10.ckpt
+2026-06-02 20:24:09:INFO:TRAIN-(hmmem) (8/11/1)>> loss: 0.5162
+2026-06-02 20:26:05:INFO:VAL-(hmmem) >>
+2026-06-02 20:26:05:INFO:M: >>  Has0_acc_2: 0.7750  Has0_F1_score: 0.7257  Non0_acc_2: 0.4346  Non0_F1_score: 0.3495  Mult_acc_5: 0.4794  Mult_acc_7: 0.4687  MAE: 0.7072  Corr: 0.4241 
+2026-06-02 20:30:55:INFO:TEST-(hmmem) >>
+2026-06-02 20:30:55:INFO:M: >>  Has0_acc_2: 0.8341  Has0_F1_score: 0.8226  Non0_acc_2: 0.5438  Non0_F1_score: 0.5107  Mult_acc_5: 0.5053  Mult_acc_7: 0.4851  MAE: 0.6542  Corr: 0.6399 
+2026-06-02 20:30:56:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-chatglm3-mosei-regression.csv...
+2026-06-02 20:33:27:INFO:========= 准备训练数据集: mosei (regression) =========
+2026-06-02 20:33:27:INFO:[ConfigResolver] model_type=chatglm3, dataset=mosei, task=regression, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'H']
+2026-06-02 20:33:27:INFO:Start running hmmem...
+2026-06-02 20:33:27:INFO:<Storage{'is_tune': False, 'train_mode': 'regression', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'mosei', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [], 'seeds': [2234], 'use_tgm': False, 'use_origin_amm': False, 'use_amm': True, 'amm_mode': 'hierarchical', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': False, 'use_moe_fusion': False, 'use_sd_moe': True, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'mosei_feature_mode': 'compressed', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'query_key_value', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 32, 'learning_rate': 5e-05, 'max_epochs': None, 'warm_up_epochs': 30, 'early_stop': 10, 'gradient_accumulation_steps': 2, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260602_203327', 'dataPath': '/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl', 'seq_lens': (50, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 16326, 'num_classes': 3, 'language': 'en', 'KeyEval': 'MAE', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please predict sentiment intensity of the above multimodal content in range [-3.0, 3.0]. response: The sentiment is', 'max_new_tokens': 4, 'pseudo_tokens': 4, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 2234}>
+2026-06-02 20:33:28:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-06-02 20:33:28:INFO:Let's use the GPU 1 !
+2026-06-02 20:33:28:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 20:33:34:INFO:MOSEI train loaded: 16326 samples, audio=(16326, 157, 64), vision=(16326, 32, 64)
+2026-06-02 20:33:38:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 20:33:44:INFO:MOSEI valid loaded: 1871 samples, audio=(1871, 157, 64), vision=(1871, 32, 64)
+2026-06-02 20:33:45:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-02 20:33:52:INFO:MOSEI test loaded: 4659 samples, audio=(4659, 157, 64), vision=(4659, 32, 64)
+2026-06-02 20:34:16:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, shared_proj, global_moe, local_moe, moe_msf
+2026-06-02 20:34:16:INFO:trainable params: 3671182 || all params: 6247255182 || trainable%: 0.05876471975368718
+2026-06-02 20:34:16:INFO:Single-LR optimizer: 86 tensors, lr=5e-05
+2026-06-02 20:34:16:INFO:Init labels...
+2026-06-02 20:34:16:INFO:Start training...
+2026-06-02 20:34:16:INFO:  Batch size = 32
+2026-06-02 20:34:16:INFO:  Gradient Accumulation steps = 2
+2026-06-02 20:34:16:INFO:  Effective batch size = 64
+2026-06-02 20:34:16:INFO:  AMP dtype = torch.bfloat16
+2026-06-02 20:44:06:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 1.7225
+2026-06-02 20:46:07:INFO:VAL-(hmmem) >>
+2026-06-02 20:46:07:INFO:M: >>  Has0_acc_2: 0.7825  Has0_F1_score: 0.7335  Non0_acc_2: 0.4485  Non0_F1_score: 0.3726  Mult_acc_5: 0.4746  Mult_acc_7: 0.4639  MAE: 0.7135  Corr: 0.4172 
+2026-06-02 20:46:15:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-chatglm3-mosei-regression-20260602_203327.pth.
+2026-06-02 20:55:57:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 0.7894
+2026-06-02 20:57:54:INFO:VAL-(hmmem) >>
+2026-06-02 20:57:54:INFO:M: >>  Has0_acc_2: 0.8359  Has0_F1_score: 0.8319  Non0_acc_2: 0.7246  Non0_F1_score: 0.7305  Mult_acc_5: 0.4196  Mult_acc_7: 0.4030  MAE: 0.8454  Corr: 0.5998 
+2026-06-02 21:07:34:INFO:TRAIN-(hmmem) (2/3/1)>> loss: 0.5722
+2026-06-02 21:09:31:INFO:VAL-(hmmem) >>
+2026-06-02 21:09:31:INFO:M: >>  Has0_acc_2: 0.8397  Has0_F1_score: 0.8401  Non0_acc_2: 0.6203  Non0_F1_score: 0.6131  Mult_acc_5: 0.5094  Mult_acc_7: 0.4933  MAE: 0.6212  Corr: 0.6528 
+2026-06-02 21:09:38:INFO:Saving best model at epoch 3 to /root/autodl-tmp/results/models/hmmem-chatglm3-mosei-regression-20260602_203327.pth.
+2026-06-02 21:19:22:INFO:TRAIN-(hmmem) (1/4/1)>> loss: 0.5492
+2026-06-02 21:21:18:INFO:VAL-(hmmem) >>
+2026-06-02 21:21:18:INFO:M: >>  Has0_acc_2: 0.8391  Has0_F1_score: 0.8294  Non0_acc_2: 0.6745  Non0_F1_score: 0.6751  Mult_acc_5: 0.5254  Mult_acc_7: 0.5077  MAE: 0.5941  Corr: 0.6744 
+2026-06-02 21:21:25:INFO:Saving best model at epoch 4 to /root/autodl-tmp/results/models/hmmem-chatglm3-mosei-regression-20260602_203327.pth.
+2026-06-02 21:31:04:INFO:TRAIN-(hmmem) (1/5/1)>> loss: 0.5396
+2026-06-02 21:33:01:INFO:VAL-(hmmem) >>
+2026-06-02 21:33:01:INFO:M: >>  Has0_acc_2: 0.8493  Has0_F1_score: 0.8463  Non0_acc_2: 0.5515  Non0_F1_score: 0.5232  Mult_acc_5: 0.5131  Mult_acc_7: 0.4992  MAE: 0.5823  Corr: 0.6862 
+2026-06-02 21:33:07:INFO:Saving best model at epoch 5 to /root/autodl-tmp/results/models/hmmem-chatglm3-mosei-regression-20260602_203327.pth.
+2026-06-02 21:33:18:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-mosei-regression-20260602_203327-epoch5.ckpt
+2026-06-02 21:42:56:INFO:TRAIN-(hmmem) (1/6/1)>> loss: 0.5345
+2026-06-02 21:44:53:INFO:VAL-(hmmem) >>
+2026-06-02 21:44:53:INFO:M: >>  Has0_acc_2: 0.8471  Has0_F1_score: 0.8402  Non0_acc_2: 0.6238  Non0_F1_score: 0.6163  Mult_acc_5: 0.5329  Mult_acc_7: 0.5179  MAE: 0.5656  Corr: 0.6937 
+2026-06-02 21:44:59:INFO:Saving best model at epoch 6 to /root/autodl-tmp/results/models/hmmem-chatglm3-mosei-regression-20260602_203327.pth.
+2026-06-02 21:54:42:INFO:TRAIN-(hmmem) (1/7/1)>> loss: 0.5323
+2026-06-02 21:56:38:INFO:VAL-(hmmem) >>
+2026-06-02 21:56:38:INFO:M: >>  Has0_acc_2: 0.8429  Has0_F1_score: 0.8366  Non0_acc_2: 0.6029  Non0_F1_score: 0.5912  Mult_acc_5: 0.5265  Mult_acc_7: 0.5136  MAE: 0.5750  Corr: 0.6833 
+2026-06-02 22:06:19:INFO:TRAIN-(hmmem) (2/8/1)>> loss: 0.5271
+2026-06-02 22:08:16:INFO:VAL-(hmmem) >>
+2026-06-02 22:08:16:INFO:M: >>  Has0_acc_2: 0.8445  Has0_F1_score: 0.8471  Non0_acc_2: 0.5855  Non0_F1_score: 0.5689  Mult_acc_5: 0.5136  Mult_acc_7: 0.4992  MAE: 0.5888  Corr: 0.7065 
+2026-06-02 22:17:57:INFO:TRAIN-(hmmem) (3/9/1)>> loss: 0.5253
+2026-06-02 22:19:53:INFO:VAL-(hmmem) >>
+2026-06-02 22:19:53:INFO:M: >>  Has0_acc_2: 0.8562  Has0_F1_score: 0.8563  Non0_acc_2: 0.5389  Non0_F1_score: 0.5063  Mult_acc_5: 0.5174  Mult_acc_7: 0.5029  MAE: 0.5775  Corr: 0.7034 
+2026-06-02 22:29:34:INFO:TRAIN-(hmmem) (4/10/1)>> loss: 0.5229
+2026-06-02 22:31:31:INFO:VAL-(hmmem) >>
+2026-06-02 22:31:31:INFO:M: >>  Has0_acc_2: 0.8514  Has0_F1_score: 0.8484  Non0_acc_2: 0.5591  Non0_F1_score: 0.5330  Mult_acc_5: 0.5259  Mult_acc_7: 0.5120  MAE: 0.5704  Corr: 0.7030 
+2026-06-02 22:31:41:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-mosei-regression-20260602_203327-epoch10.ckpt
+2026-06-02 22:41:23:INFO:TRAIN-(hmmem) (5/11/1)>> loss: 0.5209
+2026-06-02 22:43:19:INFO:VAL-(hmmem) >>
+2026-06-02 22:43:19:INFO:M: >>  Has0_acc_2: 0.8503  Has0_F1_score: 0.8464  Non0_acc_2: 0.5487  Non0_F1_score: 0.5199  Mult_acc_5: 0.5281  Mult_acc_7: 0.5147  MAE: 0.5689  Corr: 0.7050 
+2026-06-02 22:52:59:INFO:TRAIN-(hmmem) (6/12/1)>> loss: 0.5191
+2026-06-02 22:54:56:INFO:VAL-(hmmem) >>
+2026-06-02 22:54:56:INFO:M: >>  Has0_acc_2: 0.8546  Has0_F1_score: 0.8510  Non0_acc_2: 0.6001  Non0_F1_score: 0.5872  Mult_acc_5: 0.5286  Mult_acc_7: 0.5136  MAE: 0.5646  Corr: 0.7041 
+2026-06-02 22:55:04:INFO:Saving best model at epoch 12 to /root/autodl-tmp/results/models/hmmem-chatglm3-mosei-regression-20260602_203327.pth.
+2026-06-02 23:04:48:INFO:TRAIN-(hmmem) (1/13/1)>> loss: 0.5175
+2026-06-02 23:06:44:INFO:VAL-(hmmem) >>
+2026-06-02 23:06:44:INFO:M: >>  Has0_acc_2: 0.8541  Has0_F1_score: 0.8489  Non0_acc_2: 0.5744  Non0_F1_score: 0.5552  Mult_acc_5: 0.5307  Mult_acc_7: 0.5174  MAE: 0.5646  Corr: 0.7031 
+2026-06-02 23:16:25:INFO:TRAIN-(hmmem) (2/14/1)>> loss: 0.5160
+2026-06-02 23:18:21:INFO:VAL-(hmmem) >>
+2026-06-02 23:18:21:INFO:M: >>  Has0_acc_2: 0.8557  Has0_F1_score: 0.8527  Non0_acc_2: 0.5675  Non0_F1_score: 0.5453  Mult_acc_5: 0.5281  Mult_acc_7: 0.5147  MAE: 0.5695  Corr: 0.7048 
+2026-06-02 23:28:02:INFO:TRAIN-(hmmem) (3/15/1)>> loss: 0.5145
+2026-06-02 23:29:59:INFO:VAL-(hmmem) >>
+2026-06-02 23:29:59:INFO:M: >>  Has0_acc_2: 0.8578  Has0_F1_score: 0.8583  Non0_acc_2: 0.5654  Non0_F1_score: 0.5429  Mult_acc_5: 0.5158  Mult_acc_7: 0.5029  MAE: 0.5741  Corr: 0.7132 
+2026-06-02 23:30:10:INFO:Checkpoint saved at epoch 15 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-mosei-regression-20260602_203327-epoch15.ckpt
+2026-06-03 16:54:28:INFO:========= 准备训练数据集: mosei (regression) =========
+2026-06-03 16:54:28:INFO:[ConfigResolver] model_type=chatglm3, dataset=mosei, task=regression, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'H']
+2026-06-03 16:54:28:INFO:Start running hmmem...
+2026-06-03 16:54:28:INFO:<Storage{'is_tune': False, 'train_mode': 'regression', 'modelName': 'hmmem', 'model_type': 'chatglm3', 'datasetName': 'mosei', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': None, 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/chatglm3-6b-base', 'gpu_ids': [], 'seeds': [2234], 'use_tgm': True, 'use_origin_amm': False, 'use_amm': False, 'amm_mode': 'base', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'bypass_scale_init': 0.3, 'use_msf': True, 'use_moe_fusion': False, 'use_sd_moe': False, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 0.01, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 0.05, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'raw', 'meld_feature_mode': 'raw', 'mosei_feature_mode': 'compressed', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'query_key_value', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'use_speaker_tag': False, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 32, 'learning_rate': 5e-05, 'max_epochs': None, 'warm_up_epochs': 30, 'early_stop': 10, 'gradient_accumulation_steps': 2, 'resume_checkpoint': '/root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-mosei-regression-20260602_203327-epoch15.ckpt', 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'timestamp': '20260603_165428', 'dataPath': '/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl', 'seq_lens': (50, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 16326, 'num_classes': 3, 'language': 'en', 'KeyEval': 'MAE', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please predict sentiment intensity of the above multimodal content in range [-3.0, 3.0]. response: The sentiment is', 'max_new_tokens': 4, 'pseudo_tokens': 4, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 2234}>
+2026-06-03 16:54:28:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-06-03 16:54:28:INFO:Let's use the GPU 1 !
+2026-06-03 16:54:28:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-03 16:54:38:INFO:MOSEI train loaded: 16326 samples, audio=(16326, 157, 64), vision=(16326, 32, 64)
+2026-06-03 16:54:44:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-03 16:54:50:INFO:MOSEI valid loaded: 1871 samples, audio=(1871, 157, 64), vision=(1871, 32, 64)
+2026-06-03 16:54:51:INFO:MOSEI loading NEW mode: pkl=/root/autodl-tmp/datasets/MOSEI/mosei_data_0610.pkl, text_dir=/root/autodl-tmp/datasets/MOSEI/mosei_text
+2026-06-03 16:54:56:INFO:MOSEI test loaded: 4659 samples, audio=(4659, 157, 64), vision=(4659, 32, 64)
+2026-06-03 16:55:24:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, fusion
+2026-06-03 16:55:24:INFO:trainable params: 2632844 || all params: 6246216844 || trainable%: 0.04215101822039786
+2026-06-03 16:55:24:INFO:Single-LR optimizer: 32 tensors, lr=5e-05
+2026-06-03 16:55:24:INFO:Init labels...
+2026-06-03 16:55:24:INFO:Resuming from checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-mosei-regression-20260602_203327-epoch15.ckpt
+2026-06-03 16:55:24:WARNING:Failed to restore optimizer/scheduler state: loaded state dict contains a parameter group that doesn't match the size of optimizer's group. This is expected when torch.compile changes parameter structure. Continuing with fresh optimizer state (model weights ARE restored).
+2026-06-03 16:55:24:INFO:Resumed from checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-mosei-regression-20260602_203327-epoch15.ckpt (epoch=15, best_valid=0.5646)
+2026-06-03 16:55:24:INFO:Start training...
+2026-06-03 16:55:24:INFO:  Batch size = 32
+2026-06-03 16:55:24:INFO:  Gradient Accumulation steps = 2
+2026-06-03 16:55:24:INFO:  Effective batch size = 64
+2026-06-03 16:55:24:INFO:  AMP dtype = torch.bfloat16
+2026-06-03 16:55:24:INFO:  Resuming from epoch 15, best_valid=0.5646 (best_epoch=12)
+2026-06-03 17:05:10:INFO:TRAIN-(hmmem) (4/16/1)>> loss: 1.0628
+2026-06-03 17:07:09:INFO:VAL-(hmmem) >>
+2026-06-03 17:07:09:INFO:M: >>  Has0_acc_2: 0.8092  Has0_F1_score: 0.7892  Non0_acc_2: 0.4972  Non0_F1_score: 0.4486  Mult_acc_5: 0.4858  Mult_acc_7: 0.4698  MAE: 0.7028  Corr: 0.4913 
+2026-06-03 17:16:51:INFO:TRAIN-(hmmem) (5/17/1)>> loss: 0.6668
+2026-06-03 17:18:48:INFO:VAL-(hmmem) >>
+2026-06-03 17:18:48:INFO:M: >>  Has0_acc_2: 0.7664  Has0_F1_score: 0.7138  Non0_acc_2: 0.4819  Non0_F1_score: 0.4405  Mult_acc_5: 0.4447  Mult_acc_7: 0.4180  MAE: 0.7912  Corr: 0.3881 
+2026-06-03 17:28:30:INFO:TRAIN-(hmmem) (6/18/1)>> loss: 0.5475
+2026-06-03 17:30:28:INFO:VAL-(hmmem) >>
+2026-06-03 17:30:28:INFO:M: >>  Has0_acc_2: 0.8022  Has0_F1_score: 0.7758  Non0_acc_2: 0.5167  Non0_F1_score: 0.4858  Mult_acc_5: 0.4682  Mult_acc_7: 0.4329  MAE: 0.7436  Corr: 0.4894 
+2026-06-03 17:40:10:INFO:TRAIN-(hmmem) (7/19/1)>> loss: 0.5359
+2026-06-03 17:42:07:INFO:VAL-(hmmem) >>
+2026-06-03 17:42:07:INFO:M: >>  Has0_acc_2: 0.8108  Has0_F1_score: 0.7933  Non0_acc_2: 0.5452  Non0_F1_score: 0.5341  Mult_acc_5: 0.4222  Mult_acc_7: 0.3891  MAE: 0.7816  Corr: 0.5009 
+2026-06-03 17:51:50:INFO:TRAIN-(hmmem) (8/20/1)>> loss: 0.5281
+2026-06-03 17:53:47:INFO:VAL-(hmmem) >>
+2026-06-03 17:53:47:INFO:M: >>  Has0_acc_2: 0.8487  Has0_F1_score: 0.8368  Non0_acc_2: 0.6599  Non0_F1_score: 0.6640  Mult_acc_5: 0.4955  Mult_acc_7: 0.4479  MAE: 0.6743  Corr: 0.6492 
+2026-06-03 17:53:56:INFO:Checkpoint saved at epoch 20 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-mosei-regression-20260603_165428-epoch20.ckpt
+2026-06-03 18:03:38:INFO:TRAIN-(hmmem) (9/21/1)>> loss: 0.5222
+2026-06-03 18:05:36:INFO:VAL-(hmmem) >>
+2026-06-03 18:05:36:INFO:M: >>  Has0_acc_2: 0.8402  Has0_F1_score: 0.8208  Non0_acc_2: 0.6245  Non0_F1_score: 0.6238  Mult_acc_5: 0.5200  Mult_acc_7: 0.4832  MAE: 0.6314  Corr: 0.6430 
+2026-06-03 18:15:19:INFO:TRAIN-(hmmem) (10/22/1)>> loss: 0.5204
+2026-06-03 18:17:17:INFO:VAL-(hmmem) >>
+2026-06-03 18:17:17:INFO:M: >>  Has0_acc_2: 0.8413  Has0_F1_score: 0.8272  Non0_acc_2: 0.6022  Non0_F1_score: 0.5955  Mult_acc_5: 0.5040  Mult_acc_7: 0.4671  MAE: 0.6506  Corr: 0.6256 
+2026-06-03 18:17:17:INFO:No new best found during resumed training. Saving checkpoint-restored best model to /root/autodl-tmp/results/models/hmmem-chatglm3-mosei-regression-20260603_165428.pth
+2026-06-03 18:17:24:INFO:Saving best model at epoch 12 to /root/autodl-tmp/results/models/hmmem-chatglm3-mosei-regression-20260603_165428.pth.
+2026-06-03 18:22:20:INFO:TEST-(hmmem) >>
+2026-06-03 18:22:20:INFO:M: >>  Has0_acc_2: 0.8422  Has0_F1_score: 0.8319  Non0_acc_2: 0.5966  Non0_F1_score: 0.5836  Mult_acc_5: 0.5048  Mult_acc_7: 0.4589  MAE: 0.6564  Corr: 0.6775 
+2026-06-03 18:22:21:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-chatglm3-mosei-regression.csv...

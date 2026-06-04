@@ -667,6 +667,76 @@ EXPERIMENT_GROUPS['speechcue_comparison'] = {
     ]
 }
 
+# ── 22. MELD 组件消融 (ChatGLM3 + H-AMM + SD-MoE 基线) ──
+# 对应论文 Table: Ablation Study on MELD
+# 基线: chatglm3 + H-AMM + SD-MoE + context + speaker_tag + label_format=text
+# 消融策略: 逐项移除组件，观察性能下降
+EXPERIMENT_GROUPS['meld_component_ablation'] = {
+    'description': 'MELD 组件消融: w/o A / w/o V / w/o T / w/o A,V / w/o H-AMM / w/o SDMoE / w/o Context',
+    'experiments': [
+        # ── 完整基线 ──
+        # C0: Full Model (H-AMM + SD-MoE + Context + SpeakerTag)
+        {'name': 'full_baseline',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'label_format': 'text',
+         'use_context': True, 'context_window': 12, 'text_seq_len': 128,
+         'use_speaker_tag': True},
+
+        # ── 模态消融 ──
+        # C1: w/o Audio (仅 text + video)
+        {'name': 'wo_A',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'label_format': 'text',
+         'use_context': True, 'context_window': 12, 'text_seq_len': 128,
+         'use_speaker_tag': True,
+         'modalities': 'tv'},
+
+        # C1: w/o Video (仅 text + audio)
+        {'name': 'wo_V',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'label_format': 'text',
+         'use_context': True, 'context_window': 12, 'text_seq_len': 128,
+         'use_speaker_tag': True,
+         'modalities': 'ta'},
+
+        # C2: w/o Text (仅 audio + video，纯非文本)
+        {'name': 'wo_T',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'label_format': 'text',
+         'use_context': True, 'context_window': 12, 'text_seq_len': 128,
+         'use_speaker_tag': True,
+         'modalities': 'av'},
+
+        # C3: w/o Audio & Video (仅 text，text-only baseline)
+        {'name': 'wo_AV',
+         'label_format': 'text',
+         'use_context': True, 'context_window': 12, 'text_seq_len': 128,
+         'use_speaker_tag': True,
+         'modalities': 't'},
+
+        # ── 模块消融 ──
+        # C4: w/o H-AMM (移除 Mixer，直接拼接，保留 SD-MoE)
+        {'name': 'wo_HAMM',
+         'use_amm': False, 'use_tgm': False, 'use_sd_moe': True,
+         'label_format': 'text',
+         'use_context': True, 'context_window': 12, 'text_seq_len': 128,
+         'use_speaker_tag': True},
+
+        # C5: w/o SD-MoE (移除 Fusion，直接拼接，保留 H-AMM)
+        {'name': 'wo_SDMoE',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': False,
+         'label_format': 'text',
+         'use_context': True, 'context_window': 12, 'text_seq_len': 128,
+         'use_speaker_tag': True},
+
+        # C6: w/o Context (移除对话上下文，保留 H-AMM + SD-MoE)
+        {'name': 'wo_Context',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'label_format': 'text',
+         'use_context': False, 'use_speaker_tag': False},
+    ]
+}
+
 # ═══════════════════════════════════════════════════════════════════
 # 命令构建
 # ═══════════════════════════════════════════════════════════════════
@@ -685,6 +755,7 @@ BOOLEAN_FLAGS = {
     'use_bilstm', 'use_oversampling',
     'use_cls_head',
     'use_context', 'prompt_context',
+    'use_speaker_tag',
     'eval_only',
 }
 

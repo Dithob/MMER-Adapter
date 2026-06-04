@@ -448,12 +448,16 @@ class HMMEM():
                     audio_np = np.concatenate(all_audio, axis=0) if all_audio else None
                     video_np = np.concatenate(all_video, axis=0) if all_video else None
 
-                    # Save analysis outputs (with timestamp to avoid overwriting)
+                    # Save analysis outputs in per-experiment subfolder
+                    # Folder: {modelName}-{model_type}-{datasetName}-{timestamp}
+                    ts = getattr(self.args, 'timestamp', None)
+                    exp_folder = f"{self.args.modelName}-{self.args.model_type}-{self.args.datasetName}"
+                    if ts:
+                        exp_folder += f"-{ts}"
                     analysis_dir = os.path.join(
-                        getattr(self.args, 'res_save_dir', 'results'), 'analysis'
+                        getattr(self.args, 'res_save_dir', 'results'), 'analysis', exp_folder
                     )
                     tag = f"{self.args.modelName}-{self.args.model_type}-{self.args.datasetName}-{mode}"
-                    ts = getattr(self.args, 'timestamp', None)
 
                     analysis_result = detailed_classification_analysis(
                         y_true=true,
@@ -464,7 +468,7 @@ class HMMEM():
                         save_dir=analysis_dir,
                         tag=tag,
                         log=logger,
-                        timestamp=ts,
+                        timestamp=None,  # timestamp is in folder name now
                     )
                     # Attach plot paths to eval_results for CSV recording
                     eval_results['cm_path'] = analysis_result.get('cm_path', '')

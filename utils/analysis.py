@@ -4,9 +4,9 @@ Detailed Classification Analysis Toolkit for MMER-Adapter.
 Provides:
   - Per-class Precision / Recall / F1 / Support
   - WA (Weighted Accuracy), UA (Unweighted Accuracy), WF1, Macro-F1
-  - Confusion matrix heatmap (PNG)
-  - t-SNE emotion clustering scatter plot (PNG)
-  - t-SNE modality separation scatter plot (PNG) — paper Figure 4 style
+  - Confusion matrix heatmap (PNG + SVG)
+  - t-SNE emotion clustering scatter plot (PNG + SVG) — true-label & predicted-label
+  - t-SNE modality separation scatter plot (PNG + SVG) — paper Figure 4 style
 
 Usage:
     from utils.analysis import detailed_classification_analysis
@@ -27,6 +27,8 @@ from sklearn.metrics import (
     precision_recall_fscore_support, confusion_matrix
 )
 from sklearn.manifold import TSNE
+from sklearn.preprocessing import StandardScaler, normalize
+from sklearn.decomposition import PCA
 
 logger = logging.getLogger('MSA')
 
@@ -69,9 +71,25 @@ def _try_chinese_font():
     return None
 
 
+def _save_multi_format(fig, base_path, dpi=300, facecolor='white'):
+    """Save figure in PNG + SVG formats for publication quality.
+
+    Args:
+        fig: matplotlib Figure
+        base_path: str — path ending with .png (used as the base)
+        dpi: int — DPI for raster format (PNG)
+        facecolor: str — background color
+    """
+    for ext in ['.png', '.svg']:
+        path = base_path.replace('.png', ext)
+        fig.savefig(path, dpi=dpi, bbox_inches='tight', facecolor=facecolor,
+                    format=ext.lstrip('.'))
+
+
 def detailed_classification_analysis(
     y_true, y_pred, features, label_names, save_dir, tag,
-    modality_features=None, log=None, timestamp=None
+    modality_features=None, log=None, timestamp=None,
+    max_per_class=150,
 ):
     """
     Run full classification analysis and save results.
@@ -89,6 +107,7 @@ def detailed_classification_analysis(
                            t-SNE (Figure 4 style). Can be None to skip.
         log: logger instance (optional)
         timestamp: str — timestamp suffix for filenames (optional)
+        max_per_class: int — max samples per emotion class for balanced t-SNE
 
     Returns:
         dict with keys: WA, UA, WF1, Macro_F1, per_class, cm_path, tsne_path
@@ -143,21 +162,36 @@ def detailed_classification_analysis(
     # ── 4. Confusion matrix heatmap ──
     cm_path = os.path.join(save_dir, f'{tag}-confusion_matrix{ts_suffix}.png')
     _plot_confusion_matrix(y_true, y_pred, label_names, cm_path, tag)
-    log.info(f"Confusion matrix saved → {cm_path}")
+    log.info(f"Confusion matrix saved → {cm_path} (+.svg)")
 
     # ── 5. Emotion t-SNE clustering ──
     tsne_path = None
     if features is not None and len(features) > 0:
-        tsne_path = os.path.join(save_dir, f'{tag}-tsne_emotion{ts_suffix}.png')
-        _plot_emotion_tsne(features, y_true, label_names, tsne_path, tag)
-        log.info(f"Emotion t-SNE saved → {tsne_path}")
+        tsne_path = os.path.join(save_dir, f'{tag}-tsne_emotion_true{ts_suffix}.png')
+
+        # Save features + labels as npz for offline analysis
+        npz_path = os.path.join(save_dir, f'{tag}-tsne_features{ts_suffix}.npz')
+        np.savez(
+            npz_path,
+            features=features,
+            labels=y_true,
+            pred_labels=y_pred,
+        )
+        log.info(f"t-SNE features saved → {npz_path}")
+
+        _plot_emotion_tsne(
+            features, true_labels=y_true, pred_labels=y_pred,
+            label_names=label_names, save_path=tsne_path, tag=tag,
+            max_per_class=max_per_class,
+        )
+        log.info(f"Emotion t-SNE saved → {tsne_path} (+.svg, +pred)")
 
     # ── 6. Modality separation t-SNE (Figure 4 style) ──
     modality_tsne_path = None
     if modality_features is not None:
         modality_tsne_path = os.path.join(save_dir, f'{tag}-tsne_modality{ts_suffix}.png')
         _plot_modality_tsne(modality_features, modality_tsne_path, tag)
-        log.info(f"Modality t-SNE saved → {modality_tsne_path}")
+        log.info(f"Modality t-SNE saved → {modality_tsne_path} (+.svg)")
 
     return {
         'WA': wa,
@@ -173,12 +207,13 @@ def detailed_classification_analysis(
 def _plot_confusion_matrix(y_true, y_pred, label_names, save_path, tag):
     """
     Plot confusion matrix heatmap with both percentages and raw counts.
+    Enlarged fonts for publication quality.
     """
     cm = confusion_matrix(y_true, y_pred, labels=list(range(len(label_names))))
     cm_norm = cm.astype('float') / (cm.sum(axis=1, keepdims=True) + 1e-10)
 
-    fig, ax = plt.subplots(figsize=(max(6, len(label_names) * 1.2),
-                                     max(5, len(label_names) * 1.0)))
+    n = len(label_names)
+    fig, ax = plt.subplots(figsize=(max(7, n * 1.3), max(6, n * 1.1)))
 
     chinese_font = _try_chinese_font()
     font_props = {}
@@ -189,68 +224,180 @@ def _plot_confusion_matrix(y_true, y_pred, label_names, save_path, tag):
     fig.colorbar(cax, ax=ax, fraction=0.046, pad=0.04)
 
     thresh = cm_norm.max() / 2.0
+    # Cell text font size: enlarged for readability
+    cell_fontsize = max(10, 15 - n)
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
             text_color = "white" if cm_norm[i, j] > thresh else "black"
             ax.text(j, i, f"{cm_norm[i, j]:.1%}\n({cm[i, j]})",
                     ha="center", va="center", color=text_color,
-                    fontsize=max(7, 12 - len(label_names)))
+                    fontsize=cell_fontsize, fontweight='medium')
 
-    ax.set_xticks(range(len(label_names)))
-    ax.set_yticks(range(len(label_names)))
-    ax.set_xticklabels(label_names, rotation=45, ha='right', **font_props)
-    ax.set_yticklabels(label_names, **font_props)
-    ax.set_xlabel('Predicted', fontsize=12)
-    ax.set_ylabel('True', fontsize=12)
-    ax.set_title(f'Confusion Matrix — {tag}', fontsize=13, fontweight='bold')
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    ax.set_xticklabels(label_names, rotation=45, ha='right', fontsize=12, **font_props)
+    ax.set_yticklabels(label_names, fontsize=12, **font_props)
+    ax.set_xlabel('Predicted', fontsize=14, fontweight='bold')
+    ax.set_ylabel('True', fontsize=14, fontweight='bold')
+    ax.set_title(f'Confusion Matrix — {tag}', fontsize=15, fontweight='bold')
 
     plt.tight_layout()
-    fig.savefig(save_path, dpi=200, bbox_inches='tight')
+    _save_multi_format(fig, save_path, dpi=300)
     plt.close(fig)
 
 
 # ═══════════════════════════════════════════════════════════
 #  Emotion Clustering t-SNE (colored by emotion label)
+#  Optimized: balanced sampling, preprocessing, cosine metric
 # ═══════════════════════════════════════════════════════════
 
-def _plot_emotion_tsne(features, labels, label_names, save_path, tag,
-                       perplexity=30, max_samples=5000):
+def _balanced_subsample(features, labels, max_per_class=150, rng=None):
+    """Subsample each class to at most max_per_class for balanced t-SNE.
+
+    This prevents high-frequency classes (e.g. neutral) from dominating
+    the t-SNE layout and drowning out minority classes.
+
+    Args:
+        features: np.ndarray (N, D)
+        labels: np.ndarray (N,)
+        max_per_class: int — max samples per class
+        rng: np.random.Generator (optional)
+
+    Returns:
+        subsampled features, subsampled labels
     """
-    Clean t-SNE scatter plot colored by emotion class.
-    Publication-quality: no grid, no contours, minimal axes.
+    if rng is None:
+        rng = np.random.default_rng(42)
+
+    indices = []
+    for cls in np.unique(labels):
+        cls_idx = np.where(labels == cls)[0]
+        if len(cls_idx) > max_per_class:
+            cls_idx = rng.choice(cls_idx, max_per_class, replace=False)
+        indices.append(cls_idx)
+
+    indices = np.concatenate(indices)
+    rng.shuffle(indices)
+    return features[indices], labels[indices], indices
+
+
+def _preprocess_features(features):
+    """Preprocess features for t-SNE: StandardScaler → L2 normalize → PCA.
+
+    This pipeline ensures:
+    1. StandardScaler: zero mean, unit variance per dimension
+    2. L2 normalize: project onto unit hypersphere (cosine-friendly)
+    3. PCA: reduce dimensionality to remove noise dimensions
+
+    Args:
+        features: np.ndarray (N, D)
+
+    Returns:
+        processed features: np.ndarray (N, pca_dim)
+    """
+    # Step 1: Standard scaling
+    scaler = StandardScaler()
+    features = scaler.fit_transform(features)
+
+    # Step 2: L2 normalization (row-wise)
+    features = normalize(features, norm='l2', axis=1)
+
+    # Step 3: PCA dimensionality reduction
+    pca_dim = min(50, features.shape[1], features.shape[0] - 1)
+    if pca_dim < features.shape[1]:
+        pca = PCA(n_components=pca_dim, random_state=42)
+        features = pca.fit_transform(features)
+
+    return features
+
+
+def _plot_emotion_tsne(features, true_labels, pred_labels, label_names,
+                       save_path, tag, max_per_class=150):
+    """
+    Publication-quality t-SNE scatter plot colored by emotion class.
+
+    Generates two plots:
+      1. True-label coloring (primary figure)
+      2. Predicted-label coloring (secondary figure for comparison)
+
+    Pipeline:
+      Balanced subsampling → StandardScaler → L2 → PCA → t-SNE (cosine)
     """
     features = np.array(features, dtype=np.float32)
-    labels = np.array(labels, dtype=int)
-
-    # Subsample for performance
-    if len(features) > max_samples:
-        indices = np.random.choice(len(features), max_samples, replace=False)
-        features = features[indices]
-        labels = labels[indices]
+    true_labels = np.array(true_labels, dtype=int)
+    pred_labels = np.array(pred_labels, dtype=int)
 
     # Handle NaN/Inf
     valid_mask = np.all(np.isfinite(features), axis=1)
     if not np.all(valid_mask):
         features = features[valid_mask]
-        labels = labels[valid_mask]
+        true_labels = true_labels[valid_mask]
+        pred_labels = pred_labels[valid_mask]
 
     if len(features) < 10:
         logger.warning("Too few valid samples for t-SNE, skipping.")
         return
 
-    effective_perplexity = min(perplexity, max(5, len(features) // 4))
+    # ── 1. Balanced subsampling ──
+    features_bal, true_labels_bal, bal_idx = _balanced_subsample(
+        features, true_labels, max_per_class=max_per_class
+    )
+    pred_labels_bal = pred_labels[bal_idx]
+
+    if len(features_bal) < 10:
+        logger.warning("Too few balanced samples for t-SNE, skipping.")
+        return
+
+    # ── 2. Feature preprocessing: StandardScaler → L2 → PCA ──
+    features_proc = _preprocess_features(features_bal)
+
+    # ── 3. t-SNE with cosine metric and optimized hyperparams ──
+    n_samples = len(features_proc)
+    # Adaptive perplexity: heuristic based on sample count
+    perplexity = int(np.clip(n_samples / 5, 5, 50))
 
     tsne = TSNE(
         n_components=2,
-        perplexity=effective_perplexity,
+        perplexity=perplexity,
+        metric='cosine',
+        early_exaggeration=12,
         random_state=42,
-        init='pca',
+        init='random',  # 'pca' not supported with cosine metric
         learning_rate='auto',
-        max_iter=1500,
+        max_iter=3000,
     )
-    embeddings = tsne.fit_transform(features)
+    embeddings = tsne.fit_transform(features_proc)
 
-    # ── Plot ──
+    # ── 4. Plot: True labels (primary figure) ──
+    _draw_tsne_scatter(embeddings, true_labels_bal, label_names,
+                       save_path, tag, title_suffix='True Labels')
+
+    # ── 5. Plot: Predicted labels (secondary figure) ──
+    pred_save_path = save_path.replace('_true', '_pred')
+    _draw_tsne_scatter(embeddings, pred_labels_bal, label_names,
+                       pred_save_path, tag, title_suffix='Predicted Labels')
+
+    # ── 6. Plot: Correctly predicted samples only (supplementary) ──
+    correct_mask = true_labels_bal == pred_labels_bal
+    if correct_mask.sum() >= 10:
+        correct_save_path = save_path.replace('_true', '_correct')
+        _draw_tsne_scatter(embeddings[correct_mask], true_labels_bal[correct_mask],
+                           label_names, correct_save_path, tag,
+                           title_suffix='Correct Predictions Only')
+
+
+def _draw_tsne_scatter(embeddings, labels, label_names, save_path, tag,
+                       title_suffix=''):
+    """Draw a single t-SNE scatter plot and save in PNG + SVG.
+
+    Args:
+        embeddings: np.ndarray (N, 2) — t-SNE coordinates
+        labels: np.ndarray (N,) — class labels for coloring
+        label_names: list of str
+        save_path: str — base path (.png)
+        tag: str — experiment tag
+        title_suffix: str — appended to plot title
+    """
     fig, ax = plt.subplots(figsize=(8, 7))
     fig.patch.set_facecolor('white')
     ax.set_facecolor('white')
@@ -264,8 +411,8 @@ def _plot_emotion_tsne(features, labels, label_names, save_path, tag,
     unique_labels = sorted(set(labels))
 
     # Adaptive point size: larger for fewer points
-    n_total = len(features)
-    point_size = max(6, min(50, 3000 / max(n_total, 1)))
+    n_total = len(embeddings)
+    point_size = max(10, min(60, 3000 / max(n_total, 1)))
 
     for idx in unique_labels:
         if idx >= len(label_names):
@@ -276,20 +423,22 @@ def _plot_emotion_tsne(features, labels, label_names, save_path, tag,
             embeddings[mask, 0], embeddings[mask, 1],
             c=colors[idx % len(colors)],
             label=f'{label_names[idx]} ({n_pts})',
-            alpha=0.7,
+            alpha=0.75,
             s=point_size,
-            edgecolors='none',
-            rasterized=True,  # faster rendering for many points
+            edgecolors='white',
+            linewidths=0.3,
         )
 
     ax.legend(
-        loc='best', fontsize=9, framealpha=0.9,
+        loc='best', fontsize=10, framealpha=0.9,
         markerscale=max(1, 8 / point_size),
         prop=legend_prop if legend_prop else None,
-        title='Emotion', title_fontsize=10,
+        title='Emotion', title_fontsize=11,
     )
-    ax.set_title(f't-SNE Emotion Clusters — {tag}',
-                 fontsize=13, fontweight='bold')
+    title = f't-SNE Emotion Clusters — {tag}'
+    if title_suffix:
+        title += f' ({title_suffix})'
+    ax.set_title(title, fontsize=13, fontweight='bold')
 
     # Clean minimal style — no ticks, no grid
     ax.set_xticks([])
@@ -298,7 +447,7 @@ def _plot_emotion_tsne(features, labels, label_names, save_path, tag,
         spine.set_visible(False)
 
     plt.tight_layout()
-    fig.savefig(save_path, dpi=200, bbox_inches='tight', facecolor='white')
+    _save_multi_format(fig, save_path, dpi=300, facecolor='white')
     plt.close(fig)
 
 
@@ -416,5 +565,5 @@ def _plot_modality_tsne(modality_features, save_path, tag,
         spine.set_visible(False)
 
     plt.tight_layout()
-    fig.savefig(save_path, dpi=200, bbox_inches='tight', facecolor='white')
+    _save_multi_format(fig, save_path, dpi=300, facecolor='white')
     plt.close(fig)

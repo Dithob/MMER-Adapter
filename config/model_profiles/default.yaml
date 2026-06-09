@@ -17,7 +17,7 @@ classification:
       Please recognize emotion of the above multimodal content from the target
       set <neutral:0, surprise:1, fear:2, sad:3, joy:4, disgust:5, anger:6>. response: The emotion is
     max_new_tokens: 1
-    pseudo_tokens: 2
+    pseudo_tokens: 4
     label_index_mapping:
       neutral: 0
       surprise: 1

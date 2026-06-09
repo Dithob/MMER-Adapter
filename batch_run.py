@@ -697,10 +697,10 @@ EXPERIMENT_GROUPS['meld_component_ablation'] = {
          'modalities': 'ta'},
 
         # C2: w/o Text (仅 audio + video，纯非文本)
+        # 注意: 去掉 text 时必须关闭 context/speaker_tag (它们是文本特征)
         {'name': 'wo_T',
          'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
-         'use_context': True, 'context_window': 12, 'text_seq_len': 128,
-         'use_speaker_tag': True,
+         'use_context': False, 'use_speaker_tag': False,
          'modalities': 'av'},
 
         # C3: w/o Audio & Video (仅 text，text-only baseline)

@@ -544,17 +544,17 @@ class HMMEM(nn.Module):
         if self.use_audio and self.use_video:
             if self.use_text:
                 return self.mixer(audio_h, video_h, text_embed)
-            return audio_h + video_h, None if self._amm_active else audio_h + video_h
+            return (audio_h + video_h, None) if self._amm_active else audio_h + video_h
         elif self.use_audio:
             zero_v = torch.zeros_like(audio_h)
             if self.use_text:
                 return self.mixer(audio_h, zero_v, text_embed)
-            return audio_h, None if self._amm_active else audio_h
+            return (audio_h, None) if self._amm_active else audio_h
         elif self.use_video:
             zero_a = torch.zeros_like(video_h)
             if self.use_text:
                 return self.mixer(zero_a, video_h, text_embed)
-            return video_h, None if self._amm_active else video_h
+            return (video_h, None) if self._amm_active else video_h
         else:
             text_pooled = torch.mean(text_embed, dim=1)
             projected = self.text_fallback_proj(text_pooled)

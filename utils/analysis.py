@@ -230,7 +230,7 @@ def _plot_confusion_matrix(y_true, y_pred, label_names, save_path, tag):
 
     thresh = cm_norm.max() / 2.0
     # Fixed cell font size — independent of class count for cross-dataset consistency
-    cell_fontsize = 11
+    cell_fontsize = 12
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
             text_color = "white" if cm_norm[i, j] > thresh else "black"

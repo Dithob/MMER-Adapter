@@ -172,14 +172,20 @@ def detailed_classification_analysis(
     if features is not None and len(features) > 0:
         tsne_path = os.path.join(save_dir, f'{tag}-tsne_emotion_true{ts_suffix}.png')
 
-        # Save features + labels as npz for offline analysis
+        # Save features + labels as npz for offline analysis / replotting
         npz_path = os.path.join(save_dir, f'{tag}-tsne_features{ts_suffix}.npz')
-        np.savez(
-            npz_path,
+        save_dict = dict(
             features=features,
             labels=y_true,
             pred_labels=y_pred,
         )
+        # Also save modality features for modality t-SNE replotting
+        if modality_features is not None:
+            for mod_name in ('audio', 'video', 'fusion'):
+                mod_feat = modality_features.get(mod_name)
+                if mod_feat is not None:
+                    save_dict[f'mod_{mod_name}'] = np.array(mod_feat)
+        np.savez(npz_path, **save_dict)
         log.info(f"t-SNE features saved → {npz_path}")
 
         _plot_emotion_tsne(

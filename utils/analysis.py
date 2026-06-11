@@ -107,7 +107,10 @@ def detailed_classification_analysis(
                            t-SNE (Figure 4 style). Can be None to skip.
         log: logger instance (optional)
         timestamp: str — timestamp suffix for filenames (optional)
-        max_per_class: int — max samples per emotion class for balanced t-SNE
+        max_per_class: int — controls balanced sampling for emotion t-SNE.
+            > 0: each class capped at this number (balanced, prevents neutral domination)
+              0: no sampling, use ALL samples (denser plot)
+            CLI override: --tsne_max_per_class 0
 
     Returns:
         dict with keys: WA, UA, WF1, Macro_F1, per_class, cm_path, tsne_path
@@ -207,13 +210,15 @@ def detailed_classification_analysis(
 def _plot_confusion_matrix(y_true, y_pred, label_names, save_path, tag):
     """
     Plot confusion matrix heatmap with both percentages and raw counts.
-    Enlarged fonts for publication quality.
+    Fixed canvas size (8x7) ensures MELD-7 and IEMOCAP-4/6 produce
+    identically-dimensioned figures with consistent font sizes.
     """
     cm = confusion_matrix(y_true, y_pred, labels=list(range(len(label_names))))
     cm_norm = cm.astype('float') / (cm.sum(axis=1, keepdims=True) + 1e-10)
 
     n = len(label_names)
-    fig, ax = plt.subplots(figsize=(max(7, n * 1.3), max(6, n * 1.1)))
+    # Fixed figure size — guarantees identical canvas across datasets (4/6/7 classes)
+    fig, ax = plt.subplots(figsize=(8, 7))
 
     chinese_font = _try_chinese_font()
     font_props = {}
@@ -224,8 +229,8 @@ def _plot_confusion_matrix(y_true, y_pred, label_names, save_path, tag):
     fig.colorbar(cax, ax=ax, fraction=0.046, pad=0.04)
 
     thresh = cm_norm.max() / 2.0
-    # Cell text font size: enlarged for readability
-    cell_fontsize = max(10, 15 - n)
+    # Fixed cell font size — independent of class count for cross-dataset consistency
+    cell_fontsize = 11
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
             text_color = "white" if cm_norm[i, j] > thresh else "black"
@@ -320,8 +325,13 @@ def _plot_emotion_tsne(features, true_labels, pred_labels, label_names,
       1. True-label coloring (primary figure)
       2. Predicted-label coloring (secondary figure for comparison)
 
+    Args:
+      max_per_class: int — controls balanced sampling.
+          > 0: each class capped at this number (balanced)
+            0: no sampling, use ALL samples (denser plot)
+
     Pipeline:
-      Balanced subsampling → StandardScaler → L2 → PCA → t-SNE (cosine)
+      [Optional balanced subsampling] → StandardScaler → L2 → PCA → t-SNE (cosine)
     """
     features = np.array(features, dtype=np.float32)
     true_labels = np.array(true_labels, dtype=int)
@@ -338,14 +348,22 @@ def _plot_emotion_tsne(features, true_labels, pred_labels, label_names,
         logger.warning("Too few valid samples for t-SNE, skipping.")
         return
 
-    # ── 1. Balanced subsampling ──
-    features_bal, true_labels_bal, bal_idx = _balanced_subsample(
-        features, true_labels, max_per_class=max_per_class
-    )
-    pred_labels_bal = pred_labels[bal_idx]
+    # ── 1. Balanced subsampling (skip when max_per_class <= 0) ──
+    if max_per_class > 0:
+        features_bal, true_labels_bal, bal_idx = _balanced_subsample(
+            features, true_labels, max_per_class=max_per_class
+        )
+        pred_labels_bal = pred_labels[bal_idx]
+        logger.info(f"t-SNE balanced sampling: {len(features)} → {len(features_bal)} "
+                    f"(max_per_class={max_per_class})")
+    else:
+        features_bal = features
+        true_labels_bal = true_labels
+        pred_labels_bal = pred_labels
+        logger.info(f"t-SNE using ALL {len(features)} samples (no balanced sampling)")
 
     if len(features_bal) < 10:
-        logger.warning("Too few balanced samples for t-SNE, skipping.")
+        logger.warning("Too few samples for t-SNE, skipping.")
         return
 
     # ── 2. Feature preprocessing: StandardScaler → L2 → PCA ──
@@ -430,7 +448,7 @@ def _draw_tsne_scatter(embeddings, labels, label_names, save_path, tag,
         )
 
     ax.legend(
-        loc='best', fontsize=10, framealpha=0.9,
+        loc='upper right', fontsize=10, framealpha=0.9,
         markerscale=max(1, 8 / point_size),
         prop=legend_prop if legend_prop else None,
         title='Emotion', title_fontsize=11,
@@ -548,7 +566,7 @@ def _plot_modality_tsne(modality_features, save_path, tag,
         )
 
     ax.legend(
-        loc='best', fontsize=11, framealpha=0.9,
+        loc='upper right', fontsize=11, framealpha=0.9,
         markerscale=max(1, 10 / point_size),
         title='Modality', title_fontsize=12,
     )

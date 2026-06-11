@@ -590,6 +590,12 @@ def parse_args():
     parser.add_argument('--eval_model_path', type=str, default=None,
                         help='path to the .pth model file to evaluate (required when --eval_only is set)')
 
+    # ── Analysis / Visualization ──
+    parser.add_argument('--tsne_max_per_class', type=int, default=150,
+                        help='max samples per emotion class for t-SNE balanced sampling. '
+                             '150=balanced (default, prevents neutral domination). '
+                             '0=no sampling, use ALL samples (denser plot).')
+
     return parser.parse_args()
 
 if __name__ == '__main__':

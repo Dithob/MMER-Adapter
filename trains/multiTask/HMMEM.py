@@ -469,6 +469,7 @@ class HMMEM():
                         tag=tag,
                         log=logger,
                         timestamp=None,  # timestamp is in folder name now
+                        max_per_class=getattr(self.args, 'tsne_max_per_class', 150),
                     )
                     # Attach plot paths to eval_results for CSV recording
                     eval_results['cm_path'] = analysis_result.get('cm_path', '')

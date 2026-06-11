@@ -152,8 +152,10 @@ class HMMEM(nn.Module):
         self.alpha_align = getattr(args, 'alpha_align', 0.6)
         self.beta_fiber = getattr(args, 'beta_fiber', 0.1)
         self.beta_offset = getattr(args, 'beta_offset', 0.1)
-        self.diff_loss_weight = getattr(args, 'diff_loss_weight', 0.01)
-        self.nce_weight = getattr(args, 'nce_weight', 0.05)
+        self.diff_loss_weight = getattr(args, 'diff_loss_weight', 1.0)
+        self.nce_weight = getattr(args, 'nce_weight', 1.0)
+        self.lb_loss_weight = getattr(args, 'lb_loss_weight', 1.0)
+        self.beta_moe = getattr(args, 'beta_moe', 0.1)
 
         fusion_input_size = 256
         self.text_in = text_in
@@ -710,16 +712,16 @@ class HMMEM(nn.Module):
             if self.use_moe_lb_loss:
                 # Only apply LB loss to Local branch (Global has heterogeneous experts)
                 lb_local = self._compute_lb_loss(moe_aux['local_gw'])
-                res['MoE_LB_Loss'] = lb_local * 0.01
+                res['MoE_LB_Loss'] = lb_local * self.lb_loss_weight * self.beta_moe
 
             if self.use_diff_loss:
                 diff_branch = self.diff_loss_fn(moe_aux['global_out'], moe_aux['local_out'])
-                res['DiffLoss'] = diff_branch * self.diff_loss_weight
+                res['DiffLoss'] = diff_branch * self.diff_loss_weight * self.beta_moe
 
             if self.use_expert_diff_loss:
                 diff_global = self._compute_diff_loss_pairs(moe_aux['global_experts'])
                 diff_local = self._compute_diff_loss_pairs(moe_aux['local_experts'])
-                res['ExpertDiffLoss'] = (diff_global + diff_local) * self.diff_loss_weight
+                res['ExpertDiffLoss'] = (diff_global + diff_local) * self.diff_loss_weight * self.beta_moe
 
         if self.use_atgfbff and self.training and self.use_atgfbff_loss and fusion_aux is not None:
             res['ATGFBFF_Align_Loss'] = self.alpha_align * fusion_aux['align_loss']
@@ -740,7 +742,7 @@ class HMMEM(nn.Module):
             if self.use_video and video_seq is not None:
                 nce_terms.append(self.cpc_text_video(text_embed, video_seq))
             if nce_terms:
-                res['NCELoss'] = sum(nce_terms) * self.nce_weight
+                res['NCELoss'] = sum(nce_terms) * self.nce_weight * self.beta_moe
 
         return res
 

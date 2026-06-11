@@ -409,7 +409,11 @@ def parse_args():
     parser.add_argument('--use_amm_align_loss', action='store_true', default=True,
                         help='enable AMM modal alignment loss L_amm (default: True)')
     parser.add_argument('--alpha_amm', type=float, default=0.5,
-                        help='weight for AMM modal alignment loss (default: 0.5)')
+                        help='weight for AMM modal alignment loss α (default: 0.5)')
+    parser.add_argument('--beta_moe', type=float, default=0.1,
+                        help='weight for DBMoE expert regularization loss β: '
+                             'each MoE sub-loss (LB/Diff/NCE) is directly scaled by β. '
+                             'L = L_task + α·L_AMF + β·(L_LB + L_Diff + L_NCE) (default: 0.1)')
     parser.add_argument('--bypass_scale_init', type=float, default=0.3,
                         help='initial scale for bypass AV tokens (learnable, default: 0.3)')
     
@@ -452,8 +456,8 @@ def parse_args():
                         help='enable DiffLoss between Global and Local branches')
     parser.add_argument('--use_expert_diff_loss', action='store_true',
                         help='enable DiffLoss between experts within each branch')
-    parser.add_argument('--diff_loss_weight', type=float, default=0.01,
-                        help='weight for DiffLoss')
+    parser.add_argument('--diff_loss_weight', type=float, default=1.0,
+                        help='internal weight λ_diff for DiffLoss within L_MoE (default: 1.0)')
     
     # ── NCE Loss ──
     parser.add_argument('--use_nce_loss', action='store_true',
@@ -462,8 +466,10 @@ def parse_args():
                         help='hidden dim for NCE CPC module')
     parser.add_argument('--nce_pred_steps', type=int, default=2,
                         help='prediction steps for NCE CPC')
-    parser.add_argument('--nce_weight', type=float, default=0.05,
-                        help='weight for NCE loss')
+    parser.add_argument('--nce_weight', type=float, default=1.0,
+                        help='internal weight λ_nce for NCE loss within L_MoE (default: 1.0)')
+    parser.add_argument('--lb_loss_weight', type=float, default=1.0,
+                        help='internal weight λ_lb for MoE load-balance loss within L_MoE (default: 1.0)')
     
     # ── Feature Adapter (for high-dim encoders: HuBERT/Whisper) ──
     parser.add_argument('--adapter_dim', type=int, default=128,

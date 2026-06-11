@@ -729,6 +729,30 @@ EXPERIMENT_GROUPS['meld_component_ablation'] = {
     ]
 }
 
+# ── 23. Loss Function Parameter Analysis (论文 α×β 超参数分析图) ──
+# 对应论文公式 (3-25): L = L_task + α·L_AMF + β·L_MoE
+# 固定 MoE 内部比重 (λ_lb=0.01, λ_diff=0.01, λ_nce=0.05)，
+# 只扫描外部超参数 α (AMF 对齐损失权重) 和 β (MoE 正则化整体权重)。
+# 跑 5 组 β，最终选 3 组有区分度的画图。
+EXPERIMENT_GROUPS['loss_alpha_beta_grid'] = {
+    'description': 'Loss 超参数分析: α(AMF)×β(MoE) 网格搜索 — 论文 Fig: Loss Parameter Analysis',
+    'experiments': [
+        {'name': f'a{str(a).replace(".", "")}_b{str(b).replace(".", "")}',
+         'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
+         'use_tcap': False,
+         # α: AMF 模态对齐损失权重
+         'use_amm_align_loss': True, 'alpha_amm': a,
+         # β: MoE 正则化整体权重 (内部 λ_lb/λ_diff/λ_nce 保持默认比重)
+         'beta_moe': b,
+         # 开启全部 3 个 MoE 子损失 (LB + Diff + NCE)
+         'use_moe_lb_loss': True, 'use_diff_loss': True, 'use_nce_loss': True,
+         # 关闭 ExpertDiffLoss (论文不考虑)
+         'use_expert_diff_loss': False}
+        for a in [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+        for b in [0.05, 0.1, 0.15, 0.2, 0.3]
+    ]
+}
+
 # ═══════════════════════════════════════════════════════════════════
 # 命令构建
 # ═══════════════════════════════════════════════════════════════════

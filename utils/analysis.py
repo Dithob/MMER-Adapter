@@ -18,10 +18,16 @@ Usage:
 import os
 import logging
 import numpy as np
+import re
 import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend for server environments
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
+
+# ── Global font: Times New Roman for publication quality ──
+plt.rcParams['font.family'] = 'serif'
+plt.rcParams['font.serif'] = ['Times New Roman'] + plt.rcParams['font.serif']
+plt.rcParams['mathtext.fontset'] = 'stix'  # math font consistent with TNR
 from sklearn.metrics import (
     accuracy_score, recall_score, f1_score,
     precision_recall_fscore_support, confusion_matrix
@@ -248,9 +254,12 @@ def _plot_confusion_matrix(y_true, y_pred, label_names, save_path, tag):
     ax.set_yticks(range(n))
     ax.set_xticklabels(label_names, rotation=45, ha='right', fontsize=12, **font_props)
     ax.set_yticklabels(label_names, fontsize=12, **font_props)
-    ax.set_xlabel('Predicted', fontsize=14, fontweight='bold')
-    ax.set_ylabel('True', fontsize=14, fontweight='bold')
-    ax.set_title(f'Confusion Matrix — {tag}', fontsize=15, fontweight='bold')
+    ax.set_xlabel('Predicted Label', fontsize=12, fontweight='bold')
+    ax.set_ylabel('True Label', fontsize=12, fontweight='bold')
+    # Extract dataset name from tag (e.g. 'hmmem-chatglm3-iemocap6-TEST' → 'IEMOCAP')
+    parts = tag.split('-')
+    dataset_name = re.sub(r'\d+$', '', parts[2]).upper() if len(parts) >= 3 else tag
+    ax.set_title(f'Normalized Confusion Matrix of {dataset_name}', fontsize=15, fontweight='bold')
 
     plt.tight_layout()
     _save_multi_format(fig, save_path, dpi=300)

@@ -243,7 +243,7 @@ def run_normal(args):
             "Mixer", "Fusion", "Gate", "LoRA", "LoRA_r", "LoRA_LR", "LoRA_targets", "LoRA_warmup", "INT8",
             "AdapterDim", "Modalities", "RawAV", "PromptStyle", "PretrainLM",
             "BiLSTM", "ModalDropout", "Oversampling", "OS_Alpha",
-            "LabelFormat", "ClsHead",
+            "LabelFormat", "ClsHead", "ConstrainedDecode",
         ]
         columns = ["Model", "ModelType", "Dataset", "Seed", "Timestamp", "PTH Path",
                     "ConfusionMatrix", "tSNE"] \
@@ -286,6 +286,7 @@ def run_normal(args):
             getattr(args, 'oversampling_alpha', 0.5) if getattr(args, 'use_oversampling', False) else '',
             getattr(args, 'label_format', 'index'),
             getattr(args, 'use_cls_head', False),
+            getattr(args, 'constrain_label_decode', False),
         ]
 
         for k, test_results in enumerate(model_results):
@@ -535,6 +536,8 @@ def parse_args():
     # ── Classification Head (方案 B) ──
     parser.add_argument('--use_cls_head', action='store_true', default=False,
                         help='use classification head on LLM hidden states instead of generative decoding')
+    parser.add_argument('--constrain_label_decode', action='store_true', default=False,
+                        help='classification eval: score valid label candidates instead of free-form generation')
 
     # ── Context Ablation ──
     parser.add_argument('--use_context', action='store_true', default=False,

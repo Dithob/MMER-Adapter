@@ -26,6 +26,7 @@ class Language_model(nn.Module):
         self.train_mode = args.train_mode
         self.task_specific_prompt = args.task_specific_prompt
         self.prompt_style = getattr(args, 'prompt_style', 'default')
+        self.constrain_label_decode = getattr(args, 'constrain_label_decode', False)
         self._args = args
         self._lora_enabled = False
         self._wrap_prefix_len = 0
@@ -331,6 +332,15 @@ class Language_model(nn.Module):
             attention_mask = atts_fusion
             gen_kwargs = {"num_beams": 1, "do_sample": False, "max_new_tokens": self.max_new_tokens}
 
+        if (
+            self.train_mode == 'classification'
+            and self.constrain_label_decode
+            and self.model_type in ['qwen', 'qwen3.5', 'llama2', 'deepseek']
+        ):
+            constrained = self._generate_constrained_classification(opt_tokens, attention_mask)
+            if constrained is not None:
+                return constrained
+
         pad_id = getattr(self.model.config, 'pad_token_id', None) or getattr(self.tokenizer, 'pad_token_id', None)
 
         if self.model_type == 'gemma' and self._gemma_ple_dim > 0:
@@ -410,6 +420,95 @@ class Language_model(nn.Module):
                 value = self._parse_classification_output(response)
             all_responses.append(value)
         return all_responses
+
+    def _classification_candidates(self):
+        if not self.label_index_mapping_for_parse:
+            return []
+
+        idx_to_name = {}
+        for name, idx in self.label_index_mapping_for_parse.items():
+            idx_to_name.setdefault(int(idx), name)
+        idx_to_name.update({int(idx): name for idx, name in self._idx_to_name.items()})
+
+        candidates = []
+        for idx in sorted(idx_to_name):
+            if self.label_format == 'text':
+                label_text = idx_to_name[idx]
+                variants = [label_text, f" {label_text}"]
+            else:
+                label_text = str(idx)
+                variants = [label_text, f" {label_text}"]
+            candidates.append((idx, variants))
+        return candidates
+
+    def _score_candidate_variant(self, opt_tokens, attention_mask, candidate_ids):
+        batch_size = opt_tokens.shape[0]
+        candidate_ids = candidate_ids.unsqueeze(0).expand(batch_size, -1)
+        candidate_embeds = self.text_embedding(candidate_ids)
+        candidate_mask = torch.ones(
+            batch_size,
+            candidate_ids.shape[1],
+            dtype=attention_mask.dtype,
+            device=attention_mask.device,
+        )
+        inputs_embeds = torch.cat([opt_tokens, candidate_embeds], dim=1)
+        full_attention_mask = torch.cat([attention_mask, candidate_mask], dim=1)
+
+        outputs = self.model(
+            inputs_embeds=inputs_embeds,
+            attention_mask=full_attention_mask,
+            return_dict=True,
+        )
+        start = opt_tokens.shape[1] - 1
+        logits = outputs.logits[:, start:start + candidate_ids.shape[1], :]
+        log_probs = F.log_softmax(logits.float(), dim=-1)
+        token_scores = log_probs.gather(-1, candidate_ids.unsqueeze(-1)).squeeze(-1)
+        return token_scores.mean(dim=-1)
+
+    def _generate_constrained_classification(self, opt_tokens, attention_mask):
+        candidates = self._classification_candidates()
+        if not candidates:
+            return None
+
+        old_use_cache = getattr(self.model.config, 'use_cache', True)
+        self.model.config.use_cache = False
+        scores = []
+        try:
+            with torch.no_grad(), torch.amp.autocast(device_type='cuda'):
+                for idx, variants in candidates:
+                    variant_scores = []
+                    for variant in variants:
+                        encoded = self.tokenizer(
+                            variant,
+                            return_tensors='pt',
+                            add_special_tokens=False,
+                        )['input_ids'].to(self.device).view(-1)
+                        if encoded.numel() == 0:
+                            continue
+                        variant_scores.append(
+                            self._score_candidate_variant(opt_tokens, attention_mask, encoded)
+                        )
+                    if not variant_scores:
+                        continue
+                    best_variant_score = torch.stack(variant_scores, dim=0).max(dim=0).values
+                    scores.append((idx, best_variant_score))
+        finally:
+            self.model.config.use_cache = old_use_cache
+
+        if not scores:
+            return None
+
+        label_ids = torch.tensor([idx for idx, _ in scores], device=opt_tokens.device, dtype=torch.float)
+        score_tensor = torch.stack([score for _, score in scores], dim=1)
+        preds = label_ids[score_tensor.argmax(dim=1)]
+
+        if not hasattr(self, '_constrained_debug_logged'):
+            self._constrained_debug_logged = True
+            logger.info(
+                f"[GenDebug] constrained label decode enabled: "
+                f"labels={label_ids.detach().cpu().tolist()}"
+            )
+        return preds.detach().cpu().tolist()
 
     def input_processing(self, fusion_embedding, labels=None, mode=None, input_attn_mask=None):
         if self.model_type == 'chatglm3':

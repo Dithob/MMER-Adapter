@@ -97,7 +97,7 @@
 2026-06-07 22:02:04:INFO:Checkpoint saved at epoch 20 -> /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-meld-classification-20260607_180044-epoch20.ckpt
 2026-06-07 22:02:05:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-chatglm3-meld-classification-20260607_180044-epoch5.ckpt
 2026-06-07 22:04:05:INFO:TEST-(hmmem) >>
-2026-06-07 22:04:05:INFO:M: >>  acc: 0.6736  UA: 0.4949  weight_F1: 0.6657  Macro_F1: 0.5021 
+2026-06-07 22:04:05:INFO:M: >>  acc: 0.6751  UA: 0.4963  weight_F1: 0.6667  Macro_F1: 0.5030 
 2026-06-07 22:04:05:INFO:============================================================
 2026-06-07 22:04:05:INFO:         Detailed Classification Analysis
 2026-06-07 22:04:05:INFO:============================================================
@@ -107,14 +107,14 @@
 2026-06-07 22:04:05:INFO:      surprise   0.5066   0.6833   0.5818       281
 2026-06-07 22:04:05:INFO:          fear   0.2750   0.2200   0.2444        50
 2026-06-07 22:04:05:INFO:       sadness   0.5462   0.3125   0.3976       208
-2026-06-07 22:04:05:INFO:           joy   0.6292   0.6542   0.6415       402
+2026-06-07 22:04:05:INFO:           joy   0.6327   0.6642   0.6481       402
 2026-06-07 22:04:05:INFO:       disgust   0.3167   0.2794   0.2969        68
 2026-06-07 22:04:05:INFO:         anger   0.6222   0.4870   0.5463       345
 2026-06-07 22:04:05:INFO:------------------------------------------------------------
-2026-06-07 22:04:05:INFO:  WA  (Weighted Accuracy) : 0.6736
-2026-06-07 22:04:05:INFO:  UA  (Unweighted Accuracy): 0.4949
-2026-06-07 22:04:05:INFO:  WF1 (Weighted F1)       : 0.6657
-2026-06-07 22:04:05:INFO:  Macro-F1                : 0.5021
+2026-06-07 22:04:05:INFO:  WA  (Weighted Accuracy) : 0.6751
+2026-06-07 22:04:05:INFO:  UA  (Unweighted Accuracy): 0.4963
+2026-06-07 22:04:05:INFO:  WF1 (Weighted F1)       : 0.6667
+2026-06-07 22:04:05:INFO:  Macro-F1                : 0.5030
 2026-06-07 22:04:05:INFO:============================================================
 2026-06-07 22:04:07:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-chatglm3-meld-20260607_180044/hmmem-chatglm3-meld-TEST-confusion_matrix.png (+.svg)
 2026-06-07 22:04:07:INFO:t-SNE features saved → /root/autodl-tmp/results/results/analysis/hmmem-chatglm3-meld-20260607_180044/hmmem-chatglm3-meld-TEST-tsne_features.npz

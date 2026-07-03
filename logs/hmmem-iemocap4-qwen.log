@@ -917,3 +917,408 @@
 2026-07-03 01:59:24:INFO:TRAIN-(hmmem) (1/24/2)>> loss: 0.4898
 2026-07-03 01:59:26:INFO:VAL-(hmmem) >>
 2026-07-03 01:59:26:INFO:M: >>  acc: 0.6187  UA: 0.6535  weight_F1: 0.6206  Macro_F1: 0.6257 
+2026-07-03 13:00:49:INFO:========= 准备训练数据集: iemocap4 (classification) =========
+2026-07-03 13:00:49:INFO:[ConfigResolver] model_type=qwen, dataset=iemocap4, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-07-03 13:00:49:INFO:Start running hmmem...
+2026-07-03 13:00:49:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'iemocap4', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'IEMOCAP_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [1234], 'use_tgm': True, 'use_origin_amm': False, 'use_amm': False, 'amm_mode': 'base', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'beta_moe': 0.1, 'bypass_scale_init': 0.3, 'use_msf': True, 'use_moe_fusion': False, 'use_sd_moe': False, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 1.0, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 1.0, 'lb_loss_weight': 1.0, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'compressed', 'meld_feature_mode': 'raw', 'mosei_feature_mode': 'legacy', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'use_speaker_tag': False, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 5e-05, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 2, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'tsne_max_per_class': 150, 'timestamp': '20260703_130049', 'dataPath': '/root/autodl-tmp/datasets/IEMOCAP_UniMSE/iemocap_data_0610.pkl', 'seq_lens': (84, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 4290, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <angry:0, happy:1, sad:2, neutral:3>. Assistant: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'angry': 0, 'happy': 1, 'sad': 2, 'neutral': 3}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 1234}>
+2026-07-03 13:00:49:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-07-03 13:00:49:INFO:Let's use the GPU 1 !
+2026-07-03 13:00:50:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-07-03 13:00:50:INFO:IEMOCAP train split loaded 3915/5354 samples (drop: missing_meta=117, unknown_emo=1322, mapping_missing=0, missing_modal=0)
+2026-07-03 13:00:51:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-07-03 13:00:51:INFO:IEMOCAP valid split loaded 375/528 samples (drop: missing_meta=7, unknown_emo=146, mapping_missing=0, missing_modal=0)
+2026-07-03 13:00:52:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-07-03 13:00:52:INFO:IEMOCAP test split loaded 1241/1650 samples (drop: missing_meta=28, unknown_emo=381, mapping_missing=0, missing_modal=0)
+2026-07-03 13:00:57:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, fusion
+2026-07-03 13:00:57:INFO:trainable params: 1352396 || all params: 1838181068 || trainable%: 0.0735725127161412
+2026-07-03 13:00:57:INFO:Single-LR optimizer: 32 tensors, lr=5e-05
+2026-07-03 13:00:57:INFO:Init labels...
+2026-07-03 13:00:57:INFO:Start training...
+2026-07-03 13:00:57:INFO:  Batch size = 24
+2026-07-03 13:00:57:INFO:  Gradient Accumulation steps = 2
+2026-07-03 13:00:57:INFO:  Effective batch size = 48
+2026-07-03 13:00:57:INFO:  AMP dtype = torch.bfloat16
+2026-07-03 13:01:58:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 10.8568
+2026-07-03 13:01:59:INFO:[GenDebug] model_type=qwen, max_new_tokens=2
+2026-07-03 13:01:59:INFO:[GenDebug] inputs_embeds.shape=torch.Size([24, 136, 2048]), outputs.shape=torch.Size([24, 3])
+2026-07-03 13:01:59:INFO:[GenDebug] outputs[0] token IDs: [151644, 264, 1584]
+2026-07-03 13:01:59:INFO:[GenDebug] outputs[0] full decode: ' a state'
+2026-07-03 13:01:59:INFO:[GenDebug] decoded responses[:8]: [' a state', ' a state', ' a state', ' a ______', ' a state', ' a ______', ' a state', ' a state']
+2026-07-03 13:02:01:INFO:VAL-(hmmem) >>
+2026-07-03 13:02:01:INFO:M: >>  acc: 0.2693  UA: 0.2500  weight_F1: 0.1145  Macro_F1: 0.1063 
+2026-07-03 13:02:03:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_130049.pth.
+2026-07-03 13:02:57:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 3.4688
+2026-07-03 13:02:59:INFO:VAL-(hmmem) >>
+2026-07-03 13:02:59:INFO:M: >>  acc: 0.3547  UA: 0.2566  weight_F1: 0.2395  Macro_F1: 0.1835 
+2026-07-03 13:03:00:INFO:Saving best model at epoch 2 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_130049.pth.
+2026-07-03 13:03:55:INFO:TRAIN-(hmmem) (1/3/1)>> loss: 0.7032
+2026-07-03 13:03:56:INFO:VAL-(hmmem) >>
+2026-07-03 13:03:56:INFO:M: >>  acc: 0.1600  UA: 0.2500  weight_F1: 0.0441  Macro_F1: 0.0690 
+2026-07-03 13:04:50:INFO:TRAIN-(hmmem) (2/4/1)>> loss: 0.6910
+2026-07-03 13:04:52:INFO:VAL-(hmmem) >>
+2026-07-03 13:04:52:INFO:M: >>  acc: 0.2347  UA: 0.2496  weight_F1: 0.1771  Macro_F1: 0.1561 
+2026-07-03 13:05:45:INFO:TRAIN-(hmmem) (3/5/1)>> loss: 0.6890
+2026-07-03 13:05:47:INFO:VAL-(hmmem) >>
+2026-07-03 13:05:47:INFO:M: >>  acc: 0.2773  UA: 0.2479  weight_F1: 0.2124  Macro_F1: 0.1801 
+2026-07-03 13:05:50:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_130049-epoch5.ckpt
+2026-07-03 13:06:44:INFO:TRAIN-(hmmem) (4/6/1)>> loss: 0.6841
+2026-07-03 13:06:46:INFO:VAL-(hmmem) >>
+2026-07-03 13:06:46:INFO:M: >>  acc: 0.2800  UA: 0.2531  weight_F1: 0.2084  Macro_F1: 0.1759 
+2026-07-03 13:07:39:INFO:TRAIN-(hmmem) (5/7/1)>> loss: 0.6837
+2026-07-03 13:07:41:INFO:VAL-(hmmem) >>
+2026-07-03 13:07:41:INFO:M: >>  acc: 0.1973  UA: 0.2614  weight_F1: 0.1224  Macro_F1: 0.1399 
+2026-07-03 13:08:35:INFO:TRAIN-(hmmem) (6/8/1)>> loss: 0.6857
+2026-07-03 13:08:37:INFO:VAL-(hmmem) >>
+2026-07-03 13:08:37:INFO:M: >>  acc: 0.2853  UA: 0.2444  weight_F1: 0.2031  Macro_F1: 0.1682 
+2026-07-03 13:09:30:INFO:TRAIN-(hmmem) (7/9/1)>> loss: 0.6821
+2026-07-03 13:09:32:INFO:VAL-(hmmem) >>
+2026-07-03 13:09:32:INFO:M: >>  acc: 0.2347  UA: 0.2566  weight_F1: 0.1749  Macro_F1: 0.1564 
+2026-07-03 13:10:26:INFO:TRAIN-(hmmem) (8/10/1)>> loss: 0.6818
+2026-07-03 13:10:28:INFO:VAL-(hmmem) >>
+2026-07-03 13:10:28:INFO:M: >>  acc: 0.2213  UA: 0.2381  weight_F1: 0.1672  Macro_F1: 0.1478 
+2026-07-03 13:10:30:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_130049-epoch10.ckpt
+2026-07-03 13:10:36:INFO:TEST-(hmmem) >>
+2026-07-03 13:10:36:INFO:M: >>  acc: 0.3215  UA: 0.2639  weight_F1: 0.2194  Macro_F1: 0.1823 
+2026-07-03 13:10:36:INFO:============================================================
+2026-07-03 13:10:36:INFO:         Detailed Classification Analysis
+2026-07-03 13:10:36:INFO:============================================================
+2026-07-03 13:10:36:INFO:         Class     Prec   Recall       F1   Support
+2026-07-03 13:10:36:INFO:------------------------------------------------------------
+2026-07-03 13:10:36:INFO:         angry   0.1408   0.0588   0.0830       170
+2026-07-03 13:10:36:INFO:         happy   0.4324   0.1086   0.1736       442
+2026-07-03 13:10:36:INFO:           sad   0.0000   0.0000   0.0000       245
+2026-07-03 13:10:36:INFO:       neutral   0.3220   0.8880   0.4726       384
+2026-07-03 13:10:36:INFO:------------------------------------------------------------
+2026-07-03 13:10:36:INFO:  WA  (Weighted Accuracy) : 0.3215
+2026-07-03 13:10:36:INFO:  UA  (Unweighted Accuracy): 0.2639
+2026-07-03 13:10:36:INFO:  WF1 (Weighted F1)       : 0.2194
+2026-07-03 13:10:36:INFO:  Macro-F1                : 0.1823
+2026-07-03 13:10:36:INFO:============================================================
+2026-07-03 13:10:37:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-iemocap4-20260703_130049/hmmem-qwen-iemocap4-TEST-confusion_matrix.png (+.svg)
+2026-07-03 13:10:37:INFO:t-SNE features saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-iemocap4-20260703_130049/hmmem-qwen-iemocap4-TEST-tsne_features.npz
+2026-07-03 13:10:37:INFO:t-SNE balanced sampling: 1241 → 600 (max_per_class=150)
+2026-07-03 13:10:42:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-iemocap4-20260703_130049/hmmem-qwen-iemocap4-TEST-tsne_emotion_true.png (+.svg, +pred)
+2026-07-03 13:11:03:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-iemocap4-20260703_130049/hmmem-qwen-iemocap4-TEST-tsne_modality.png (+.svg)
+2026-07-03 13:11:04:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-qwen-iemocap4-classification.csv...
+2026-07-03 13:12:27:INFO:========= 准备训练数据集: iemocap4 (classification) =========
+2026-07-03 13:12:27:INFO:[ConfigResolver] model_type=qwen, dataset=iemocap4, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-07-03 13:12:27:INFO:Start running hmmem...
+2026-07-03 13:12:27:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'iemocap4', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'IEMOCAP_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [], 'seeds': [2234, 3234], 'use_tgm': True, 'use_origin_amm': False, 'use_amm': False, 'amm_mode': 'base', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'beta_moe': 0.1, 'bypass_scale_init': 0.3, 'use_msf': True, 'use_moe_fusion': False, 'use_sd_moe': False, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 1.0, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 1.0, 'lb_loss_weight': 1.0, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'compressed', 'meld_feature_mode': 'raw', 'mosei_feature_mode': 'legacy', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'use_speaker_tag': False, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 5e-05, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 2, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'tsne_max_per_class': 150, 'timestamp': '20260703_131227', 'dataPath': '/root/autodl-tmp/datasets/IEMOCAP_UniMSE/iemocap_data_0610.pkl', 'seq_lens': (84, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 4290, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <angry:0, happy:1, sad:2, neutral:3>. Assistant: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'angry': 0, 'happy': 1, 'sad': 2, 'neutral': 3}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 2234}>
+2026-07-03 13:12:27:INFO:Find gpu: 0, with memory: 509607936 left!
+2026-07-03 13:12:27:INFO:Let's use the GPU 1 !
+2026-07-03 13:12:27:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-07-03 13:12:27:INFO:IEMOCAP train split loaded 3915/5354 samples (drop: missing_meta=117, unknown_emo=1322, mapping_missing=0, missing_modal=0)
+2026-07-03 13:12:28:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-07-03 13:12:29:INFO:IEMOCAP valid split loaded 375/528 samples (drop: missing_meta=7, unknown_emo=146, mapping_missing=0, missing_modal=0)
+2026-07-03 13:12:29:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-07-03 13:12:29:INFO:IEMOCAP test split loaded 1241/1650 samples (drop: missing_meta=28, unknown_emo=381, mapping_missing=0, missing_modal=0)
+2026-07-03 13:12:34:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, fusion
+2026-07-03 13:12:34:INFO:trainable params: 1352396 || all params: 1838181068 || trainable%: 0.0735725127161412
+2026-07-03 13:12:34:INFO:Single-LR optimizer: 32 tensors, lr=5e-05
+2026-07-03 13:12:34:INFO:Init labels...
+2026-07-03 13:12:34:INFO:Start training...
+2026-07-03 13:12:34:INFO:  Batch size = 24
+2026-07-03 13:12:34:INFO:  Gradient Accumulation steps = 2
+2026-07-03 13:12:34:INFO:  Effective batch size = 48
+2026-07-03 13:12:34:INFO:  AMP dtype = torch.bfloat16
+2026-07-03 13:13:33:INFO:TRAIN-(hmmem) (1/1/1)>> loss: 10.9399
+2026-07-03 13:13:34:INFO:[GenDebug] model_type=qwen, max_new_tokens=2
+2026-07-03 13:13:34:INFO:[GenDebug] inputs_embeds.shape=torch.Size([24, 136, 2048]), outputs.shape=torch.Size([24, 3])
+2026-07-03 13:13:34:INFO:[GenDebug] outputs[0] token IDs: [151644, 264, 1584]
+2026-07-03 13:13:34:INFO:[GenDebug] outputs[0] full decode: ' a state'
+2026-07-03 13:13:34:INFO:[GenDebug] decoded responses[:8]: [' a state', ' a state', ' a state', ' a state', ' a state', ' a state', ' a state', ' a state']
+2026-07-03 13:13:36:INFO:VAL-(hmmem) >>
+2026-07-03 13:13:36:INFO:M: >>  acc: 0.2693  UA: 0.2500  weight_F1: 0.1145  Macro_F1: 0.1063 
+2026-07-03 13:13:38:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:14:32:INFO:TRAIN-(hmmem) (1/2/1)>> loss: 4.1154
+2026-07-03 13:14:34:INFO:VAL-(hmmem) >>
+2026-07-03 13:14:34:INFO:M: >>  acc: 0.3200  UA: 0.2838  weight_F1: 0.2807  Macro_F1: 0.2439 
+2026-07-03 13:14:35:INFO:Saving best model at epoch 2 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:15:29:INFO:TRAIN-(hmmem) (1/3/1)>> loss: 0.7101
+2026-07-03 13:15:31:INFO:VAL-(hmmem) >>
+2026-07-03 13:15:31:INFO:M: >>  acc: 0.2400  UA: 0.2387  weight_F1: 0.2133  Macro_F1: 0.1862 
+2026-07-03 13:16:24:INFO:TRAIN-(hmmem) (2/4/1)>> loss: 0.6971
+2026-07-03 13:16:26:INFO:VAL-(hmmem) >>
+2026-07-03 13:16:26:INFO:M: >>  acc: 0.1813  UA: 0.2528  weight_F1: 0.1121  Macro_F1: 0.1218 
+2026-07-03 13:17:20:INFO:TRAIN-(hmmem) (3/5/1)>> loss: 0.6941
+2026-07-03 13:17:22:INFO:VAL-(hmmem) >>
+2026-07-03 13:17:22:INFO:M: >>  acc: 0.2453  UA: 0.2626  weight_F1: 0.2272  Macro_F1: 0.2035 
+2026-07-03 13:17:24:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch5.ckpt
+2026-07-03 13:18:17:INFO:TRAIN-(hmmem) (4/6/1)>> loss: 0.6892
+2026-07-03 13:18:19:INFO:VAL-(hmmem) >>
+2026-07-03 13:18:19:INFO:M: >>  acc: 0.2907  UA: 0.2758  weight_F1: 0.2716  Macro_F1: 0.2410 
+2026-07-03 13:19:13:INFO:TRAIN-(hmmem) (5/7/1)>> loss: 0.6842
+2026-07-03 13:19:15:INFO:VAL-(hmmem) >>
+2026-07-03 13:19:15:INFO:M: >>  acc: 0.1787  UA: 0.2407  weight_F1: 0.1152  Macro_F1: 0.1166 
+2026-07-03 13:20:08:INFO:TRAIN-(hmmem) (6/8/1)>> loss: 0.6859
+2026-07-03 13:20:10:INFO:VAL-(hmmem) >>
+2026-07-03 13:20:10:INFO:M: >>  acc: 0.3333  UA: 0.2388  weight_F1: 0.2108  Macro_F1: 0.1574 
+2026-07-03 13:21:03:INFO:TRAIN-(hmmem) (7/9/1)>> loss: 0.6802
+2026-07-03 13:21:05:INFO:VAL-(hmmem) >>
+2026-07-03 13:21:05:INFO:M: >>  acc: 0.2933  UA: 0.2372  weight_F1: 0.2121  Macro_F1: 0.1710 
+2026-07-03 13:21:59:INFO:TRAIN-(hmmem) (8/10/1)>> loss: 0.6814
+2026-07-03 13:22:01:INFO:VAL-(hmmem) >>
+2026-07-03 13:22:01:INFO:M: >>  acc: 0.2827  UA: 0.2327  weight_F1: 0.2330  Macro_F1: 0.1915 
+2026-07-03 13:22:03:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch10.ckpt
+2026-07-03 13:22:09:INFO:TEST-(hmmem) >>
+2026-07-03 13:22:09:INFO:M: >>  acc: 0.2562  UA: 0.2649  weight_F1: 0.2340  Macro_F1: 0.2114 
+2026-07-03 13:22:09:INFO:============================================================
+2026-07-03 13:22:09:INFO:         Detailed Classification Analysis
+2026-07-03 13:22:09:INFO:============================================================
+2026-07-03 13:22:09:INFO:         Class     Prec   Recall       F1   Support
+2026-07-03 13:22:09:INFO:------------------------------------------------------------
+2026-07-03 13:22:09:INFO:         angry   0.1552   0.4765   0.2341       170
+2026-07-03 13:22:09:INFO:         happy   0.3413   0.2262   0.2721       442
+2026-07-03 13:22:09:INFO:           sad   0.0000   0.0000   0.0000       245
+2026-07-03 13:22:09:INFO:       neutral   0.3239   0.3568   0.3395       384
+2026-07-03 13:22:09:INFO:------------------------------------------------------------
+2026-07-03 13:22:09:INFO:  WA  (Weighted Accuracy) : 0.2562
+2026-07-03 13:22:09:INFO:  UA  (Unweighted Accuracy): 0.2649
+2026-07-03 13:22:09:INFO:  WF1 (Weighted F1)       : 0.2340
+2026-07-03 13:22:09:INFO:  Macro-F1                : 0.2114
+2026-07-03 13:22:09:INFO:============================================================
+2026-07-03 13:22:10:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-iemocap4-20260703_131227/hmmem-qwen-iemocap4-TEST-confusion_matrix.png (+.svg)
+2026-07-03 13:22:10:INFO:t-SNE features saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-iemocap4-20260703_131227/hmmem-qwen-iemocap4-TEST-tsne_features.npz
+2026-07-03 13:22:10:INFO:t-SNE balanced sampling: 1241 → 600 (max_per_class=150)
+2026-07-03 13:22:14:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-iemocap4-20260703_131227/hmmem-qwen-iemocap4-TEST-tsne_emotion_true.png (+.svg, +pred)
+2026-07-03 13:22:36:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-iemocap4-20260703_131227/hmmem-qwen-iemocap4-TEST-tsne_modality.png (+.svg)
+2026-07-03 13:22:37:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-qwen-iemocap4-classification.csv...
+2026-07-03 13:22:37:INFO:[ConfigResolver] model_type=qwen, dataset=iemocap4, task=classification, profile_keys=['pretrain_LM', 'lora_target_modules', 'task_specific_prompt', 'max_new_tokens', 'pseudo_tokens', 'label_index_mapping', 'batch_size', 'gradient_accumulation_steps', 'learning_rate', 'a_lstm_hidden_size', 'v_lstm_hidden_size', 'a_lstm_layers', 'v_lstm_layers', 'a_lstm_dropout', 'v_lstm_dropout', 'warm_up_epochs', 'gamma', 'update_epochs', 'early_stop', 'max_epochs', 'H']
+2026-07-03 13:22:37:INFO:Start running hmmem...
+2026-07-03 13:22:37:INFO:<Storage{'is_tune': False, 'train_mode': 'classification', 'modelName': 'hmmem', 'model_type': 'qwen', 'datasetName': 'iemocap4', 'root_dataset_dir': '/root/autodl-tmp/datasets/', 'data_dir': 'IEMOCAP_UniMSE', 'num_workers': 4, 'model_save_dir': '/root/autodl-tmp/results/models', 'res_save_dir': '/root/autodl-tmp/results/results', 'pretrain_LM': '/root/autodl-tmp/models/Qwen-1_8B', 'gpu_ids': [0], 'seeds': [2234, 3234], 'use_tgm': True, 'use_origin_amm': False, 'use_amm': False, 'amm_mode': 'base', 'num_emotion_prototypes': 4, 'use_atgfbff': False, 'use_atgfbff_loss': True, 'use_shared_offset': False, 'use_shared_offset_loss': True, 'shared_offset_mode': 'gate', 'alpha_align': 0.6, 'beta_fiber': 0.1, 'beta_offset': 0.1, 'num_latents': 4, 'use_mslaf': False, 'use_tcap': False, 'use_amm_align_loss': True, 'alpha_amm': 0.5, 'beta_moe': 0.1, 'bypass_scale_init': 0.3, 'use_msf': True, 'use_moe_fusion': False, 'use_sd_moe': False, 'use_gate': False, 'use_moe_lb_loss': False, 'num_local_experts': 3, 'expert_bottleneck': 64, 'use_qformer': False, 'qformer_num_queries': 8, 'qformer_layers': 4, 'qformer_heads': 8, 'qformer_d_model': 256, 'use_cross_attn_expander': False, 'use_diff_loss': False, 'use_expert_diff_loss': False, 'diff_loss_weight': 1.0, 'use_nce_loss': False, 'nce_hidden_dim': 32, 'nce_pred_steps': 2, 'nce_weight': 1.0, 'lb_loss_weight': 1.0, 'adapter_dim': 128, 'audio_adapter_dim': None, 'video_adapter_dim': None, 'iemocap_feature_mode': 'compressed', 'meld_feature_mode': 'raw', 'mosei_feature_mode': 'legacy', 'a_lstm_hidden_size': 64, 'v_lstm_hidden_size': 32, 'use_lora': False, 'lora_r': 16, 'lora_alpha': 32, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,v_proj', 'lora_warmup_epochs': 0, 'lora_lr': 2e-05, 'use_int8': False, 'modalities': 'tav', 'use_bilstm': False, 'modality_dropout_p': 0.0, 'use_oversampling': False, 'oversampling_alpha': 0.5, 'label_format': 'index', 'use_cls_head': False, 'use_context': False, 'text_seq_len': None, 'prompt_context': False, 'context_max_tokens': 64, 'context_window': 0, 'use_speaker_tag': False, 'raw_av_mode': 'none', 'av_pseudo_tokens': 4, 'prompt_style': 'default', 'batch_size': 24, 'learning_rate': 5e-05, 'max_epochs': 50, 'warm_up_epochs': 30, 'early_stop': 8, 'gradient_accumulation_steps': 2, 'resume_checkpoint': None, 'ckpt_save_interval': 5, 'eval_only': False, 'eval_model_path': None, 'tsne_max_per_class': 150, 'timestamp': '20260703_131227', 'dataPath': '/root/autodl-tmp/datasets/IEMOCAP_UniMSE/iemocap_data_0610.pkl', 'seq_lens': (84, 157, 32), 'feature_dims': (0, 64, 64), 'train_samples': 4290, 'num_classes': 4, 'language': 'en', 'KeyEval': 'weight_F1', 'need_data_aligned': False, 'need_model_aligned': False, 'need_label_prefix': True, 'need_normalized': False, 'use_PLM': True, 'save_labels': False, 'task_specific_prompt': 'Please recognize the emotion of the above multimodal content from the target set <angry:0, happy:1, sad:2, neutral:3>. Assistant: The emotion is', 'max_new_tokens': 2, 'pseudo_tokens': 4, 'label_index_mapping': {'angry': 0, 'happy': 1, 'sad': 2, 'neutral': 3}, 'a_lstm_layers': 1, 'v_lstm_layers': 1, 'a_lstm_dropout': 0.0, 'v_lstm_dropout': 0.0, 'gamma': 1, 'update_epochs': 1, 'H': 3.0, 'seed': 3234}>
+2026-07-03 13:22:37:INFO:Let's use the GPU 1 !
+2026-07-03 13:22:38:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-07-03 13:22:38:INFO:IEMOCAP train split loaded 3915/5354 samples (drop: missing_meta=117, unknown_emo=1322, mapping_missing=0, missing_modal=0)
+2026-07-03 13:22:39:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-07-03 13:22:39:INFO:IEMOCAP valid split loaded 375/528 samples (drop: missing_meta=7, unknown_emo=146, mapping_missing=0, missing_modal=0)
+2026-07-03 13:22:40:INFO:Using pre-parsed CSV files from: /root/autodl-tmp/datasets/IEMOCAP/iemocap_text
+2026-07-03 13:22:40:INFO:IEMOCAP test split loaded 1241/1650 samples (drop: missing_meta=28, unknown_emo=381, mapping_missing=0, missing_modal=0)
+2026-07-03 13:22:43:INFO:torch.compile enabled for: audio_LSTM, video_LSTM, mixer, fusion
+2026-07-03 13:22:43:INFO:trainable params: 1352396 || all params: 1838181068 || trainable%: 0.0735725127161412
+2026-07-03 13:22:43:INFO:Single-LR optimizer: 32 tensors, lr=5e-05
+2026-07-03 13:22:43:INFO:Init labels...
+2026-07-03 13:22:43:INFO:Start training...
+2026-07-03 13:22:43:INFO:  Batch size = 24
+2026-07-03 13:22:43:INFO:  Gradient Accumulation steps = 2
+2026-07-03 13:22:43:INFO:  Effective batch size = 48
+2026-07-03 13:22:43:INFO:  AMP dtype = torch.bfloat16
+2026-07-03 13:23:37:INFO:TRAIN-(hmmem) (1/1/2)>> loss: 10.1683
+2026-07-03 13:23:38:INFO:[GenDebug] model_type=qwen, max_new_tokens=2
+2026-07-03 13:23:38:INFO:[GenDebug] inputs_embeds.shape=torch.Size([24, 136, 2048]), outputs.shape=torch.Size([24, 3])
+2026-07-03 13:23:38:INFO:[GenDebug] outputs[0] token IDs: [151644, 264, 1584]
+2026-07-03 13:23:38:INFO:[GenDebug] outputs[0] full decode: ' a state'
+2026-07-03 13:23:38:INFO:[GenDebug] decoded responses[:8]: [' a state', ' a state', ' a state', ' the most', ' a state', ' the most', ' a state', ' a state']
+2026-07-03 13:23:40:INFO:VAL-(hmmem) >>
+2026-07-03 13:23:40:INFO:M: >>  acc: 0.2693  UA: 0.2500  weight_F1: 0.1145  Macro_F1: 0.1063 
+2026-07-03 13:23:42:INFO:Saving best model at epoch 1 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:24:36:INFO:TRAIN-(hmmem) (1/2/2)>> loss: 6.6816
+2026-07-03 13:24:38:INFO:VAL-(hmmem) >>
+2026-07-03 13:24:38:INFO:M: >>  acc: 0.2880  UA: 0.2920  weight_F1: 0.1646  Macro_F1: 0.1756 
+2026-07-03 13:24:41:INFO:Saving best model at epoch 2 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:25:35:INFO:TRAIN-(hmmem) (1/3/2)>> loss: 1.0523
+2026-07-03 13:25:37:INFO:VAL-(hmmem) >>
+2026-07-03 13:25:37:INFO:M: >>  acc: 0.2213  UA: 0.2654  weight_F1: 0.1916  Macro_F1: 0.1913 
+2026-07-03 13:25:38:INFO:Saving best model at epoch 3 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:26:32:INFO:TRAIN-(hmmem) (1/4/2)>> loss: 0.7441
+2026-07-03 13:26:34:INFO:VAL-(hmmem) >>
+2026-07-03 13:26:34:INFO:M: >>  acc: 0.2480  UA: 0.2534  weight_F1: 0.2378  Macro_F1: 0.2145 
+2026-07-03 13:26:35:INFO:Saving best model at epoch 4 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:27:29:INFO:TRAIN-(hmmem) (1/5/2)>> loss: 0.7138
+2026-07-03 13:27:30:INFO:VAL-(hmmem) >>
+2026-07-03 13:27:30:INFO:M: >>  acc: 0.2827  UA: 0.2773  weight_F1: 0.2798  Macro_F1: 0.2521 
+2026-07-03 13:27:32:INFO:Saving best model at epoch 5 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:27:33:INFO:Checkpoint saved at epoch 5 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch5.ckpt
+2026-07-03 13:28:27:INFO:TRAIN-(hmmem) (1/6/2)>> loss: 0.6988
+2026-07-03 13:28:29:INFO:VAL-(hmmem) >>
+2026-07-03 13:28:29:INFO:M: >>  acc: 0.3893  UA: 0.3418  weight_F1: 0.3755  Macro_F1: 0.3362 
+2026-07-03 13:28:30:INFO:Saving best model at epoch 6 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:29:24:INFO:TRAIN-(hmmem) (1/7/2)>> loss: 0.6760
+2026-07-03 13:29:26:INFO:VAL-(hmmem) >>
+2026-07-03 13:29:26:INFO:M: >>  acc: 0.3600  UA: 0.3548  weight_F1: 0.3683  Macro_F1: 0.3383 
+2026-07-03 13:30:19:INFO:TRAIN-(hmmem) (2/8/2)>> loss: 0.6522
+2026-07-03 13:30:21:INFO:VAL-(hmmem) >>
+2026-07-03 13:30:21:INFO:M: >>  acc: 0.3760  UA: 0.3681  weight_F1: 0.3845  Macro_F1: 0.3562 
+2026-07-03 13:30:22:INFO:Saving best model at epoch 8 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:31:16:INFO:TRAIN-(hmmem) (1/9/2)>> loss: 0.6042
+2026-07-03 13:31:18:INFO:VAL-(hmmem) >>
+2026-07-03 13:31:18:INFO:M: >>  acc: 0.4453  UA: 0.4357  weight_F1: 0.4529  Macro_F1: 0.4368 
+2026-07-03 13:31:19:INFO:Saving best model at epoch 9 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:32:13:INFO:TRAIN-(hmmem) (1/10/2)>> loss: 0.5795
+2026-07-03 13:32:15:INFO:VAL-(hmmem) >>
+2026-07-03 13:32:15:INFO:M: >>  acc: 0.4880  UA: 0.4462  weight_F1: 0.4909  Macro_F1: 0.4550 
+2026-07-03 13:32:16:INFO:Saving best model at epoch 10 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:32:18:INFO:Checkpoint saved at epoch 10 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch10.ckpt
+2026-07-03 13:33:11:INFO:TRAIN-(hmmem) (1/11/2)>> loss: 0.5575
+2026-07-03 13:33:13:INFO:VAL-(hmmem) >>
+2026-07-03 13:33:13:INFO:M: >>  acc: 0.4907  UA: 0.5151  weight_F1: 0.5014  Macro_F1: 0.4958 
+2026-07-03 13:33:14:INFO:Saving best model at epoch 11 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:34:08:INFO:TRAIN-(hmmem) (1/12/2)>> loss: 0.5519
+2026-07-03 13:34:10:INFO:VAL-(hmmem) >>
+2026-07-03 13:34:10:INFO:M: >>  acc: 0.4827  UA: 0.4984  weight_F1: 0.4832  Macro_F1: 0.4776 
+2026-07-03 13:35:04:INFO:TRAIN-(hmmem) (2/13/2)>> loss: 0.5414
+2026-07-03 13:35:06:INFO:VAL-(hmmem) >>
+2026-07-03 13:35:06:INFO:M: >>  acc: 0.5173  UA: 0.5078  weight_F1: 0.5221  Macro_F1: 0.5044 
+2026-07-03 13:35:08:INFO:Saving best model at epoch 13 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:36:02:INFO:TRAIN-(hmmem) (1/14/2)>> loss: 0.5326
+2026-07-03 13:36:04:INFO:VAL-(hmmem) >>
+2026-07-03 13:36:04:INFO:M: >>  acc: 0.4747  UA: 0.5011  weight_F1: 0.4977  Macro_F1: 0.4896 
+2026-07-03 13:36:57:INFO:TRAIN-(hmmem) (2/15/2)>> loss: 0.5261
+2026-07-03 13:36:59:INFO:VAL-(hmmem) >>
+2026-07-03 13:36:59:INFO:M: >>  acc: 0.5280  UA: 0.5171  weight_F1: 0.5197  Macro_F1: 0.5030 
+2026-07-03 13:37:01:INFO:Checkpoint saved at epoch 15 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch15.ckpt
+2026-07-03 13:37:55:INFO:TRAIN-(hmmem) (3/16/2)>> loss: 0.5208
+2026-07-03 13:37:57:INFO:VAL-(hmmem) >>
+2026-07-03 13:37:57:INFO:M: >>  acc: 0.5200  UA: 0.4918  weight_F1: 0.5206  Macro_F1: 0.4991 
+2026-07-03 13:38:50:INFO:TRAIN-(hmmem) (4/17/2)>> loss: 0.5149
+2026-07-03 13:38:52:INFO:VAL-(hmmem) >>
+2026-07-03 13:38:52:INFO:M: >>  acc: 0.5227  UA: 0.5339  weight_F1: 0.5360  Macro_F1: 0.5272 
+2026-07-03 13:38:53:INFO:Saving best model at epoch 17 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:39:47:INFO:TRAIN-(hmmem) (1/18/2)>> loss: 0.5054
+2026-07-03 13:39:49:INFO:VAL-(hmmem) >>
+2026-07-03 13:39:49:INFO:M: >>  acc: 0.5360  UA: 0.5124  weight_F1: 0.5345  Macro_F1: 0.5121 
+2026-07-03 13:40:42:INFO:TRAIN-(hmmem) (2/19/2)>> loss: 0.5030
+2026-07-03 13:40:44:INFO:VAL-(hmmem) >>
+2026-07-03 13:40:44:INFO:M: >>  acc: 0.5360  UA: 0.5106  weight_F1: 0.5454  Macro_F1: 0.5211 
+2026-07-03 13:40:45:INFO:Saving best model at epoch 19 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:41:39:INFO:TRAIN-(hmmem) (1/20/2)>> loss: 0.4942
+2026-07-03 13:41:41:INFO:VAL-(hmmem) >>
+2026-07-03 13:41:41:INFO:M: >>  acc: 0.5573  UA: 0.5203  weight_F1: 0.5459  Macro_F1: 0.5174 
+2026-07-03 13:41:42:INFO:Saving best model at epoch 20 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:41:44:INFO:Checkpoint saved at epoch 20 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch20.ckpt
+2026-07-03 13:41:44:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch5.ckpt
+2026-07-03 13:42:37:INFO:TRAIN-(hmmem) (1/21/2)>> loss: 0.4919
+2026-07-03 13:42:39:INFO:VAL-(hmmem) >>
+2026-07-03 13:42:39:INFO:M: >>  acc: 0.5547  UA: 0.5111  weight_F1: 0.5513  Macro_F1: 0.5223 
+2026-07-03 13:42:40:INFO:Saving best model at epoch 21 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:43:34:INFO:TRAIN-(hmmem) (1/22/2)>> loss: 0.4882
+2026-07-03 13:43:36:INFO:VAL-(hmmem) >>
+2026-07-03 13:43:36:INFO:M: >>  acc: 0.5307  UA: 0.5459  weight_F1: 0.5337  Macro_F1: 0.5276 
+2026-07-03 13:44:29:INFO:TRAIN-(hmmem) (2/23/2)>> loss: 0.4832
+2026-07-03 13:44:31:INFO:VAL-(hmmem) >>
+2026-07-03 13:44:31:INFO:M: >>  acc: 0.5547  UA: 0.5468  weight_F1: 0.5609  Macro_F1: 0.5446 
+2026-07-03 13:44:32:INFO:Saving best model at epoch 23 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:45:26:INFO:TRAIN-(hmmem) (1/24/2)>> loss: 0.4774
+2026-07-03 13:45:28:INFO:VAL-(hmmem) >>
+2026-07-03 13:45:28:INFO:M: >>  acc: 0.5600  UA: 0.5287  weight_F1: 0.5545  Macro_F1: 0.5281 
+2026-07-03 13:46:21:INFO:TRAIN-(hmmem) (2/25/2)>> loss: 0.4748
+2026-07-03 13:46:23:INFO:VAL-(hmmem) >>
+2026-07-03 13:46:23:INFO:M: >>  acc: 0.5627  UA: 0.5594  weight_F1: 0.5697  Macro_F1: 0.5556 
+2026-07-03 13:46:24:INFO:Saving best model at epoch 25 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:46:26:INFO:Checkpoint saved at epoch 25 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch25.ckpt
+2026-07-03 13:46:26:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch10.ckpt
+2026-07-03 13:47:19:INFO:TRAIN-(hmmem) (1/26/2)>> loss: 0.4711
+2026-07-03 13:47:21:INFO:VAL-(hmmem) >>
+2026-07-03 13:47:21:INFO:M: >>  acc: 0.5547  UA: 0.5489  weight_F1: 0.5655  Macro_F1: 0.5479 
+2026-07-03 13:48:14:INFO:TRAIN-(hmmem) (2/27/2)>> loss: 0.4702
+2026-07-03 13:48:16:INFO:VAL-(hmmem) >>
+2026-07-03 13:48:16:INFO:M: >>  acc: 0.5520  UA: 0.5539  weight_F1: 0.5611  Macro_F1: 0.5471 
+2026-07-03 13:49:09:INFO:TRAIN-(hmmem) (3/28/2)>> loss: 0.4665
+2026-07-03 13:49:11:INFO:VAL-(hmmem) >>
+2026-07-03 13:49:11:INFO:M: >>  acc: 0.5520  UA: 0.5375  weight_F1: 0.5546  Macro_F1: 0.5323 
+2026-07-03 13:50:05:INFO:TRAIN-(hmmem) (4/29/2)>> loss: 0.4661
+2026-07-03 13:50:06:INFO:VAL-(hmmem) >>
+2026-07-03 13:50:06:INFO:M: >>  acc: 0.5680  UA: 0.5581  weight_F1: 0.5739  Macro_F1: 0.5544 
+2026-07-03 13:50:08:INFO:Saving best model at epoch 29 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:51:02:INFO:TRAIN-(hmmem) (1/30/2)>> loss: 0.4650
+2026-07-03 13:51:03:INFO:VAL-(hmmem) >>
+2026-07-03 13:51:03:INFO:M: >>  acc: 0.5547  UA: 0.5477  weight_F1: 0.5619  Macro_F1: 0.5449 
+2026-07-03 13:51:05:INFO:Checkpoint saved at epoch 30 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch30.ckpt
+2026-07-03 13:51:05:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch15.ckpt
+2026-07-03 13:51:58:INFO:TRAIN-(hmmem) (2/31/2)>> loss: 0.4653
+2026-07-03 13:52:00:INFO:VAL-(hmmem) >>
+2026-07-03 13:52:00:INFO:M: >>  acc: 0.5467  UA: 0.5378  weight_F1: 0.5553  Macro_F1: 0.5345 
+2026-07-03 13:52:54:INFO:TRAIN-(hmmem) (3/32/2)>> loss: 0.4651
+2026-07-03 13:52:56:INFO:VAL-(hmmem) >>
+2026-07-03 13:52:56:INFO:M: >>  acc: 0.5653  UA: 0.5611  weight_F1: 0.5728  Macro_F1: 0.5566 
+2026-07-03 13:53:49:INFO:TRAIN-(hmmem) (4/33/2)>> loss: 0.4662
+2026-07-03 13:53:51:INFO:VAL-(hmmem) >>
+2026-07-03 13:53:51:INFO:M: >>  acc: 0.5600  UA: 0.5536  weight_F1: 0.5681  Macro_F1: 0.5496 
+2026-07-03 13:54:44:INFO:TRAIN-(hmmem) (5/34/2)>> loss: 0.4669
+2026-07-03 13:54:46:INFO:VAL-(hmmem) >>
+2026-07-03 13:54:46:INFO:M: >>  acc: 0.5707  UA: 0.5571  weight_F1: 0.5776  Macro_F1: 0.5572 
+2026-07-03 13:54:47:INFO:Saving best model at epoch 34 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:55:41:INFO:TRAIN-(hmmem) (1/35/2)>> loss: 0.4678
+2026-07-03 13:55:43:INFO:VAL-(hmmem) >>
+2026-07-03 13:55:43:INFO:M: >>  acc: 0.5840  UA: 0.5640  weight_F1: 0.5829  Macro_F1: 0.5603 
+2026-07-03 13:55:44:INFO:Saving best model at epoch 35 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 13:55:46:INFO:Checkpoint saved at epoch 35 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch35.ckpt
+2026-07-03 13:55:46:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch20.ckpt
+2026-07-03 13:56:40:INFO:TRAIN-(hmmem) (1/36/2)>> loss: 0.4691
+2026-07-03 13:56:41:INFO:VAL-(hmmem) >>
+2026-07-03 13:56:41:INFO:M: >>  acc: 0.5627  UA: 0.5440  weight_F1: 0.5675  Macro_F1: 0.5447 
+2026-07-03 13:57:35:INFO:TRAIN-(hmmem) (2/37/2)>> loss: 0.4697
+2026-07-03 13:57:37:INFO:VAL-(hmmem) >>
+2026-07-03 13:57:37:INFO:M: >>  acc: 0.5600  UA: 0.5640  weight_F1: 0.5642  Macro_F1: 0.5535 
+2026-07-03 13:58:31:INFO:TRAIN-(hmmem) (3/38/2)>> loss: 0.4702
+2026-07-03 13:58:33:INFO:VAL-(hmmem) >>
+2026-07-03 13:58:33:INFO:M: >>  acc: 0.5680  UA: 0.5454  weight_F1: 0.5685  Macro_F1: 0.5437 
+2026-07-03 13:59:26:INFO:TRAIN-(hmmem) (4/39/2)>> loss: 0.4706
+2026-07-03 13:59:28:INFO:VAL-(hmmem) >>
+2026-07-03 13:59:28:INFO:M: >>  acc: 0.5627  UA: 0.5769  weight_F1: 0.5752  Macro_F1: 0.5629 
+2026-07-03 14:00:21:INFO:TRAIN-(hmmem) (5/40/2)>> loss: 0.4711
+2026-07-03 14:00:23:INFO:VAL-(hmmem) >>
+2026-07-03 14:00:23:INFO:M: >>  acc: 0.5467  UA: 0.5475  weight_F1: 0.5631  Macro_F1: 0.5464 
+2026-07-03 14:00:25:INFO:Checkpoint saved at epoch 40 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch40.ckpt
+2026-07-03 14:00:25:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch25.ckpt
+2026-07-03 14:01:19:INFO:TRAIN-(hmmem) (6/41/2)>> loss: 0.4758
+2026-07-03 14:01:20:INFO:VAL-(hmmem) >>
+2026-07-03 14:01:20:INFO:M: >>  acc: 0.5840  UA: 0.5615  weight_F1: 0.5875  Macro_F1: 0.5685 
+2026-07-03 14:01:22:INFO:Saving best model at epoch 41 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 14:02:16:INFO:TRAIN-(hmmem) (1/42/2)>> loss: 0.4732
+2026-07-03 14:02:17:INFO:VAL-(hmmem) >>
+2026-07-03 14:02:17:INFO:M: >>  acc: 0.5787  UA: 0.5762  weight_F1: 0.5901  Macro_F1: 0.5746 
+2026-07-03 14:02:18:INFO:Saving best model at epoch 42 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 14:03:13:INFO:TRAIN-(hmmem) (1/43/2)>> loss: 0.4743
+2026-07-03 14:03:14:INFO:VAL-(hmmem) >>
+2026-07-03 14:03:14:INFO:M: >>  acc: 0.5707  UA: 0.5642  weight_F1: 0.5772  Macro_F1: 0.5633 
+2026-07-03 14:04:08:INFO:TRAIN-(hmmem) (2/44/2)>> loss: 0.4697
+2026-07-03 14:04:10:INFO:VAL-(hmmem) >>
+2026-07-03 14:04:10:INFO:M: >>  acc: 0.5627  UA: 0.5469  weight_F1: 0.5671  Macro_F1: 0.5473 
+2026-07-03 14:05:03:INFO:TRAIN-(hmmem) (3/45/2)>> loss: 0.4754
+2026-07-03 14:05:05:INFO:VAL-(hmmem) >>
+2026-07-03 14:05:05:INFO:M: >>  acc: 0.5920  UA: 0.5938  weight_F1: 0.6016  Macro_F1: 0.5871 
+2026-07-03 14:05:06:INFO:Saving best model at epoch 45 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 14:05:08:INFO:Checkpoint saved at epoch 45 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch45.ckpt
+2026-07-03 14:05:08:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch30.ckpt
+2026-07-03 14:06:01:INFO:TRAIN-(hmmem) (1/46/2)>> loss: 0.4682
+2026-07-03 14:06:03:INFO:VAL-(hmmem) >>
+2026-07-03 14:06:03:INFO:M: >>  acc: 0.5520  UA: 0.5531  weight_F1: 0.5618  Macro_F1: 0.5469 
+2026-07-03 14:06:57:INFO:TRAIN-(hmmem) (2/47/2)>> loss: 0.4689
+2026-07-03 14:06:58:INFO:VAL-(hmmem) >>
+2026-07-03 14:06:58:INFO:M: >>  acc: 0.5493  UA: 0.5765  weight_F1: 0.5479  Macro_F1: 0.5458 
+2026-07-03 14:07:52:INFO:TRAIN-(hmmem) (3/48/2)>> loss: 0.4698
+2026-07-03 14:07:54:INFO:VAL-(hmmem) >>
+2026-07-03 14:07:54:INFO:M: >>  acc: 0.6053  UA: 0.5968  weight_F1: 0.6098  Macro_F1: 0.5929 
+2026-07-03 14:07:55:INFO:Saving best model at epoch 48 to /root/autodl-tmp/results/models/hmmem-qwen-iemocap4-classification-20260703_131227.pth.
+2026-07-03 14:08:49:INFO:TRAIN-(hmmem) (1/49/2)>> loss: 0.4685
+2026-07-03 14:08:51:INFO:VAL-(hmmem) >>
+2026-07-03 14:08:51:INFO:M: >>  acc: 0.5653  UA: 0.5786  weight_F1: 0.5674  Macro_F1: 0.5587 
+2026-07-03 14:09:44:INFO:TRAIN-(hmmem) (2/50/2)>> loss: 0.4645
+2026-07-03 14:09:46:INFO:VAL-(hmmem) >>
+2026-07-03 14:09:46:INFO:M: >>  acc: 0.5893  UA: 0.5687  weight_F1: 0.5832  Macro_F1: 0.5656 
+2026-07-03 14:09:48:INFO:Checkpoint saved at epoch 50 -> /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch50.ckpt
+2026-07-03 14:09:48:INFO:Removed old checkpoint: /root/autodl-tmp/results/models/checkpoints/hmmem-qwen-iemocap4-classification-20260703_131227-epoch35.ckpt
+2026-07-03 14:09:48:INFO:Reached max_epochs (50), stopping training. Best epoch: 48, best valid: 0.6098
+2026-07-03 14:09:54:INFO:TEST-(hmmem) >>
+2026-07-03 14:09:54:INFO:M: >>  acc: 0.5302  UA: 0.5535  weight_F1: 0.5258  Macro_F1: 0.5378 
+2026-07-03 14:09:54:INFO:============================================================
+2026-07-03 14:09:54:INFO:         Detailed Classification Analysis
+2026-07-03 14:09:54:INFO:============================================================
+2026-07-03 14:09:54:INFO:         Class     Prec   Recall       F1   Support
+2026-07-03 14:09:54:INFO:------------------------------------------------------------
+2026-07-03 14:09:54:INFO:         angry   0.4904   0.6000   0.5397       170
+2026-07-03 14:09:54:INFO:         happy   0.5317   0.3982   0.4554       442
+2026-07-03 14:09:54:INFO:           sad   0.5907   0.6245   0.6071       245
+2026-07-03 14:09:54:INFO:       neutral   0.5124   0.5911   0.5490       384
+2026-07-03 14:09:54:INFO:------------------------------------------------------------
+2026-07-03 14:09:54:INFO:  WA  (Weighted Accuracy) : 0.5302
+2026-07-03 14:09:54:INFO:  UA  (Unweighted Accuracy): 0.5535
+2026-07-03 14:09:54:INFO:  WF1 (Weighted F1)       : 0.5258
+2026-07-03 14:09:54:INFO:  Macro-F1                : 0.5378
+2026-07-03 14:09:54:INFO:============================================================
+2026-07-03 14:09:55:INFO:Confusion matrix saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-iemocap4-20260703_131227/hmmem-qwen-iemocap4-TEST-confusion_matrix.png (+.svg)
+2026-07-03 14:09:55:INFO:t-SNE features saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-iemocap4-20260703_131227/hmmem-qwen-iemocap4-TEST-tsne_features.npz
+2026-07-03 14:09:55:INFO:t-SNE balanced sampling: 1241 → 600 (max_per_class=150)
+2026-07-03 14:10:01:INFO:Emotion t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-iemocap4-20260703_131227/hmmem-qwen-iemocap4-TEST-tsne_emotion_true.png (+.svg, +pred)
+2026-07-03 14:10:22:INFO:Modality t-SNE saved → /root/autodl-tmp/results/results/analysis/hmmem-qwen-iemocap4-20260703_131227/hmmem-qwen-iemocap4-TEST-tsne_modality.png (+.svg)
+2026-07-03 14:10:24:INFO:Results are added to /root/autodl-tmp/results/results/hmmem-qwen-iemocap4-classification.csv...

@@ -740,6 +740,8 @@ EXPERIMENT_GROUPS['loss_alpha_beta_grid'] = {
         {'name': f'a{str(a).replace(".", "")}_b{str(b).replace(".", "")}',
          'use_amm': True, 'amm_mode': 'hierarchical', 'use_sd_moe': True,
          'use_tcap': False,
+         'use_context': True, 'context_window': 12, 'text_seq_len': 128,
+         'use_speaker_tag': True,
          # α: AMF 模态对齐损失权重
          'use_amm_align_loss': True, 'alpha_amm': a,
          # β: MoE 正则化整体权重 (内部 λ_lb/λ_diff/λ_nce 保持默认比重)
@@ -748,8 +750,19 @@ EXPERIMENT_GROUPS['loss_alpha_beta_grid'] = {
          'use_moe_lb_loss': True, 'use_diff_loss': True, 'use_nce_loss': True,
          # 关闭 ExpertDiffLoss (论文不考虑)
          'use_expert_diff_loss': False}
-        for a in [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-        for b in [0.05, 0.1, 0.15, 0.2, 0.3]
+        # for a in [0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+        # for b in [0.05, 0.1, 0.15, 0.2, 0.3]
+        # 已跑
+        # for a in [0.5]
+        # for b in [0.1]
+        # for a in [0.5, 0.4, 0.6]
+        # for b in [0.2, 0.3]
+        # 待跑
+        for a in [0.4, 0.6]
+        for b in [0.1]
+        
+        # for a in [0.3, 0.7]
+        # for b in [0.1, 0.2, 0.3]
     ]
 }
 

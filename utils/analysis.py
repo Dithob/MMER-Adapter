@@ -259,7 +259,7 @@ def _plot_confusion_matrix(y_true, y_pred, label_names, save_path, tag):
     # Extract dataset name from tag (e.g. 'hmmem-chatglm3-iemocap6-TEST' → 'IEMOCAP')
     parts = tag.split('-')
     dataset_name = re.sub(r'\d+$', '', parts[2]).upper() if len(parts) >= 3 else tag
-    ax.set_title(f'Normalized Confusion Matrix of {dataset_name}', fontsize=15, fontweight='bold')
+    ax.set_title(f'Normalized Confusion Matrix of {dataset_name}', fontsize=14, fontweight='bold')
 
     plt.tight_layout()
     _save_multi_format(fig, save_path, dpi=300)

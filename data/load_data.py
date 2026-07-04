@@ -12,6 +12,7 @@ from torch.utils.data import Dataset, DataLoader
 from transformers import AutoTokenizer, AutoModel
 from operator import itemgetter
 from torch.nn.utils.rnn import pad_sequence
+from data.context_utils import build_context_text
 
 __all__ = ['MMDataLoader']
 
@@ -19,89 +20,8 @@ logger = logging.getLogger('MSA')
 
 
 def _build_context_text(context_raw, target_text, context_window=0, use_speaker_tag=False):
-    """Parse dialogue context, keep only PRECEDING utterances, apply window, reverse for recent-first.
-
-    The reversal ensures that when the tokenizer applies right-truncation,
-    the OLDEST (least important) context is cut first, preserving recent turns.
-
-    Args:
-        context_raw: Raw context string (JSON list like '["<a>text1", "<b>text2", ...]')
-        target_text: Target utterance text (to locate position & exclude future turns)
-        context_window: Max preceding turns to keep (0 = unlimited, 12 = SpeechCueLLM default)
-        use_speaker_tag: If True, inject Speaker_N: prefixes (InstructERC-style)
-
-    Returns:
-        Context string with most-recent utterances first, or '' if no valid context.
-    """
-    if not context_raw:
-        return ''
-    context_raw = str(context_raw).strip()
-    if not context_raw or context_raw == '[]':
-        return ''
-
-    # Try to parse as JSON list
-    parsed = None
-    if context_raw.startswith('['):
-        try:
-            parsed = json.loads(context_raw)
-            if not isinstance(parsed, list):
-                parsed = None
-        except (json.JSONDecodeError, ValueError):
-            parsed = None
-
-    if parsed is None or len(parsed) == 0:
-        return context_raw  # plain text fallback
-
-    # Find target utterance position to exclude it and all future turns
-    target_clean = target_text.strip().lower()
-    target_idx = len(parsed)  # default: target is after all entries
-    for i, entry in enumerate(parsed):
-        # Strip speaker tags: "<a>text" → "text", "[Speaker_0] text" → "text"
-        entry_text = re.sub(r'^<[^>]*>|^\[[^\]]*\]\s*', '', str(entry)).strip()
-        if entry_text.lower() == target_clean:
-            target_idx = i
-            break
-
-    # Only keep entries BEFORE target (prevents future information leakage)
-    preceding = parsed[:target_idx]
-    if not preceding:
-        return ''
-
-    # Apply window limit (keep most recent N turns)
-    if context_window > 0 and len(preceding) > context_window:
-        preceding = preceding[-context_window:]
-
-    if use_speaker_tag:
-        # ── InstructERC-style: Speaker_N: "utterance" ──
-        # Extract speaker tags from raw context entries, map to Speaker_0/1/2/...
-        speaker_map = {}  # original_tag → Speaker_N
-        speaker_counter = 0
-        formatted = []
-        for entry in preceding:
-            entry_str = str(entry).strip()
-            # Try to extract speaker tag from "<tag>text" or "[tag] text" format
-            spk_match = re.match(r'^<([^>]+)>(.*)', entry_str)
-            if not spk_match:
-                spk_match = re.match(r'^\[([^\]]+)\]\s*(.*)', entry_str)
-            if spk_match:
-                raw_spk = spk_match.group(1).strip()
-                utterance = spk_match.group(2).strip()
-                if raw_spk not in speaker_map:
-                    speaker_map[raw_spk] = f'Speaker_{speaker_counter}'
-                    speaker_counter += 1
-                spk_label = speaker_map[raw_spk]
-            else:
-                # No speaker tag found — assign a generic label
-                utterance = entry_str
-                spk_label = 'Speaker_0'
-            formatted.append(f'{spk_label}: "{utterance}"')
-        # Reverse: most recent first → protected from right-truncation
-        formatted = list(reversed(formatted))
-        return ' '.join(formatted)
-    else:
-        # Reverse: most recent first → protected from right-truncation
-        preceding = list(reversed(preceding))
-        return ' '.join(str(t).strip() for t in preceding if str(t).strip())
+    """Compatibility wrapper for existing call sites."""
+    return build_context_text(context_raw, target_text, context_window, use_speaker_tag)
 
 class MMDataset(Dataset):
     def __init__(self, args, mode='train'):
@@ -493,7 +413,7 @@ class MMDataset(Dataset):
         
         iemocap_meta = parse_labels_and_texts()
         
-        raw_audio, raw_video, raw_text, labels_m = [], [], [], []
+        raw_audio, raw_video, raw_text, raw_context, labels_m = [], [], [], [], []
         audio_lengths, video_lengths = [], []
         
         # IEMOCAP Emotion Maps
@@ -533,6 +453,11 @@ class MMDataset(Dataset):
                 
             labels_m.append(label_index_mapping[mapped_emo])
             raw_text.append(build_multimodal_text(meta))
+            ctx_window = getattr(self.args, 'context_window', 0)
+            raw_context.append(_build_context_text(
+                meta.get('context', ''), str(meta.get('text', '')), ctx_window,
+                use_speaker_tag=_use_speaker_tag,
+            ))
             
             raw_audio.append(aud_feat)
             raw_video.append(vid_feat)
@@ -557,6 +482,7 @@ class MMDataset(Dataset):
             )
             
         self.rawText = np.array(raw_text)
+        self.rawContext = raw_context
         self.labels = {'M': labels_m}
         self.vision = pad_sequence_numpy(raw_video, self.args.seq_lens[2], self.args.feature_dims[2])
         self.audio = pad_sequence_numpy(raw_audio, self.args.seq_lens[1], self.args.feature_dims[1])
@@ -967,7 +893,7 @@ def MMDataLoader(args):
                 pin_memory=True,
                 persistent_workers=(_nw > 0),
                 prefetch_factor=2 if _nw > 0 else None,
-                drop_last=True,
+                drop_last=getattr(args, 'drop_last_train', True),
             )
         else:
             dataLoader[ds] = DataLoader(

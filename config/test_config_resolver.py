@@ -46,10 +46,10 @@ def test_llama2_meld():
     args = make_args(model_type='llama2', datasetName='meld')
     config = ConfigResolver(args)
     c = config.get_config()
-    assert c.batch_size == 6, f"Expected 6, got {c.batch_size}"
+    assert c.batch_size == 24, f"Expected 24, got {c.batch_size}"
     assert c.learning_rate == 5e-4, f"Expected 5e-4, got {c.learning_rate}"
     assert c.pretrain_LM == '/root/autodl-tmp/models/Meta/Llama-2-7b-hf/'
-    print("✓ llama2 + meld: OK (batch_size=6, lr=5e-4, pretrain_LM auto-set)")
+    print("✓ llama2 + meld: OK (batch_size=24, lr=5e-4, pretrain_LM auto-set)")
 
 def test_qwen_meld():
     args = make_args(model_type='qwen', datasetName='meld')
@@ -85,7 +85,7 @@ def test_regression():
     args = make_args(model_type='chatglm3', datasetName='mosei', train_mode='regression')
     config = ConfigResolver(args)
     c = config.get_config()
-    assert c.batch_size == 16, f"Expected 16, got {c.batch_size}"
+    assert c.batch_size == 32, f"Expected 32, got {c.batch_size}"
     assert 'sentiment' in c.task_specific_prompt.lower()
     print("✓ chatglm3 + mosei (regression): OK")
 
@@ -108,7 +108,7 @@ def test_deep_merge_inheritance():
     config = ConfigResolver(args)
     c = config.get_config()
     # 这些是 llama2.yaml 中显式覆盖的
-    assert c.batch_size == 6, f"Expected 6 (overridden), got {c.batch_size}"
+    assert c.batch_size == 24, f"Expected 24 (overridden), got {c.batch_size}"
     assert c.learning_rate == 5e-4, f"Expected 5e-4 (overridden), got {c.learning_rate}"
     # 这些应该从 default.yaml 继承 (llama2.yaml 中没有写)
     assert c.gamma == 1, f"Expected 1 (inherited), got {c.gamma}"

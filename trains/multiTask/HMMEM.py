@@ -178,9 +178,10 @@ class HMMEM():
         # to prevent catastrophic forgetting of LLM pretrained representations.
         lora_lr = getattr(self.args, 'lora_lr', 2e-5)
         optimizer = self._build_optimizer(model, self.args.learning_rate, lora_lr, use_lora)
-        total_steps = len(dataloader['train'])*self.args.warm_up_epochs   #大致的一个训练step数
+        total_epochs = max(1, getattr(self.args, 'max_epochs', None) or self.args.warm_up_epochs)
+        total_steps = len(dataloader['train']) * total_epochs
         # Adjust total_steps for gradient accumulation (optimizer steps, not forward steps)
-        optimizer_steps = total_steps // grad_accum_steps
+        optimizer_steps = max(1, math.ceil(total_steps / grad_accum_steps))
         scheduler = get_cosine_schedule_with_warmup(
             optimizer, num_warmup_steps=int(0.1*optimizer_steps), num_training_steps=optimizer_steps)
 
@@ -242,7 +243,7 @@ class HMMEM():
                 optimizer = self._build_optimizer(model, self.args.learning_rate, lora_lr, use_lora)
                 # Recompute scheduler for remaining epochs
                 remaining_epochs = (max_epochs - epochs + 1) if max_epochs else self.args.warm_up_epochs
-                remaining_steps = len(dataloader['train']) * remaining_epochs // grad_accum_steps
+                remaining_steps = max(1, math.ceil(len(dataloader['train']) * remaining_epochs / grad_accum_steps))
                 scheduler = get_cosine_schedule_with_warmup(
                     optimizer, num_warmup_steps=int(0.1 * remaining_steps),
                     num_training_steps=remaining_steps)
@@ -321,6 +322,7 @@ class HMMEM():
                 else:
                     optimizer.step()
                 optimizer.zero_grad(set_to_none=True)
+                scheduler.step()
             
             train_loss = train_loss / len(dataloader['train'])
 

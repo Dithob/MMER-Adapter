@@ -327,23 +327,23 @@ class ConfigResolver:
         profile_params.pop('task_specific_prompt_6class', None)
         profile_params.pop('label_index_mapping_6class', None)
 
-        # ── 4. 检测 pretrain_LM 是否被 CLI 显式覆盖 ──
-        # 如果用户没有通过 CLI 显式设置 --pretrain_LM (仍是 argparse 默认值),
-        # 则用 profile 中的 pretrain_LM
-        _CLI_DEFAULT_PRETRAIN = '/root/autodl-tmp/models/chatglm3-6b-base/'
-        cli_pretrain = getattr(args, 'pretrain_LM', _CLI_DEFAULT_PRETRAIN)
-        if cli_pretrain != _CLI_DEFAULT_PRETRAIN:
-            # 用户通过 CLI 显式指定了 LM 路径，覆盖 profile
-            profile_params['pretrain_LM'] = cli_pretrain
+        raw_args = vars(args).copy()
+        cli_keys = set(raw_args.get('_cli_provided_keys', []) or [])
+        config_keys = set(raw_args.get('_config_provided_keys', []) or [])
 
-        # ── 5. 合并: CLI args < Dataset Common < Model Common < Profile ──
-        # 注意: dict 后面的 key 会覆盖前面的
+        # ── 5. 合并: parser defaults < Dataset/Common/Profile < config < explicit CLI ──
         merged = dict(
-            vars(args),           # CLI args (最低优先级的基础)
+            raw_args,             # parser defaults
             **dataArgs,           # Level 1: 数据集路径、维度
             **_COMMON_PARAS,      # 模型公共开关
-            **profile_params,     # Level 2: 模型×数据集 训练参数 (覆盖上面)
+            **profile_params,     # Level 2: 模型×数据集 训练参数
         )
+        for key in config_keys:
+            if hasattr(args, key):
+                merged[key] = getattr(args, key)
+        for key in cli_keys:
+            if hasattr(args, key):
+                merged[key] = getattr(args, key)
 
         self.args = Storage(merged)
 
@@ -356,6 +356,18 @@ class ConfigResolver:
             old = list(self.args.seq_lens)
             old[0] = max(old[0], 128)
             self.args.seq_lens = tuple(old)
+
+        if (base_dataset_name in ('meld', 'iemocap')
+                and getattr(self.args, 'use_context', False)
+                and getattr(self.args, 'context_window', 0) >= 12
+                and self.args.seq_lens[0] <= 128):
+            logger.warning(
+                "[ConfigResolver] context_window=%s with text_seq_len=%s is likely to truncate "
+                "too much %s context. Prefer window=4 at seq_len=128, or raise text_seq_len.",
+                self.args.context_window,
+                self.args.seq_lens[0],
+                base_dataset_name.upper(),
+            )
 
         logger.info(f"[ConfigResolver] model_type={model_type}, dataset={dataset_name}, "
                      f"task={train_mode}, profile_keys={list(profile_params.keys())}")

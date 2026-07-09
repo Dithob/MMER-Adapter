@@ -180,26 +180,11 @@ def detailed_classification_analysis(
 
     # ── 5. Emotion t-SNE clustering ──
     tsne_path = None
+    emotion_cache = None  # will hold (embeddings, true_labels_bal, pred_labels_bal)
     if features is not None and len(features) > 0:
         tsne_path = os.path.join(save_dir, f'{tag}-tsne_emotion_true{ts_suffix}.png')
 
-        # Save features + labels as npz for offline analysis / replotting
-        npz_path = os.path.join(save_dir, f'{tag}-tsne_features{ts_suffix}.npz')
-        save_dict = dict(
-            features=features,
-            labels=y_true,
-            pred_labels=y_pred,
-        )
-        # Also save modality features for modality t-SNE replotting
-        if modality_features is not None:
-            for mod_name in ('audio', 'video', 'fusion'):
-                mod_feat = modality_features.get(mod_name)
-                if mod_feat is not None:
-                    save_dict[f'mod_{mod_name}'] = np.array(mod_feat)
-        np.savez(npz_path, **save_dict)
-        log.info(f"t-SNE features saved → {npz_path}")
-
-        _plot_emotion_tsne(
+        emotion_cache = _plot_emotion_tsne(
             features, true_labels=y_true, pred_labels=y_pred,
             label_names=label_names, save_path=tsne_path, tag=tag,
             max_per_class=max_per_class,
@@ -208,10 +193,38 @@ def detailed_classification_analysis(
 
     # ── 6. Modality separation t-SNE (Figure 4 style) ──
     modality_tsne_path = None
+    modality_cache = None  # will hold (embeddings, labels)
     if modality_features is not None:
         modality_tsne_path = os.path.join(save_dir, f'{tag}-tsne_modality{ts_suffix}.png')
-        _plot_modality_tsne(modality_features, modality_tsne_path, tag)
+        modality_cache = _plot_modality_tsne(modality_features, modality_tsne_path, tag)
         log.info(f"Modality t-SNE saved → {modality_tsne_path} (+.svg)")
+
+    # ── 7. Save npz with features + cached t-SNE embeddings for fast replotting ──
+    if features is not None and len(features) > 0:
+        npz_path = os.path.join(save_dir, f'{tag}-tsne_features{ts_suffix}.npz')
+        save_dict = dict(
+            features=features,
+            labels=y_true,
+            pred_labels=y_pred,
+        )
+        # Cached emotion t-SNE embeddings (skip recomputation on replot)
+        if emotion_cache is not None:
+            emb, tl, pl = emotion_cache
+            save_dict['emo_embeddings'] = emb
+            save_dict['emo_true_labels'] = tl
+            save_dict['emo_pred_labels'] = pl
+        # Modality features + cached modality t-SNE embeddings
+        if modality_features is not None:
+            for mod_name in ('audio', 'video', 'fusion'):
+                mod_feat = modality_features.get(mod_name)
+                if mod_feat is not None:
+                    save_dict[f'mod_{mod_name}'] = np.array(mod_feat)
+        if modality_cache is not None:
+            mod_emb, mod_lbl = modality_cache
+            save_dict['mod_embeddings'] = mod_emb
+            save_dict['mod_labels'] = mod_lbl
+        np.savez(npz_path, **save_dict)
+        log.info(f"t-SNE features + cached embeddings saved → {npz_path}")
 
     return {
         'WA': wa,
@@ -417,7 +430,7 @@ def _plot_emotion_tsne(features, true_labels, pred_labels, label_names,
 
     if len(features) < 10:
         logger.warning("Too few valid samples for t-SNE, skipping.")
-        return
+        return None
 
     # ── 1. Balanced subsampling (skip when max_per_class <= 0) ──
     if max_per_class > 0:
@@ -435,7 +448,7 @@ def _plot_emotion_tsne(features, true_labels, pred_labels, label_names,
 
     if len(features_bal) < 10:
         logger.warning("Too few samples for t-SNE, skipping.")
-        return
+        return None
 
     # ── 2. Feature preprocessing: StandardScaler → L2 → PCA ──
     features_proc = _preprocess_features(features_bal)
@@ -473,6 +486,9 @@ def _plot_emotion_tsne(features, true_labels, pred_labels, label_names,
         _draw_tsne_scatter(embeddings[correct_mask], true_labels_bal[correct_mask],
                            label_names, correct_save_path, tag,
                            title_suffix='Correct Predictions Only')
+
+    # Return cached data for npz storage
+    return (embeddings, true_labels_bal, pred_labels_bal)
 
 
 def _draw_tsne_scatter(embeddings, labels, label_names, save_path, tag,
@@ -601,15 +617,25 @@ def _plot_modality_tsne(modality_features, save_path, tag,
     )
     embeddings = tsne.fit_transform(all_feats)
 
-    # ── Publication-quality plot (synced with emotion t-SNE style) ──
+    _draw_modality_scatter(embeddings, all_labels, modality_order,
+                           modality_counts, save_path)
+
+    # Return cached data for npz storage
+    return (embeddings, all_labels)
+
+
+def _draw_modality_scatter(embeddings, all_labels, modality_order,
+                           modality_counts, save_path):
+    """Draw modality t-SNE scatter plot. Separated for reuse in replotting."""
     fig, ax = plt.subplots(figsize=(8, 7))
     fig.patch.set_facecolor('white')
     ax.set_facecolor('white')
 
-    n_total = len(all_feats)
+    n_total = len(embeddings)
     point_size = max(25, min(80, 6000 / max(n_total, 1)))
 
-    for mod_idx, mod_name in enumerate(modality_order):
+    modality_order_full = ['fusion', 'audio', 'video']
+    for mod_idx, mod_name in enumerate(modality_order_full):
         if mod_name not in modality_counts:
             continue
         mask = all_labels == mod_idx

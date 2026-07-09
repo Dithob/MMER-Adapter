@@ -32,8 +32,8 @@ import numpy as np
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from utils.analysis import (
-    _plot_emotion_tsne, _plot_confusion_matrix, _plot_modality_tsne,
-    _save_multi_format, logger,
+    _plot_emotion_tsne, _plot_confusion_matrix, _plot_confusion_matrix_clean,
+    _plot_modality_tsne, _save_multi_format, logger,
 )
 
 
@@ -141,6 +141,11 @@ def main():
         cm_path = os.path.join(out_dir, f'{tag}-confusion_matrix-replot.png')
         _plot_confusion_matrix(true_labels, pred_labels, label_names, cm_path, tag)
         print(f"  → {cm_path} (+.svg)")
+
+        # Clean version (percentage-only, for paper figures)
+        cm_clean_path = os.path.join(out_dir, f'{tag}-confusion_matrix_clean-replot.png')
+        _plot_confusion_matrix_clean(true_labels, pred_labels, label_names, cm_clean_path, tag)
+        print(f"  → {cm_clean_path} (+.svg) (clean/paper version)")
 
     print("\nDone!")
 

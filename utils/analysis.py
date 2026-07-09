@@ -173,6 +173,11 @@ def detailed_classification_analysis(
     _plot_confusion_matrix(y_true, y_pred, label_names, cm_path, tag)
     log.info(f"Confusion matrix saved → {cm_path} (+.svg)")
 
+    # ── 4b. Clean confusion matrix (percentage-only, for paper figures) ──
+    cm_clean_path = os.path.join(save_dir, f'{tag}-confusion_matrix_clean{ts_suffix}.png')
+    _plot_confusion_matrix_clean(y_true, y_pred, label_names, cm_clean_path, tag)
+    log.info(f"Clean confusion matrix saved → {cm_clean_path} (+.svg)")
+
     # ── 5. Emotion t-SNE clustering ──
     tsne_path = None
     if features is not None and len(features) > 0:
@@ -260,6 +265,57 @@ def _plot_confusion_matrix(y_true, y_pred, label_names, save_path, tag):
     parts = tag.split('-')
     dataset_name = re.sub(r'\d+$', '', parts[2]).upper() if len(parts) >= 3 else tag
     ax.set_title(f'Normalized Confusion Matrix of {dataset_name}', fontsize=14, fontweight='bold')
+
+    plt.tight_layout()
+    _save_multi_format(fig, save_path, dpi=300)
+    plt.close(fig)
+
+
+def _plot_confusion_matrix_clean(y_true, y_pred, label_names, save_path, tag):
+    """
+    Clean confusion matrix: cells show only the percentage number (no sample
+    count, no '%' symbol). The '%' is shown on the colorbar instead.
+    Designed for paper figures where space inside cells is limited.
+    """
+    cm = confusion_matrix(y_true, y_pred, labels=list(range(len(label_names))))
+    cm_norm = cm.astype('float') / (cm.sum(axis=1, keepdims=True) + 1e-10)
+
+    n = len(label_names)
+    fig, ax = plt.subplots(figsize=(8, 7))
+
+    chinese_font = _try_chinese_font()
+    font_props = {}
+    if chinese_font:
+        font_props = {'fontfamily': chinese_font}
+
+    # Display as 0-100 scale so cell text is just a number like "82.8"
+    cax = ax.imshow(cm_norm * 100, interpolation='nearest', cmap='Blues',
+                    vmin=0, vmax=100)
+    cbar = fig.colorbar(cax, ax=ax, fraction=0.046, pad=0.04)
+    cbar.set_label('Accuracy (%)', fontsize=12)
+
+    thresh = cm_norm.max() / 2.0
+    # Larger font since cells only contain one short number
+    cell_fontsize = 14
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            val = cm_norm[i, j]
+            text_color = 'white' if val > thresh else 'black'
+            ax.text(j, i, f'{val * 100:.1f}',
+                    ha='center', va='center', color=text_color,
+                    fontsize=cell_fontsize, fontweight='medium')
+
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    ax.set_xticklabels(label_names, rotation=45, ha='right', fontsize=12, **font_props)
+    ax.set_yticklabels(label_names, fontsize=12, **font_props)
+    ax.set_xlabel('Predicted Label', fontsize=12, fontweight='bold')
+    ax.set_ylabel('True Label', fontsize=12, fontweight='bold')
+    # Extract dataset name (strip trailing digits: iemocap6 → IEMOCAP)
+    parts = tag.split('-')
+    dataset_name = re.sub(r'\d+$', '', parts[2]).upper() if len(parts) >= 3 else tag
+    ax.set_title(f'Normalized Confusion Matrix of {dataset_name}',
+                 fontsize=14, fontweight='bold')
 
     plt.tight_layout()
     _save_multi_format(fig, save_path, dpi=300)

@@ -423,6 +423,9 @@ def _draw_tsne_scatter(embeddings, labels, label_names, save_path, tag,
                        title_suffix=''):
     """Draw a single t-SNE scatter plot and save in PNG + SVG.
 
+    Style matches publication convention: visible axes with t-SNE coordinates,
+    semi-transparent legend, no title (use figure caption in paper).
+
     Args:
         embeddings: np.ndarray (N, 2) — t-SNE coordinates
         labels: np.ndarray (N,) — class labels for coloring
@@ -435,49 +438,37 @@ def _draw_tsne_scatter(embeddings, labels, label_names, save_path, tag,
     fig.patch.set_facecolor('white')
     ax.set_facecolor('white')
 
-    chinese_font = _try_chinese_font()
-    legend_prop = {}
-    if chinese_font:
-        legend_prop = {'family': chinese_font}
-
     colors = EMOTION_COLORS[:len(label_names)]
     unique_labels = sorted(set(labels))
 
-    # Adaptive point size: larger for fewer points
+    # Point size: larger for fewer points, with higher baseline than before
     n_total = len(embeddings)
-    point_size = max(10, min(60, 3000 / max(n_total, 1)))
+    point_size = max(25, min(80, 6000 / max(n_total, 1)))
 
     for idx in unique_labels:
         if idx >= len(label_names):
             continue
         mask = labels == idx
-        n_pts = mask.sum()
         ax.scatter(
             embeddings[mask, 0], embeddings[mask, 1],
             c=colors[idx % len(colors)],
-            label=f'{label_names[idx]} ({n_pts})',
+            label=label_names[idx],
             alpha=0.75,
             s=point_size,
             edgecolors='white',
             linewidths=0.3,
         )
 
+    # Semi-transparent legend at lower-left, matching reference paper style
     ax.legend(
-        loc='upper right', fontsize=10, framealpha=0.9,
-        markerscale=max(1, 8 / point_size),
-        prop=legend_prop if legend_prop else None,
-        title='Emotion', title_fontsize=11,
+        loc='lower left', fontsize=12, framealpha=0.6,
+        markerscale=max(1.0, 10 / point_size),
+        title='Emotion Classes', title_fontsize=13,
+        edgecolor='gray',
     )
-    title = f't-SNE Emotion Clusters — {tag}'
-    if title_suffix:
-        title += f' ({title_suffix})'
-    ax.set_title(title, fontsize=13, fontweight='bold')
 
-    # Clean minimal style — no ticks, no grid
-    ax.set_xticks([])
-    ax.set_yticks([])
-    for spine in ax.spines.values():
-        spine.set_visible(False)
+    # Keep axis ticks visible (t-SNE coordinates) — matching reference style
+    ax.tick_params(axis='both', labelsize=11)
 
     plt.tight_layout()
     _save_multi_format(fig, save_path, dpi=300, facecolor='white')

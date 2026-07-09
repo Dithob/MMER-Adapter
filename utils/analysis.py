@@ -601,13 +601,13 @@ def _plot_modality_tsne(modality_features, save_path, tag,
     )
     embeddings = tsne.fit_transform(all_feats)
 
-    # ── Publication-quality plot (Figure 4 style) ──
+    # ── Publication-quality plot (synced with emotion t-SNE style) ──
     fig, ax = plt.subplots(figsize=(8, 7))
     fig.patch.set_facecolor('white')
     ax.set_facecolor('white')
 
     n_total = len(all_feats)
-    point_size = max(4, min(30, 5000 / max(n_total, 1)))
+    point_size = max(25, min(80, 6000 / max(n_total, 1)))
 
     for mod_idx, mod_name in enumerate(modality_order):
         if mod_name not in modality_counts:
@@ -615,34 +615,27 @@ def _plot_modality_tsne(modality_features, save_path, tag,
         mask = all_labels == mod_idx
         color = MODALITY_COLORS[mod_name]
         label = MODALITY_LABELS[mod_name]
-        n_pts = mask.sum()
 
         ax.scatter(
             embeddings[mask, 0], embeddings[mask, 1],
             c=color,
-            label=f'{label} ({n_pts})',
-            alpha=0.6,
+            label=label,
+            alpha=0.75,
             s=point_size,
-            edgecolors='none',
-            rasterized=True,
+            edgecolors='white',
+            linewidths=0.3,
         )
 
+    # Semi-transparent legend at lower-left, matching emotion t-SNE style
     ax.legend(
-        loc='upper right', fontsize=11, framealpha=0.9,
-        markerscale=max(1, 10 / point_size),
-        title='Modality', title_fontsize=12,
+        loc='lower left', fontsize=12, framealpha=0.6,
+        markerscale=max(1.0, 10 / point_size),
+        title='Modality', title_fontsize=13,
+        edgecolor='gray',
     )
 
-    # Dataset name extraction for clean title
-    dataset_short = tag.split('-')[-2] if '-' in tag else tag
-    ax.set_title(f't-SNE Modality Separation — {dataset_short.upper()}',
-                 fontsize=14, fontweight='bold')
-
-    # Clean style: no ticks, no grid, no spines
-    ax.set_xticks([])
-    ax.set_yticks([])
-    for spine in ax.spines.values():
-        spine.set_visible(False)
+    # Keep axis ticks visible (t-SNE coordinates)
+    ax.tick_params(axis='both', labelsize=11)
 
     plt.tight_layout()
     _save_multi_format(fig, save_path, dpi=300, facecolor='white')

@@ -1,7 +1,20 @@
+# ---- Python ----
 __pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
 
+# ---- 运行产物（不进版本库，见 BRANCHING.md 第 7 节）----
+logs/
+runs/
+outputs/
+*.log
+
+# ---- 论文图表产物 ----
+Fig/
+
+# ---- 本地临时 ----
 backup/
-
 .codegraph/
-
 Improve.md
